@@ -1,0 +1,8 @@
+include *.rst
+include LICENSE
+include django_prosemirror/py.typed
+recursive-include django_prosemirror *.html
+recursive-include django_prosemirror *.txt
+recursive-include django_prosemirror *.po
+global-exclude __pycache__
+global-exclude *.py[co]
