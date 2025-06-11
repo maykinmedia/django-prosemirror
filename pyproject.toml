@@ -27,7 +27,8 @@ classifiers = [
 ]
 requires-python = ">=3.11"
 dependencies = [
-    "django>=4.2"
+    "django>=4.2",
+    "prosemirror>=0.5.2"
 ]
 
 [project.urls]
