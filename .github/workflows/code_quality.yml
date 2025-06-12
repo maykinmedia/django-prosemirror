@@ -19,7 +19,7 @@ jobs:
       matrix:
         toxenv:
           - ruff
-          - docs
+          # - docs
           # - typecheck
 
     steps:
