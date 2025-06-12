@@ -103,6 +103,10 @@ venv.bak/
 # mypy
 .mypy_cache/
 
+# Testapp specific
+testapp/static
+django_prosemirror.db
+
 # node
 node_modules/
 
