@@ -1,0 +1,7 @@
+/// This is the file containing the base styling
+/// The base styling is based on oip variables and colors.
+/// These defaults can be overwritten by changing the CSS vars.
+///
+@use "base";
+@use "plugins";
+@use "oip-theme";

@@ -1,0 +1,209 @@
+.ProseMirror {
+  &-textblock-dropdown {
+    min-width: 3em;
+  }
+
+  &-menubar {
+    --mask: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCIgdmlld0JveD0iMCAwIDEwIDEwIiBmaWxsPSJub25lIj4KPHBhdGggZD0iTS45NDEgNC41MjNhLjc1Ljc1IDAgMSAxIDEuMDYtMS4wNmwzLjAwNiAzLjAwNSAzLjAwNS0zLjAwNWEuNzUuNzUgMCAxIDEgMS4wNiAxLjA2bC0zLjU0OSAzLjU1YS43NS43NSAwIDAgMS0xLjE2OC0uMTM2TC45NDEgNC41MjN6IiBmaWxsPSJibGFjayIvPgo8L3N2Zz4=");
+    padding: var(--spacing-medium);
+
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    min-height: unset !important;
+    gap: 4px 0;
+    position: relative;
+    color: var(--color-body);
+
+    border-top-left-radius: var(--border-radius);
+    border-top-right-radius: var(--border-radius);
+    position: relative;
+    min-height: 1em;
+    top: 0;
+    left: 0;
+    right: 0;
+    border-bottom: 1px solid var(--color-gray-light);
+    background: var(--color-white);
+    z-index: 10;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    overflow: visible;
+
+    // Elevate the menubar if a prompt or dropdown is present.
+    &:has(.prompt, .ProseMirror-menu-dropdown-menu) {
+      z-index: 11;
+    }
+  }
+
+  &-menu-dropdown {
+    vertical-align: 1px;
+    cursor: pointer;
+    position: relative;
+    padding-right: 20px;
+
+    &:after {
+      content: "";
+      background-repeat: no-repeat;
+      background-position: center;
+      position: absolute;
+      right: 4px;
+      top: calc(50% - 5px);
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      background-color: currentColor;
+      mask: var(--mask);
+      -webkit-mask: var(--mask);
+      opacity: 0.6;
+    }
+  }
+
+  &-menuitem,
+  &-menuseparator {
+    margin-right: 5px;
+  }
+
+  &-menuseparator {
+    height: 18px;
+    border-right: 1px solid var(--color-gray-light);
+
+    &:last-child {
+      display: none;
+    }
+  }
+
+  &-menuitem {
+    display: inline-block;
+    max-height: 24px;
+
+    .ProseMirror-icon {
+      height: 20px;
+      border-radius: var(--border-radius);
+
+      &:hover {
+        background: var(--color-gray-lightest);
+      }
+
+      &:active {
+        background: var(--color-gray-light);
+      }
+    }
+  }
+
+  &-menu {
+    margin: 0 -4px;
+    line-height: 1;
+  }
+
+  &-tooltip &-menu {
+    width: -webkit-fit-content;
+    width: fit-content;
+    white-space: pre;
+  }
+
+  &-menu-dropdown,
+  &-menu-dropdown-menu {
+    font-size: 14px;
+    white-space: nowrap;
+  }
+
+  &-menu-dropdown-wrap {
+    padding: 1px 0 1px 2px;
+    display: inline-block;
+    position: relative;
+  }
+
+  &-menu-dropdown-menu,
+  &-menu-submenu {
+    position: absolute;
+    top: calc(6px + 100%);
+    background: var(--color-white);
+    border: 1px solid var(--color-gray-light);
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
+  }
+
+  &-menu-submenu {
+    border-radius: var(--border-radius);
+  }
+
+  &-menu-dropdown-menu {
+    z-index: 15;
+    min-width: 6em;
+  }
+
+  &-menu-dropdown-item {
+    cursor: pointer;
+    padding: var(--spacing-small) var(--spacing-medium) var(--spacing-small)
+      var(--spacing-medium);
+
+    &:hover {
+      background: var(--color-gray-lightest);
+    }
+  }
+
+  &-menu-submenu-wrap {
+    position: relative;
+  }
+
+  &-menu-submenu-label:after {
+    content: "";
+    background-repeat: no-repeat;
+    background-position: center;
+    position: absolute;
+    right: 0;
+    transform: rotate(-90deg);
+    top: calc(50% - 5px);
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    background-color: currentColor;
+    mask: var(--mask);
+    -webkit-mask: var(--mask);
+    opacity: 0.6;
+  }
+
+  &-menu-submenu {
+    display: none;
+    min-width: 4em;
+    left: 100%;
+    top: -3px;
+  }
+
+  .ProseMirror-menuitem &-menu-active {
+    background: var(--color-gray-light);
+    border-radius: var(--border-radius);
+
+    &:hover {
+      background: var(--color-gray-light);
+    }
+  }
+
+  &-menu-disabled {
+    opacity: 0.4;
+  }
+
+  &-menu-submenu-wrap:hover &-menu-submenu,
+  &-menu-submenu-wrap-active &-menu-submenu {
+    display: block;
+  }
+
+  &-icon {
+    display: inline-block;
+    padding: var(--spacing-tiny) var(--spacing-medium);
+    cursor: pointer;
+  }
+
+  &-menu-disabled.ProseMirror-icon {
+    cursor: default;
+  }
+
+  &-icon svg {
+    fill: currentColor;
+    height: 20px;
+    width: 20px !important;
+  }
+
+  &-icon span {
+    vertical-align: text-top;
+  }
+}

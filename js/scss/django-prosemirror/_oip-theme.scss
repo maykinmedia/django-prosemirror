@@ -1,0 +1,262 @@
+:root {
+  // Layout.
+
+  --container-width: 1024px;
+  --mobile-s-width: 768px;
+  --mobile-ms-width: 500px;
+  --mobile-xs-width: 360px;
+  --header-height: 187px;
+
+  // Border.
+
+  --border-image: linear-gradient(
+    to right,
+    var(--color-accent-lighter),
+    var(--color-accent-darker),
+    var(--color-accent-lighter)
+  );
+  --border-width: 2px;
+  --border-width-thin: 1px;
+  --border-radius: 3px;
+  --border-radius-large: 8px;
+  --border-radius-rounded: 999px;
+
+  // Color.
+
+  --color-black: #000;
+  --color-blue: #1261a3;
+  --color-gray: #d2d2d2;
+  --color-gray-dark: rgba(75, 75, 75, 1);
+  --color-gray-dark-900: rgba(75, 75, 75, 0.9);
+  --color-gray-lighter: #7a7a7a;
+  --color-gray-light: #d2d2d2;
+  --color-gray-lightest: #f3f3f3;
+  --color-green: #d5e7d4;
+  --color-green-dark: #248641;
+  --color-red-notification: var(--oip-color-red-notification);
+  --color-white: #fff;
+  --color-yellow: #f8d62d;
+  --color-yellow-dark: #cca000;
+  --color-yellow-light: #fff7d1;
+  --color-orange: #ffdbad;
+  --color-orange-dark: #8c3600;
+
+  --color-primary-h: 138;
+  --color-primary-s: 58%;
+  --color-primary-l: 33%;
+  --color-primary: hsl(
+    var(--color-primary-h),
+    var(--color-primary-s),
+    var(--color-primary-l)
+  );
+  --color-primary-darker: hsl(
+    var(--color-primary-h),
+    var(--color-primary-s),
+    calc(var(--color-primary-l) - 10%)
+  );
+  --color-primary-lighter: hsl(
+    var(--color-primary-h),
+    var(--color-primary-s),
+    calc(var(--color-primary-l) + 30%)
+  );
+  --color-secondary-h: 207;
+  --color-secondary-s: 80%;
+  --color-secondary-l: 35%;
+  --color-secondary: hsl(
+    var(--color-secondary-h),
+    var(--color-secondary-s),
+    var(--color-secondary-l)
+  );
+  --color-secondary-darker: hsl(
+    var(--color-secondary-h),
+    var(--color-secondary-s),
+    calc(var(--color-secondary-l) - 10%)
+  );
+  --color-secondary-lighter: hsl(
+    var(--color-secondary-h),
+    calc(var(--color-secondary-s) - 30%),
+    calc(var(--color-secondary-l) + 30%)
+  );
+
+  --color-accent-h: 50;
+  --color-accent-s: 94%;
+  --color-accent-l: 57%;
+  --color-accent: hsl(
+    var(--color-accent-h),
+    var(--color-accent-s),
+    var(--color-accent-l)
+  );
+  --color-accent-darker: hsl(
+    var(--color-accent-h),
+    var(--color-accent-s),
+    calc(var(--color-accent-l) - 10%)
+  );
+  --color-accent-lighter: hsl(
+    var(--color-accent-h),
+    var(--color-accent-s),
+    calc(var(--color-accent-l) + 10%)
+  );
+
+  --color-danger-h: 34;
+  --color-danger-s: 100%;
+  --color-danger-l: 27%;
+  --color-danger: hsl(
+    var(--color-danger-h),
+    var(--color-danger-s),
+    var(--color-danger-l)
+  );
+  --color-danger-darker: hsl(
+    var(--color-danger-h),
+    var(--color-danger-s),
+    calc(var(--color-danger-l) - 5%)
+  );
+  --color-danger-lighter: hsl(
+    var(--color-danger-h),
+    var(--color-danger-s),
+    calc(var(--color-danger-l) + 13%)
+  );
+  --color-danger-lightest: hsl(
+    var(--color-danger-h),
+    var(--color-danger-s),
+    calc(var(--color-danger-l) + 57%)
+  );
+
+  --color-error-h: 350;
+  --color-error-s: 100%;
+  --color-error-l: 45%;
+  --color-error: hsl(
+    var(--color-error-h),
+    var(--color-error-s),
+    var(--color-error-l)
+  );
+  --color-error-darker: hsl(
+    var(--color-error-h),
+    var(--color-error-s),
+    calc(var(--color-error-l) - 27%)
+  );
+  --color-error-lighter: hsl(
+    var(--color-error-h),
+    var(--color-error-s),
+    calc(var(--color-error-l) + 48%)
+  );
+  --color-error-lightest: hsl(
+    var(--color-error-h),
+    var(--color-error-s),
+    calc(var(--color-error-l) + 50%)
+  );
+
+  --color-info-h: 2010;
+  --color-info-s: 64%;
+  --color-info-l: 80%;
+  --color-info: hsl(
+    var(--color-info-h),
+    var(--color-info-s),
+    var(--color-info-l)
+  );
+  --color-info-lighter: hsl(
+    var(--color-info-h),
+    var(--color-info-s),
+    calc(var(--color-info-l) + 10%)
+  );
+  --color-info-lightest: hsl(210, 70%, 96%);
+  --color-info-darker: hsl(
+    var(--color-info-h),
+    var(--color-info-s),
+    calc(var(--color-info-l) - 40%)
+  );
+
+  --color-success-h: 115;
+  --color-success-s: 26%;
+  --color-success-l: 37%;
+  --color-success: hsl(
+    var(--color-success-h),
+    var(--color-success-s),
+    var(--color-success-l)
+  );
+  --color-success-lighter: hsl(
+    var(--color-success-h),
+    var(--color-success-s),
+    calc(var(--color-success-l) + 57%)
+  );
+  // color-success-l was +50% but +57% is needed for 4.5:1 contrast
+
+  --color-font-primary: var(--color-white);
+  --color-font-secondary: var(--color-white);
+  --color-font-accent: var(--color-gray-dark);
+
+  --color-body: var(--color-gray-dark);
+  // changed to #949494 to get the required 3:1 contrast ratio - in case of decorative border use var(--color-gray).
+  --color-mute: #949494;
+  // text-color for muted text inside tinted cards
+  --color-tinted-mute: #696969;
+
+  /// Font.
+
+  --font-color-heading: var(--color-black);
+  // Font-family = 'Heading' coming from both NLDS and/or the font-upload functionality
+  --font-family-heading: var(--utrecht-heading-font-family);
+  --font-weight-heading: bold;
+
+  --font-color-heading-1: var(--font-color-heading);
+  --font-family-heading-1: var(--font-family-heading);
+  --font-line-height-heading-1: 41px;
+  --font-size-heading-1: var(--utrecht-heading-1-font-size);
+  --font-weight-heading-1: var(--font-weight-heading);
+
+  --font-color-heading-2: var(--font-color-heading);
+  --font-family-heading-2: var(--font-family-heading);
+  --font-line-height-heading-2: 34px;
+  --font-size-heading-2: var(--utrecht-heading-2-font-size);
+  --font-weight-heading-2: var(--font-weight-heading);
+
+  --font-color-heading-3: var(--font-color-heading);
+  --font-family-heading-3: var(--font-family-heading);
+  --font-line-height-heading-3: 30px;
+  --font-size-heading-3: var(--utrecht-heading-3-font-size);
+  --font-weight-heading-3: var(--font-weight-heading);
+
+  --font-color-heading-4: var(--font-color-heading);
+  --font-family-heading-4: var(--font-family-heading);
+  --font-line-height-heading-4: 26px;
+  --font-size-heading-4: var(--utrecht-heading-4-font-size);
+  --font-weight-heading-4: var(--font-weight-heading);
+
+  --font-size-heading-card: 18px;
+
+  // Font-family = 'Body' coming from both NLDS and/or the font-upload functionality
+  --font-family-body: var(--utrecht-document-font-family);
+  --font-color-body: var(--color-gray-dark);
+  --font-size-body: var(--utrecht-document-font-size);
+  --font-line-height-body: 24px;
+
+  --font-size-body-extra-small: 12px;
+  --font-size-body-small: var(--utrecht-paragraph-small-font-size);
+  --font-size-body-larger: 18px;
+  --font-size-body-large: 20px;
+  --font-size-icon-large: 32px;
+  --font-line-height-body-small: 20px;
+  --font-line-height-body-medium: 24px;
+  --font-line-height-body-large: 28px;
+
+  --row-height: 40px;
+  --row-height-small: 24px;
+  --row-height-big: 48px;
+  --row-height-giant: 57px;
+  --gutter-width: 32px;
+
+  --spacing-tiny: 2px;
+  --spacing-small: 4px;
+  --spacing-medium: 8px;
+  --spacing-large: 16px;
+  --spacing-extra-large: 24px;
+  --spacing-giant: 32px;
+  --spacing-mega: 80px;
+
+  /// Common widths
+  --form-width: 500px;
+
+  /// Custom focus outline for elements that do not receive default client focus-styles
+  --focus-border-width: 3px;
+  --focus-border-style: dashed;
+  // focus-border colors can be determined by what kind of element receive them
+}
