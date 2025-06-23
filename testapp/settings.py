@@ -17,6 +17,7 @@ DATABASES = {
 
 INSTALLED_APPS = [
     "django.contrib.contenttypes",
+    "django.contrib.staticfiles",
     "django.contrib.auth",
     "django.contrib.sessions",
     "django.contrib.messages",
@@ -50,5 +51,8 @@ TEMPLATES = [
         },
     },
 ]
+
+STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "static"
 
 ROOT_URLCONF = "testapp.urls"

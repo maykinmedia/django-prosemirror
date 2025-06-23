@@ -1,0 +1,22 @@
+<div
+    id="{{ widget.attrs.id }}-editor"
+    name="{{ widget.name }}"
+    data-prosemirror-id="{{ widget.attrs.id }}"
+    date-prosemirror-input-id="{{ widget.attrs.id }}"
+    data-prosemirror-schema="{{ schema }}"
+></div>
+
+<input
+    id="{{ widget.attrs.id }}"
+    type="hidden"
+    name="{{ widget.name }}"
+    value="{{ widget.value }}"
+/>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        createDjangoProseMirror(
+            document.getElementById("{{ widget.attrs.id }}-editor"),
+            document.getElementById("{{ widget.attrs.id }}"),
+        );
+    });
+</script>
