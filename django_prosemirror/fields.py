@@ -11,6 +11,7 @@ from django.db import models
 
 from prosemirror import Schema
 
+from django_prosemirror.constants import DEFAULT_CLASSES
 from django_prosemirror.schema import (
     FULL,
     SchemaSpec,
@@ -333,6 +334,8 @@ class ProsemirrorModelField(models.JSONField):
     description = "Prosemirror content stored as JSON"
     schema: Schema
     schema_spec: SchemaSpec
+    classes: dict[str, str] = DEFAULT_CLASSES
+    history: bool
 
     def __init__(
         self,
@@ -343,6 +346,8 @@ class ProsemirrorModelField(models.JSONField):
         *,
         default: Callable[[], ProsemirrorDocument] | None = None,
         schema: SchemaSpec = FULL,
+        classes: dict[str, str] = DEFAULT_CLASSES,
+        history: bool = True,
         **kwargs: Any,
     ):
         """Initialize the Prosemirror model field.
@@ -361,8 +366,10 @@ class ProsemirrorModelField(models.JSONField):
             ValidationError: If default callable returns invalid document
         """
         # Construct schema first, before validation
-        self.schema = construct_schema_from_spec(schema)
+        self.schema = construct_schema_from_spec(schema, classes)
         self.schema_spec = schema
+        self.classes = classes
+        self.history = history
 
         # Validate default callable if provided
         if default:
@@ -390,13 +397,19 @@ class ProsemirrorModelField(models.JSONField):
         defaults = {
             "form_class": ProsemirrorFormField,
             "schema": self.schema_spec,
+            "classes": self.classes,
+            "history": self.history,
         }
         defaults.update(kwargs)
         return super().formfield(*args, **defaults)
 
     def contribute_to_class(self, cls, name, private_only=False):
         super().contribute_to_class(cls, name, private_only=private_only)
-        setattr(cls, name, ProsemirrorFieldDescriptor(self, schema=self.schema))
+        setattr(
+            cls,
+            name,
+            ProsemirrorFieldDescriptor(self, schema=self.schema),
+        )
 
     def get_prep_value(self, value):
         """Prepare value for database storage."""
@@ -444,6 +457,8 @@ class ProsemirrorFormField(forms.JSONField):
 
     schema: Schema
     schema_spec: SchemaSpec
+    classes: dict[str, str]
+    history: bool
     widget = ProsemirrorWidget
 
     def __init__(
@@ -452,6 +467,8 @@ class ProsemirrorFormField(forms.JSONField):
         decoder=None,
         *,
         schema: SchemaSpec = FULL,
+        classes=DEFAULT_CLASSES,
+        history=True,
         **kwargs,
     ):
         """Initialize the Prosemirror form field.
@@ -462,9 +479,13 @@ class ProsemirrorFormField(forms.JSONField):
             schema: Prosemirror schema specification
             **kwargs: Additional field options
         """
-        self.schema = construct_schema_from_spec(schema)
+        self.schema = construct_schema_from_spec(schema, classes)
         self.schema_spec = schema
-        kwargs["widget"] = self.widget(schema=schema)
+        self.classes = classes
+        self.history = history
+        kwargs["widget"] = self.widget(
+            schema=schema, classes=self.classes, history=self.history
+        )
         super().__init__(encoder, decoder, **kwargs)
 
     def to_python(self, value) -> ProsemirrorFieldDocument:

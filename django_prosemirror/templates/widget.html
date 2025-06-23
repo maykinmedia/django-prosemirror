@@ -1,9 +1,12 @@
 <div
     id="{{ widget.attrs.id }}-editor"
+    class="editor openinwoner-theme"
     name="{{ widget.name }}"
     data-prosemirror-id="{{ widget.attrs.id }}"
-    date-prosemirror-input-id="{{ widget.attrs.id }}"
+    data-prosemirror-input-id="{{ widget.attrs.id }}"
     data-prosemirror-schema="{{ schema }}"
+    data-prosemirror-classes="{{ classes }}"
+    data-prosemirror-history="{{ history }}"
 ></div>
 
 <input
@@ -12,11 +15,3 @@
     name="{{ widget.name }}"
     value="{{ widget.value }}"
 />
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        createDjangoProseMirror(
-            document.getElementById("{{ widget.attrs.id }}-editor"),
-            document.getElementById("{{ widget.attrs.id }}"),
-        );
-    });
-</script>

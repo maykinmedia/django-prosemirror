@@ -9,7 +9,7 @@ from django.core.exceptions import ValidationError
 import pytest
 from prosemirror import Schema
 
-from django_prosemirror.constants import EMPTY_DOC
+from django_prosemirror.constants import EMPTY_DOC, DEFAULT_CLASSES
 from django_prosemirror.exceptions import DjangoProsemirrorException
 from django_prosemirror.fields import ProsemirrorFieldDocument, ProsemirrorFormField
 from django_prosemirror.schema import FULL, AllowedNodeType, construct_schema_from_spec
@@ -277,16 +277,18 @@ class TestProsemirrorFormField:
         with pytest.raises(
             DjangoProsemirrorException, match="`spec` must be a collection"
         ):
-            ProsemirrorFormField(schema="invalid_string")
+            ProsemirrorFormField(schema="invalid_string", classes=DEFAULT_CLASSES)
 
     def test_init_with_invalid_schema_wrong_type_raises_exception(self):
         with pytest.raises(
             DjangoProsemirrorException, match="`spec` must be a collection"
         ):
-            ProsemirrorFormField(schema=["invalid_string", "another_invalid"])
+            ProsemirrorFormField(
+                schema=["invalid_string", "another_invalid"], classes=DEFAULT_CLASSES
+            )
 
     def test_init_with_invalid_schema_none_raises_exception(self):
         with pytest.raises(
             DjangoProsemirrorException, match="`spec` must be a collection"
         ):
-            ProsemirrorFormField(schema=None)
+            ProsemirrorFormField(schema=None, classes=DEFAULT_CLASSES)
