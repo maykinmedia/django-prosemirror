@@ -1,14 +1,28 @@
 {
     "name": "django-prosemirror",
     "private": true,
+    "type": "module",
     "scripts": {
-        "build": "vite build"
+        "build": "tsc -b && vite build",
+        "build:dev": "tsc -b && vite build --watch --mode=dev",
+        "test": "vitest",
+        "type-check": "tsc --noEmit",
+        "type-check:watch": "tsc --noEmit --watch",
+        "lint": "eslint .",
+        "format": "prettier --write js/",
+        "format:check": "prettier --check js/"
     },
     "devDependencies": {
+        "@vitest/coverage-v8": "^3.2.4",
+        "eslint": "^9.15.0",
         "prettier": "^3.5.3",
-        "vite": "^6.3.5"
+        "sass-embedded": "^1.89.2",
+        "typescript-eslint": "^8.34.1",
+        "vite": "^6.3.5",
+        "vitest": "^3.2.4"
     },
     "dependencies": {
+        "microscope-sass": "^2.0.0",
         "prosemirror-example-setup": "^1.2.3",
         "prosemirror-menu": "^1.2.5",
         "prosemirror-model": "^1.25.1",
