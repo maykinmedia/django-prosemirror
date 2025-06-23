@@ -4,6 +4,7 @@ import DjangoProsemirrorSchema from "./schema/prosemirror-schema.ts";
 import { EditorState } from "prosemirror-state";
 import { DOMParser, Node, Schema } from "prosemirror-model";
 import { DjangoProsemirrorSettings } from "./types/types.ts";
+import { translate } from "./i18n/translations.ts";
 
 export class DjangoProsemirror {
     // inputElement: HTMLInputElement;
@@ -102,6 +103,8 @@ export class DjangoProsemirror {
                 (this as unknown as EditorView).updateState(newState);
                 fn(newState.doc);
             },
+            // @ts-expect-error TS tells this is a issue, but it works as expected.
+            translate,
         });
     }
 }
