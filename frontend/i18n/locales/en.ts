@@ -1,4 +1,4 @@
-import { DjangoProsemirrorTranslations } from "../../types/types";
+import { DjangoProsemirrorTranslations } from "@/types/types";
 
 export const en: DjangoProsemirrorTranslations = {
     "Join with above block": "Join with above block",

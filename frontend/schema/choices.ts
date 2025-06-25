@@ -1,4 +1,6 @@
 export enum SchemaNodesEnum {
+    DOC = "doc",
+    TEXT = "text",
     STRONG = "strong",
     ITALIC = "em",
     UNDERLINE = "underline",

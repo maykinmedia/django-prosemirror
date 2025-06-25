@@ -7,9 +7,8 @@ import { DjangoProsemirrorSettings } from "./types/types.ts";
 import { translate } from "./i18n/translations.ts";
 
 export class DjangoProsemirror {
-    // inputElement: HTMLInputElement;
     editorSchema: Schema;
-    settings?: DjangoProsemirrorSettings;
+    settings: DjangoProsemirrorSettings;
     editor!: EditorView;
     editorElement: HTMLDivElement;
 
@@ -17,20 +16,20 @@ export class DjangoProsemirror {
      * @param inputElement
      * @param settings
      */
-    constructor(node: HTMLDivElement, settings?: DjangoProsemirrorSettings) {
-        if (settings?.debug) console.log("INITIALIZING PROSE_MIRROR");
+    constructor(node: HTMLDivElement, settings: DjangoProsemirrorSettings) {
+        this.settings = settings;
+        this.debugLog(
+            "%cINITIALIZING DJANGO_PROSE_MIRROR",
+            "color: blue; font-weight: bold; font-size: 1.2rem;",
+        );
         this.editorElement = node;
         this.editorSchema = new DjangoProsemirrorSchema(settings).schema;
-        this.settings = settings;
         this.create();
     }
-
-    get editorId() {
-        return this.editorElement?.dataset.prosemirrorInputId;
-    }
-
     get inputElement() {
-        return document.getElementById(`${this.editorId}`) as HTMLInputElement;
+        return document.getElementById(
+            `${this.editorElement?.dataset.prosemirrorInputId}`,
+        ) as HTMLInputElement;
     }
 
     get initialDoc() {
@@ -47,11 +46,10 @@ export class DjangoProsemirror {
                 );
             }
         } catch (error) {
-            if (this.settings?.debug)
-                console.warn(
-                    "Failed to parse JSON from input, falling back to DOM parsing:",
-                    error,
-                );
+            this.warnLog(
+                "Failed to parse JSON from input, falling back to DOM parsing:",
+                error,
+            );
             // Fall back to parsing DOM content
             return DOMParser.fromSchema(this.editorSchema).parse(
                 this.editorElement!,
@@ -62,7 +60,7 @@ export class DjangoProsemirror {
     updateFormInputValue(doc: Node) {
         const json = JSON.stringify(doc.toJSON(), null, 2);
         this.inputElement.value = json;
-        if (this.settings?.debug) console.debug("Setting value to", json);
+        this.debugLog("Setting value to", json);
     }
 
     create() {
@@ -76,19 +74,16 @@ export class DjangoProsemirror {
                 "You must specify an input element to hold the editor state",
             );
 
-        if (this.settings?.debug)
-            console.debug(
-                "Editor element:",
-                this.editorElement,
-                "Input element:",
-                this.inputElement,
-                "Editor schema:",
-                this.editorSchema,
-            );
+        this.debugLog(
+            "Editor element:",
+            this.editorElement,
+            "Input element:",
+            this.inputElement,
+            "Editor schema:",
+            this.editorSchema,
+        );
 
-        const fn = (doc: Node) => {
-            this.updateFormInputValue(doc);
-        };
+        const updateFormInputValue = this.updateFormInputValue.bind(this);
 
         this.editor = new EditorView(this.editorElement!, {
             state: EditorState.create({
@@ -101,10 +96,21 @@ export class DjangoProsemirror {
             dispatchTransaction(transaction) {
                 const newState = (this.state as EditorState).apply(transaction);
                 (this as unknown as EditorView).updateState(newState);
-                fn(newState.doc);
+                updateFormInputValue(newState.doc);
             },
             // @ts-expect-error TS tells this is a issue, but it works as expected.
             translate,
         });
+    }
+
+    debugLog(...msg: unknown[]) {
+        if (this.settings?.debug) {
+            console.debug(...msg);
+        }
+    }
+    warnLog(...msg: unknown[]) {
+        if (this.settings?.debug) {
+            console.warn(...msg);
+        }
     }
 }

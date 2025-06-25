@@ -8,8 +8,7 @@ import {
 } from "../plugins/menubar/prompt";
 
 // Mock DOM environment - unused mockElement removed for ESLint compliance
-
-global.document = {
+globalThis.document = {
     createElement: vi.fn().mockImplementation((tagName) => {
         const baseElement = {
             type: "",
@@ -45,13 +44,13 @@ global.document = {
         };
     }),
     activeElement: null,
-} as Document;
+} as unknown as Document;
 
-global.window = {
+globalThis.window = {
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
     setTimeout: vi.fn((fn) => fn()),
-} as Window & typeof globalThis;
+} as unknown as Window & typeof globalThis;
 
 // Mock translate function
 vi.mock("../../i18n/translations", () => ({
@@ -162,7 +161,7 @@ describe("plugins/menubar/prompt", () => {
         it("should return null from validateType by default", () => {
             const field = new TestField({ label: "Test" });
 
-            const result = field.validateType("any value");
+            const result = field.validateType();
             expect(result).toBeNull();
         });
     });
@@ -263,8 +262,6 @@ describe("plugins/menubar/prompt", () => {
                         { value: "1", label: "Option 1" },
                         { value: "2", label: "Option 2" },
                     ],
-                } as Parameters<typeof SelectField>[0] & {
-                    options: { value: string; label: string }[];
                 });
 
                 // Just ensure the field can be created without error
@@ -279,8 +276,6 @@ describe("plugins/menubar/prompt", () => {
                     { value: "1", label: "Option 1" },
                     { value: "2", label: "Option 2" },
                 ],
-            } as Parameters<typeof SelectField>[0] & {
-                options: { value: string; label: string }[];
             });
 
             const mockSelect = {
@@ -307,8 +302,6 @@ describe("plugins/menubar/prompt", () => {
                     { value: "1", label: "Option 1" },
                     { value: "2", label: "Option 2" },
                 ],
-            } as Parameters<typeof SelectField>[0] & {
-                options: { value: string; label: string }[];
             });
 
             const mockOption1 = { value: "", selected: false, label: "" };

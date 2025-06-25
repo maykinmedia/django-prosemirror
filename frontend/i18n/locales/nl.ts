@@ -1,4 +1,4 @@
-import { DjangoProsemirrorTranslations } from "../../types/types";
+import { DjangoProsemirrorTranslations } from "@/types/types";
 
 export const nl: DjangoProsemirrorTranslations = {
     "Join with above block": "Samenvoegen met vorige blok",

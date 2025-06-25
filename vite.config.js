@@ -1,12 +1,12 @@
 import { defineConfig } from "vite";
 import { copyFileSync, mkdirSync } from "fs";
+import path from "path";
 
 export default defineConfig({
     build: {
         sourcemap: true,
         rollupOptions: {
-            // ? Change foldername to 'frontend', since it holds both scss and js.
-            input: "./js/index.ts",
+            input: "./frontend/index.ts",
             output: {
                 entryFileNames: "bundle.js",
                 assetFileNames: (assetInfo) => {
@@ -15,65 +15,34 @@ export default defineConfig({
             },
         },
     },
+    resolve: {
+        alias: {
+            "@": path.resolve(__dirname, "./frontend"),
+        },
+    },
     plugins: [
         {
-            name: "copy-to-django-dev-mode",
-            apply: ({ mode }) => Boolean(mode == "dev"),
+            name: "copy-to-django",
             writeBundle() {
-                // Zorg ervoor dat de doelmappen bestaan
-                mkdirSync("django_prosemirror/static/js", { recursive: true });
-                mkdirSync("django_prosemirror/static/css", { recursive: true });
-
-                // Kopieer bestanden
+                const targets = ["django_prosemirror", "testapp"];
                 try {
-                    // ===== DJANGO_PROSEMIRROR STATIC ===== //
-                    // django-prosemirror.js
-                    copyFileSync(
-                        "dist/bundle.js",
-                        "django_prosemirror/static/js/django-prosemirror.js",
-                    );
-                    console.log(
-                        "✓ Gekopieerd (prosemirror): bundle.js → django-prosemirror.js",
-                    );
-                    // bundle.js.map
-                    copyFileSync(
-                        "dist/bundle.js.map",
-                        "django_prosemirror/static/js/bundle.js.map",
-                    );
-                    console.log(
-                        "✓ Gekopieerd (django_prosemirror): bundle.js.map",
-                    );
-                    // django-prosemirror.css
-                    copyFileSync(
-                        "dist/bundle.css",
-                        "django_prosemirror/static/css/django-prosemirror.css",
-                    );
-                    console.log(
-                        "✓ Gekopieerd: bundle.css (django_prosemirror) → django-prosemirror.css",
-                    );
-                    // ===== TESTAPP STATIC ===== //
-                    // django-prosemirror.js
-                    copyFileSync(
-                        "dist/bundle.js",
-                        "testapp/static/js/django-prosemirror.js",
-                    );
-                    console.log(
-                        "✓ Gekopieerd (testapp): bundle.js → django-prosemirror.js",
-                    );
-                    // bundle.js.map
-                    copyFileSync(
-                        "dist/bundle.js.map",
-                        "testapp/static/js/bundle.js.map",
-                    );
-                    console.log("✓ Gekopieerd (testapp): bundle.js.map");
-                    // django-prosemirror.css
-                    copyFileSync(
-                        "dist/bundle.css",
-                        "testapp/static/css/django-prosemirror.css",
-                    );
-                    console.log(
-                        "✓ Gekopieerd: bundle.css (testapp) → django-prosemirror.css",
-                    );
+                    for (const target of targets) {
+                        // Make sure the directories exist
+                        mkdirSync(`${target}/static/js`, { recursive: true });
+                        mkdirSync(`${target}/static/css`, { recursive: true });
+
+                        const copyDict = {
+                            "dist/bundle.js": `${target}/static/js/django-prosemirror.js`,
+                            "dist/bundle.js.map": `${target}/static/js/bundle.js.map`,
+                            "dist/bundle.css": `${target}/static/css/django-prosemirror.css`,
+                        };
+
+                        // Copy files.
+                        Object.entries(copyDict).forEach(([src, dest]) => {
+                            copyFileSync(src, dest);
+                            console.log(`✓ Gekopieerd: ${src} → ${dest}`);
+                        });
+                    }
                 } catch (error) {
                     console.warn("⚠️  Kopieer fout:", error.message);
                 }

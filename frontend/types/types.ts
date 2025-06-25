@@ -1,5 +1,5 @@
 import { Schema } from "prosemirror-model";
-import { SchemaNodesEnum } from "../schema/choices";
+import { SchemaNodesEnum } from "@/schema/choices";
 
 export interface DjangoProsemirrorSettings {
     /** Set to false to disable the menu bar. */
@@ -11,7 +11,7 @@ export interface DjangoProsemirrorSettings {
     language?: LanguageCodeEnum;
     debug?: boolean;
     classNames?: Partial<Record<SchemaNodesEnum, string>>;
-    allowedNodes: string[];
+    allowedNodes: SchemaNodesEnum[];
 }
 
 export interface DjangoProsemirrorSetup

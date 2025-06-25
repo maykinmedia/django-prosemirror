@@ -67,4 +67,8 @@ jobs:
             echo "Build failed: django-prosemirror.js not found"
             exit 1
           fi
-          echo "Build successful: django-prosemirror.js generated"
+          if [ ! -f "django_prosemirror/static/css/django-prosemirror.css" ]; then
+            echo "Build failed: django-prosemirror.css not found"
+            exit 1
+          fi
+          echo "Build successful: JS and CSS files generated"

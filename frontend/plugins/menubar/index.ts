@@ -17,7 +17,7 @@ import { toggleMark } from "prosemirror-commands";
 import { wrapInList } from "prosemirror-schema-list";
 import { TextField, openPrompt } from "./prompt";
 import { icons } from "./icons";
-import { translate } from "../../i18n/translations";
+import { translate } from "@/i18n/translations";
 /**
  * Interface defining the structure of menu items that can be built for the ProseMirror editor.
  * Each property represents a specific menu action or dropdown that can be added to the editor toolbar.
@@ -68,7 +68,7 @@ export interface MenuItemResult {
     /** Dropdown menu for insert actions */
     insertMenu: Dropdown;
     /** Dropdown menu for text type changes (paragraph, headings, etc.) */
-    typeMenu: Dropdown;
+    typeMenu: Dropdown & { type?: string };
     /** Array of menu items for block-level operations */
     blockMenu: MenuElement[][];
     /** Array of menu items for inline formatting operations */
@@ -313,7 +313,7 @@ class MenuBuilder {
     /**
      * Create a menu item for wrapping selection in a list (bullet or ordered).
      * Uses the prosemirror-schema-list wrapInList command.
-     * @param node - The list node type (bullet_list or ordered_list)
+     * @param node - The list node type (unordered_list or ordered_list)
      * @param options - Configuration options for the menu item
      * @returns MenuItem for list wrapping
      */
@@ -408,15 +408,15 @@ class MenuBuilder {
         }
 
         // Bullet list operations
-        if (this.schema.nodes.bullet_list) {
+        if (this.schema.nodes.unordered_list) {
             result.wrapBulletList = this.createListWrapMenuItem(
-                this.schema.nodes.bullet_list,
+                this.schema.nodes.unordered_list,
                 {
                     title: "Wrap in bullet list",
                     icon: icons.bulletList,
                 },
             );
-            // Add lift up and join up if bullet_list is added to the schema.
+            // Add lift up and join up if unordered_list is added to the schema.
             result.liftItem = liftItem;
             result.joinUpItem = joinUpItem;
         }

@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { buildMenuItems } from "../plugins/menubar/index";
-import { LanguageCodeEnum } from "../types/types";
 import { Schema, NodeType, MarkType } from "prosemirror-model";
 import { undoItem, redoItem, selectParentNodeItem } from "prosemirror-menu";
 
@@ -92,14 +91,14 @@ describe("plugins/menubar/index", () => {
         mockMarkType = {
             name: "strong",
             isInSet: vi.fn().mockReturnValue(null),
-        };
+        } as unknown as MarkType;
 
         // Create mock node type
         mockNodeType = {
             name: "paragraph",
             create: vi.fn().mockReturnValue({}),
             createAndFill: vi.fn().mockReturnValue({}),
-        };
+        } as unknown as NodeType;
 
         // Create mock schema with various nodes and marks
         mockSchema = {
@@ -111,7 +110,7 @@ describe("plugins/menubar/index", () => {
                 blockquote: { ...mockNodeType, name: "blockquote" },
                 image: { ...mockNodeType, name: "image" },
                 ordered_list: { ...mockNodeType, name: "ordered_list" },
-                bullet_list: { ...mockNodeType, name: "bullet_list" },
+                unordered_list: { ...mockNodeType, name: "unordered_list" },
                 list_item: { ...mockNodeType, name: "list_item" },
                 horizontal_rule: { ...mockNodeType, name: "horizontal_rule" },
                 code_block: { ...mockNodeType, name: "code_block" },
@@ -125,7 +124,7 @@ describe("plugins/menubar/index", () => {
                 code: { ...mockMarkType, name: "code" },
                 link: { ...mockMarkType, name: "link" },
             },
-        };
+        } as unknown as Schema;
     });
 
     describe("buildMenuItems", () => {
@@ -196,7 +195,7 @@ describe("plugins/menubar/index", () => {
             const schemaWithoutMarks = {
                 ...mockSchema,
                 marks: {},
-            };
+            } as Schema;
 
             expect(() => {
                 buildMenuItems(schemaWithoutMarks);
@@ -211,7 +210,7 @@ describe("plugins/menubar/index", () => {
                     text: mockNodeType,
                     paragraph: mockNodeType,
                 },
-            };
+            } as unknown as Schema;
 
             expect(() => {
                 buildMenuItems(schemaWithMinimalNodes);
@@ -247,8 +246,8 @@ describe("plugins/menubar/index", () => {
         });
 
         it("should pass language parameter correctly", () => {
-            buildMenuItems(mockSchema, true, LanguageCodeEnum.EN);
-            buildMenuItems(mockSchema, true, LanguageCodeEnum.NL);
+            buildMenuItems(mockSchema, true);
+            buildMenuItems(mockSchema, true);
 
             // Both should work without throwing
             expect(true).toBe(true);
@@ -267,21 +266,21 @@ describe("plugins/menubar/index", () => {
 
             // Check that menu items have proper structure
             expect(result.toggleStrong).toBeDefined();
-            expect(result.toggleStrong.spec.icon).toBeDefined();
+            expect(result.toggleStrong?.spec.icon).toBeDefined();
         });
 
         it("should create menu items with proper titles", () => {
             const result = buildMenuItems(mockSchema);
 
             expect(result.toggleStrong).toBeDefined();
-            expect(result.toggleStrong.spec.title).toBeDefined();
+            expect(result.toggleStrong?.spec.title).toBeDefined();
         });
 
         it("should create menu items with run functions", () => {
             const result = buildMenuItems(mockSchema);
 
             expect(result.toggleStrong).toBeDefined();
-            expect(typeof result.toggleStrong.spec.run).toBe("function");
+            expect(typeof result.toggleStrong?.spec.run).toBe("function");
         });
 
         it("should create menu items with enable/select functions", () => {
@@ -289,35 +288,92 @@ describe("plugins/menubar/index", () => {
 
             expect(result.toggleStrong).toBeDefined();
             expect(
-                result.toggleStrong.spec.active ||
-                    result.toggleStrong.spec.enable,
+                result.toggleStrong?.spec.active ||
+                    result.toggleStrong?.spec.enable,
             ).toBeDefined();
+        });
+
+        it("should not create unsupported nodes/marks", () => {
+            const schemaWithUnsupportedNodesAndMarks = {
+                nodes: {
+                    heading: mockNodeType,
+                    test: mockNodeType,
+                },
+                marks: {
+                    em: mockMarkType,
+                    test: mockMarkType,
+                },
+            } as unknown as Schema;
+
+            const result = buildMenuItems(schemaWithUnsupportedNodesAndMarks);
+
+            // Check that menu items have proper structure
+            expect(
+                Object.prototype.hasOwnProperty.call(result, "test"),
+            ).toBeFalsy();
         });
     });
 
-    describe("List menu items", () => {
-        it("should include liftItem when bullet_list is present", () => {
-            const result = buildMenuItems(mockSchema);
-            expect(result.liftItem).toBeDefined();
-        });
-
-        it("should include joinUpItem when bullet_list is present", () => {
-            const result = buildMenuItems(mockSchema);
-            expect(result.joinUpItem).toBeDefined();
-        });
-
-        it("should include liftItem when ordered_list is present", () => {
-            const schemaWithOrderedList = {
+    describe("ListItem and JoinItem menu items", () => {
+        it("should not include liftItem nor joinIten if unordered_list, ordered_list or blockquote are not present", () => {
+            const a = {
                 ...mockSchema,
                 nodes: {
                     ...mockSchema.nodes,
-                    bullet_list: undefined,
+                    ordered_list: undefined,
+                    unordered_list: undefined,
+                    blockquote: undefined,
                 },
-            };
-            delete schemaWithOrderedList.nodes.bullet_list;
+            } as unknown as Schema;
+            const result = buildMenuItems(a);
 
-            const result = buildMenuItems(schemaWithOrderedList);
-            expect(result.liftItem).toBeDefined();
+            expect(result.liftItem).toBeUndefined();
+            expect(result.joinUpItem).toBeUndefined();
+        });
+
+        it("should include liftItem and joinItem if ordered_list is present", () => {
+            const schemaOl = {
+                ...mockSchema,
+                nodes: {
+                    ...mockSchema.nodes,
+                    ordered_list: {},
+                    unordered_list: undefined,
+                    blockquote: undefined,
+                },
+            } as unknown as Schema;
+            const resultOl = buildMenuItems(schemaOl);
+            expect(resultOl.liftItem).toBeDefined();
+            expect(resultOl.joinUpItem).toBeDefined();
+        });
+
+        it("should include liftItem and joinItem if unordered_list is present", () => {
+            const schemaUl = {
+                ...mockSchema,
+                nodes: {
+                    ...mockSchema.nodes,
+                    ordered_list: undefined,
+                    unordered_list: {},
+                    blockquote: undefined,
+                },
+            } as unknown as Schema;
+            const resultUl = buildMenuItems(schemaUl);
+            expect(resultUl.liftItem).toBeDefined();
+            expect(resultUl.joinUpItem).toBeDefined();
+        });
+
+        it("should include liftItem if blockquote is present", () => {
+            const schemaBq = {
+                ...mockSchema,
+                nodes: {
+                    ...mockSchema.nodes,
+                    ordered_list: undefined,
+                    unordered_list: undefined,
+                    blockquote: {},
+                },
+            } as unknown as Schema;
+            const resultBq = buildMenuItems(schemaBq);
+            expect(resultBq.liftItem).toBeDefined();
+            expect(resultBq.joinUpItem).toBeUndefined();
         });
     });
 
@@ -347,11 +403,17 @@ describe("plugins/menubar/index", () => {
             const emptySchema = {
                 nodes: {},
                 marks: {},
-            };
+            } as unknown as Schema;
 
             expect(() => {
                 buildMenuItems(emptySchema);
             }).not.toThrow();
+            const result = buildMenuItems(emptySchema);
+
+            expect(result.makeParagraph).toBeUndefined();
+            expect(result.makeHead1).toBeUndefined();
+            expect(result.toggleStrong).toBeUndefined();
+            expect(result.toggleEm).toBeUndefined();
         });
 
         it("should handle undefined values in schema", () => {
@@ -364,11 +426,19 @@ describe("plugins/menubar/index", () => {
                     strong: undefined,
                     em: mockMarkType,
                 },
-            };
+            } as unknown as Schema;
 
             expect(() => {
                 buildMenuItems(schemaWithUndefined);
             }).not.toThrow();
+
+            const result = buildMenuItems(schemaWithUndefined);
+
+            expect(result.makeParagraph).toBeUndefined();
+            expect(result.makeHead1).toBeDefined();
+
+            expect(result.toggleStrong).toBeUndefined();
+            expect(result.toggleEm).toBeDefined();
         });
     });
 });

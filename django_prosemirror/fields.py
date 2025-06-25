@@ -2,16 +2,17 @@
 
 import json
 import weakref
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from typing import Any, Self, cast
 
 from django import forms
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 
 from prosemirror import Schema
 
-from django_prosemirror.constants import DEFAULT_CLASSES
+from django_prosemirror.constants import DEFAULT_SETTINGS
 from django_prosemirror.schema import (
     FULL,
     SchemaSpec,
@@ -334,8 +335,8 @@ class ProsemirrorModelField(models.JSONField):
     description = "Prosemirror content stored as JSON"
     schema: Schema
     schema_spec: SchemaSpec
-    classes: dict[str, str] = DEFAULT_CLASSES
-    history: bool
+    classes: Mapping[str, str]
+    history: bool | None
 
     def __init__(
         self,
@@ -346,8 +347,8 @@ class ProsemirrorModelField(models.JSONField):
         *,
         default: Callable[[], ProsemirrorDocument] | None = None,
         schema: SchemaSpec = FULL,
-        classes: dict[str, str] = DEFAULT_CLASSES,
-        history: bool = True,
+        classes: Mapping[str, str] | None = None,
+        history: bool | None = None,
         **kwargs: Any,
     ):
         """Initialize the Prosemirror model field.
@@ -366,9 +367,14 @@ class ProsemirrorModelField(models.JSONField):
             ValidationError: If default callable returns invalid document
         """
         # Construct schema first, before validation
-        self.schema = construct_schema_from_spec(schema, classes)
+        self.classes = (
+            classes
+            or getattr(settings, "DJANGO_PROSEMIRROR_CONFIG", DEFAULT_SETTINGS)[
+                "classes"
+            ]
+        )
+        self.schema = construct_schema_from_spec(schema, self.classes)
         self.schema_spec = schema
-        self.classes = classes
         self.history = history
 
         # Validate default callable if provided
@@ -457,7 +463,7 @@ class ProsemirrorFormField(forms.JSONField):
 
     schema: Schema
     schema_spec: SchemaSpec
-    classes: dict[str, str]
+    classes: Mapping[str, str]
     history: bool
     widget = ProsemirrorWidget
 
@@ -467,8 +473,8 @@ class ProsemirrorFormField(forms.JSONField):
         decoder=None,
         *,
         schema: SchemaSpec = FULL,
-        classes=DEFAULT_CLASSES,
-        history=True,
+        classes: Mapping[str, str] | None = None,
+        history: bool = True,
         **kwargs,
     ):
         """Initialize the Prosemirror form field.
@@ -479,9 +485,14 @@ class ProsemirrorFormField(forms.JSONField):
             schema: Prosemirror schema specification
             **kwargs: Additional field options
         """
-        self.schema = construct_schema_from_spec(schema, classes)
+        self.classes = (
+            classes
+            or getattr(settings, "DJANGO_PROSEMIRROR_CONFIG", DEFAULT_SETTINGS)[
+                "classes"
+            ]
+        )
+        self.schema = construct_schema_from_spec(schema, self.classes)
         self.schema_spec = schema
-        self.classes = classes
         self.history = history
         kwargs["widget"] = self.widget(
             schema=schema, classes=self.classes, history=self.history

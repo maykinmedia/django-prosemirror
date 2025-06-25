@@ -6,7 +6,10 @@ from testapp.models import TestModel
 
 
 class TestForm(forms.Form):
-    heading_only = ProsemirrorFormField(schema=[AllowedNodeType.HEADING])
+    heading_only = ProsemirrorFormField(
+        schema=[AllowedNodeType.HEADING],
+        classes={"paragraph": "HElloooo", "heading": "test"},
+    )
     full_schema = ProsemirrorFormField(schema=FULL)
 
 

@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
-// import DjangoProsemirrorSchema from "./prosemirror-schema";
 import { Mark, Node, Schema, StyleParseRule } from "prosemirror-model";
-import DjangoProsemirrorSchema from "../schema/prosemirror-schema";
-import { DjangoProsemirrorSettings, LanguageCodeEnum } from "../types/types";
+import DjangoProsemirrorSchema from "@/schema/prosemirror-schema";
+import { DjangoProsemirrorSettings, LanguageCodeEnum } from "@/types/types";
+import { SchemaNodesEnum } from "@/schema/choices";
 
 // Helper function for deep comparison of objects
 const deepEqual = (actual: unknown, expected: unknown) => {
@@ -50,9 +50,9 @@ describe("DjangoProsemirrorSchema", () => {
         it("should return all required nodes", () => {
             const requiredNodes = DjangoProsemirrorSchemaCls.getRequiredNodes;
             expect(Object.keys(requiredNodes)).toEqual([
-                "doc",
-                "text",
-                "paragraph",
+                SchemaNodesEnum.DOC,
+                SchemaNodesEnum.TEXT,
+                SchemaNodesEnum.PARAGRAPH,
             ]);
             expect(requiredNodes.doc).toEqual(DjangoProsemirrorSchemaCls.doc);
             expect(requiredNodes.text).toEqual(DjangoProsemirrorSchemaCls.text);
@@ -139,7 +139,7 @@ describe("DjangoProsemirrorSchema", () => {
             expect(imageSpec.draggable).toBe(true);
             expect(imageSpec.attrs).toEqual({
                 src: { validate: "string" },
-                alt: { default: null, validate: "string|null" },
+                alt: { default: "", validate: "string|null" },
                 title: { default: null, validate: "string|null" },
             });
 
@@ -151,7 +151,7 @@ describe("DjangoProsemirrorSchema", () => {
                         alt: "Test image",
                         title: "Test title",
                     };
-                    return attrs[attr];
+                    return attrs[attr as keyof typeof attrs];
                 },
             };
             const parseDOMRule = imageSpec.parseDOM?.[0];
@@ -227,8 +227,8 @@ describe("DjangoProsemirrorSchema", () => {
             ).toEqual(["ol", { start: 5 }, 0]);
         });
 
-        it("should return correct bullet_list node spec", () => {
-            const bulletListSpec = DjangoProsemirrorSchemaCls.bullet_list;
+        it("should return correct unordered_list node spec", () => {
+            const bulletListSpec = DjangoProsemirrorSchemaCls.unordered_list;
             expect(bulletListSpec.content).toBe("list_item+");
             expect(bulletListSpec.group).toBe("block");
             expect(bulletListSpec.parseDOM).toEqual([{ tag: "ul" }]);
@@ -260,7 +260,7 @@ describe("DjangoProsemirrorSchema", () => {
                         href: "https://example.com",
                         title: "Example",
                     };
-                    return attrs[attr];
+                    return attrs[attr as keyof typeof attrs];
                 },
             };
             const parseDOMRule = linkSpec.parseDOM?.[0];
@@ -353,18 +353,18 @@ describe("DjangoProsemirrorSchema", () => {
         it("should return all node specs", () => {
             const nodeSpecs = DjangoProsemirrorSchemaCls.getNodeSpecs;
             const expectedKeys = [
-                "doc",
-                "text",
-                "paragraph",
-                "heading",
-                "blockquote",
-                "image",
-                "ordered_list",
-                "bullet_list",
-                "list_item",
-                "horizontal_rule",
-                "code_block",
-                "hard_break",
+                SchemaNodesEnum.DOC,
+                SchemaNodesEnum.TEXT,
+                SchemaNodesEnum.PARAGRAPH,
+                SchemaNodesEnum.HEADING,
+                SchemaNodesEnum.BLOCKQUOTE,
+                SchemaNodesEnum.IMAGE,
+                SchemaNodesEnum.ORDERED_LIST,
+                SchemaNodesEnum.UNORDERED_LIST,
+                SchemaNodesEnum.LIST_ITEM,
+                SchemaNodesEnum.HORIZONTAL_RULE,
+                SchemaNodesEnum.CODE_BLOCK,
+                SchemaNodesEnum.HARD_BREAK,
             ];
             expect(Object.keys(nodeSpecs)).toEqual(expectedKeys);
         });
@@ -372,12 +372,12 @@ describe("DjangoProsemirrorSchema", () => {
         it("should return all mark specs", () => {
             const markSpecs = DjangoProsemirrorSchemaCls.getMarkSpecs;
             const expectedKeys = [
-                "link",
-                "em",
-                "strong",
-                "code",
-                "strikethrough",
-                "underline",
+                SchemaNodesEnum.LINK,
+                SchemaNodesEnum.ITALIC,
+                SchemaNodesEnum.STRONG,
+                SchemaNodesEnum.CODE,
+                SchemaNodesEnum.STRIKETHROUGH,
+                SchemaNodesEnum.UNDERLINE,
             ];
             expect(Object.keys(markSpecs)).toEqual(expectedKeys);
         });
@@ -385,18 +385,20 @@ describe("DjangoProsemirrorSchema", () => {
         it("should filter node specs correctly", () => {
             const testSettings: DjangoProsemirrorSettings = {
                 ...basicsettings,
-                allowedNodes: ["heading", "blockquote"],
+                allowedNodes: [
+                    SchemaNodesEnum.PARAGRAPH,
+                    SchemaNodesEnum.BLOCKQUOTE,
+                ],
             };
             const testSchema = new DjangoProsemirrorSchema(testSettings);
             const filteredSpecs = testSchema.getFilteredNodeSpecs;
 
             // Should include required nodes plus allowed ones
             const expectedKeys = [
-                "doc",
-                "text",
-                "paragraph",
-                "blockquote",
-                "heading",
+                SchemaNodesEnum.DOC,
+                SchemaNodesEnum.TEXT,
+                SchemaNodesEnum.BLOCKQUOTE,
+                SchemaNodesEnum.PARAGRAPH,
             ];
             expect(Object.keys(filteredSpecs).sort()).toEqual(
                 expectedKeys.sort(),
@@ -406,25 +408,33 @@ describe("DjangoProsemirrorSchema", () => {
         it("should include list_item when list nodes are allowed", () => {
             const testSettings: DjangoProsemirrorSettings = {
                 ...basicsettings,
-                allowedNodes: ["bullet_list"],
+                allowedNodes: [SchemaNodesEnum.UNORDERED_LIST],
             };
             const testSchema = new DjangoProsemirrorSchema(testSettings);
             const filteredSpecs = testSchema.getFilteredNodeSpecs;
 
-            expect(Object.keys(filteredSpecs)).toContain("bullet_list");
-            expect(Object.keys(filteredSpecs)).toContain("list_item");
+            expect(Object.keys(filteredSpecs)).toContain(
+                SchemaNodesEnum.UNORDERED_LIST,
+            );
+            expect(Object.keys(filteredSpecs)).toContain(
+                SchemaNodesEnum.LIST_ITEM,
+            );
         });
 
         it("should include list_item when ordered_list is allowed", () => {
             const testSettings: DjangoProsemirrorSettings = {
                 ...basicsettings,
-                allowedNodes: ["ordered_list"],
+                allowedNodes: [SchemaNodesEnum.ORDERED_LIST],
             };
             const testSchema = new DjangoProsemirrorSchema(testSettings);
             const filteredSpecs = testSchema.getFilteredNodeSpecs;
 
-            expect(Object.keys(filteredSpecs)).toContain("ordered_list");
-            expect(Object.keys(filteredSpecs)).toContain("list_item");
+            expect(Object.keys(filteredSpecs)).toContain(
+                SchemaNodesEnum.ORDERED_LIST,
+            );
+            expect(Object.keys(filteredSpecs)).toContain(
+                SchemaNodesEnum.LIST_ITEM,
+            );
         });
 
         it("should return all specs when empty array is passed to getFilteredNodeSpecs", () => {
@@ -436,28 +446,25 @@ describe("DjangoProsemirrorSchema", () => {
             );
 
             // Check individual specs match by comparing JSON strings to handle functions
-            Object.keys(allSpecs).forEach((key) => {
-                expect(JSON.stringify(filteredSpecs[key])).toEqual(
-                    JSON.stringify(allSpecs[key]),
-                );
+            (Object.keys(allSpecs) as SchemaNodesEnum[]).forEach((key) => {
+                deepEqual(filteredSpecs[key], allSpecs[key]);
             });
         });
 
         it("should filter mark specs correctly", () => {
             const testSettings: DjangoProsemirrorSettings = {
                 ...basicsettings,
-                allowedNodes: ["em", "strong"],
+                allowedNodes: [SchemaNodesEnum.ITALIC, SchemaNodesEnum.STRONG],
             };
             const testSchema = new DjangoProsemirrorSchema(testSettings);
             const filteredSpecs = testSchema.getFilteredMarkSpecs;
 
-            expect(Object.keys(filteredSpecs)).toEqual(["em", "strong"]);
-            expect(JSON.stringify(filteredSpecs.em)).toEqual(
-                JSON.stringify(testSchema.em),
-            );
-            expect(JSON.stringify(filteredSpecs.strong)).toEqual(
-                JSON.stringify(testSchema.strong),
-            );
+            expect(Object.keys(filteredSpecs)).toEqual([
+                SchemaNodesEnum.ITALIC,
+                SchemaNodesEnum.STRONG,
+            ]);
+            deepEqual(filteredSpecs.em, testSchema.em);
+            deepEqual(filteredSpecs.strong, testSchema.strong);
         });
 
         it("should return all mark specs when empty array is passed to getFilteredMarkSpecs", () => {
@@ -469,10 +476,8 @@ describe("DjangoProsemirrorSchema", () => {
             );
 
             // Check individual specs match by comparing JSON strings to handle functions
-            Object.keys(allSpecs).forEach((key) => {
-                expect(JSON.stringify(filteredSpecs[key])).toEqual(
-                    JSON.stringify(allSpecs[key]),
-                );
+            (Object.keys(allSpecs) as SchemaNodesEnum[]).forEach((key) => {
+                deepEqual(filteredSpecs[key], allSpecs[key]);
             });
         });
 
@@ -480,12 +485,12 @@ describe("DjangoProsemirrorSchema", () => {
             const testSettings: DjangoProsemirrorSettings = {
                 ...basicsettings,
                 allowedNodes: [
-                    "heading",
-                    "blockquote",
-                    "bullet_list",
-                    "em",
-                    "strong",
-                    "link",
+                    SchemaNodesEnum.HEADING,
+                    SchemaNodesEnum.BLOCKQUOTE,
+                    SchemaNodesEnum.UNORDERED_LIST,
+                    SchemaNodesEnum.ITALIC,
+                    SchemaNodesEnum.STRONG,
+                    SchemaNodesEnum.LINK,
                 ],
             };
             const testSchema = new DjangoProsemirrorSchema(testSettings);
@@ -497,8 +502,8 @@ describe("DjangoProsemirrorSchema", () => {
             expect(schema.nodes.paragraph).toBeDefined();
             expect(schema.nodes.heading).toBeDefined();
             expect(schema.nodes.blockquote).toBeDefined();
-            expect(schema.nodes.bullet_list).toBeDefined();
-            expect(schema.nodes.list_item).toBeDefined(); // Auto-included with bullet_list
+            expect(schema.nodes.unordered_list).toBeDefined();
+            expect(schema.nodes.list_item).toBeDefined(); // Auto-included with unordered_list
 
             expect(schema.marks.em).toBeDefined();
             expect(schema.marks.strong).toBeDefined();

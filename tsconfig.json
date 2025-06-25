@@ -30,7 +30,7 @@
         /* Module resolution */
         "baseUrl": ".",
         "paths": {
-            "@/*": ["./js/*"]
+            "@/*": ["./frontend/*"]
         },
 
         /* Interop */
@@ -38,6 +38,12 @@
         "esModuleInterop": true,
         "forceConsistentCasingInFileNames": true
     },
-    "include": ["js/**/*.ts", "js/**/*.js", "vite.config.js"],
-    "exclude": ["node_modules", "dist", "js/tests/**/*"]
+    "include": [
+        "frontend/**/*.ts",
+        "frontend/**/*.spec.ts",
+        "frontend/**/*.js",
+        "vite.config.js",
+        "vite-env.d.ts"
+    ],
+    "exclude": ["node_modules", "dist"]
 }

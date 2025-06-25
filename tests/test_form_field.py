@@ -9,7 +9,7 @@ from django.core.exceptions import ValidationError
 import pytest
 from prosemirror import Schema
 
-from django_prosemirror.constants import EMPTY_DOC, DEFAULT_CLASSES
+from django_prosemirror.constants import DEFAULT_SETTINGS, EMPTY_DOC
 from django_prosemirror.exceptions import DjangoProsemirrorException
 from django_prosemirror.fields import ProsemirrorFieldDocument, ProsemirrorFormField
 from django_prosemirror.schema import FULL, AllowedNodeType, construct_schema_from_spec
@@ -217,7 +217,9 @@ class TestProsemirrorFormField:
     def test_full_form_field_workflow(self):
         """Test the complete workflow of form field processing."""
         schema_spec = [AllowedNodeType.STRONG, AllowedNodeType.ITALIC]
-        field = ProsemirrorFormField(schema=schema_spec)
+        field = ProsemirrorFormField(
+            schema=schema_spec, classes=DEFAULT_SETTINGS["classes"]
+        )
 
         # Simulate form input as dict (what comes from JSON parsing)
         input_data = {
@@ -277,18 +279,25 @@ class TestProsemirrorFormField:
         with pytest.raises(
             DjangoProsemirrorException, match="`spec` must be a collection"
         ):
-            ProsemirrorFormField(schema="invalid_string", classes=DEFAULT_CLASSES)
+            ProsemirrorFormField(
+                schema="invalid_string",
+                classes=DEFAULT_SETTINGS["classes"],
+            )
 
     def test_init_with_invalid_schema_wrong_type_raises_exception(self):
         with pytest.raises(
             DjangoProsemirrorException, match="`spec` must be a collection"
         ):
             ProsemirrorFormField(
-                schema=["invalid_string", "another_invalid"], classes=DEFAULT_CLASSES
+                schema=["invalid_string", "another_invalid"],
+                classes=DEFAULT_SETTINGS["classes"],
             )
 
     def test_init_with_invalid_schema_none_raises_exception(self):
         with pytest.raises(
             DjangoProsemirrorException, match="`spec` must be a collection"
         ):
-            ProsemirrorFormField(schema=None, classes=DEFAULT_CLASSES)
+            ProsemirrorFormField(
+                schema=None,
+                classes=DEFAULT_SETTINGS["classes"],
+            )

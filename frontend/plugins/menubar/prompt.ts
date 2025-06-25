@@ -1,9 +1,9 @@
 import { Attrs } from "prosemirror-model";
-import { translate } from "../../i18n/translations";
+import { translate } from "@/i18n/translations";
 
 const prefix = "prompt";
 
-// Convert to react?
+// TODO Convert to react?
 export function openPrompt(options: {
     title: string;
     fields: { [name: string]: Field };
@@ -47,7 +47,6 @@ export function openPrompt(options: {
         title.textContent = options.title;
         title.className = "utrecht-heading-4";
         form.appendChild(title);
-        // form.appendChild(document.createElement("h5")).textContent = options.title;
     }
     domFields.forEach((field) => {
         form.appendChild(document.createElement("div")).appendChild(field);
@@ -156,6 +155,8 @@ export abstract class Field {
 
             /// A cleanup function for field values.
             clean?: (value: unknown) => unknown;
+
+            options?: { value: string; label: string }[];
         },
     ) {}
 

@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { DjangoProsemirror } from "../create";
 import { DjangoProsemirrorSettings, LanguageCodeEnum } from "../types/types";
 import { Node } from "prosemirror-model";
+import { SchemaNodesEnum } from "@/schema/choices";
 
 // Mock DOM environment
 Object.defineProperty(globalThis, "document", {
@@ -104,7 +105,10 @@ describe("DjangoProsemirror", () => {
     describe("Constructor", () => {
         it("should initialize with editor element and settings", () => {
             const settings: DjangoProsemirrorSettings = {
-                allowedNodes: ["heading", "paragraph"],
+                allowedNodes: [
+                    SchemaNodesEnum.HEADING,
+                    SchemaNodesEnum.PARAGRAPH,
+                ],
                 debug: false,
                 language: LanguageCodeEnum.EN,
             };
@@ -118,27 +122,30 @@ describe("DjangoProsemirror", () => {
         });
 
         it("should initialize without settings", () => {
-            const editor = new DjangoProsemirror(mockEditorElement);
+            const editor = new DjangoProsemirror(mockEditorElement, {
+                allowedNodes: [],
+            });
 
             expect(editor.editorElement).toBe(mockEditorElement);
             expect(editor.inputElement).toBe(mockInputElement);
-            expect(editor.settings).toBeUndefined();
+            expect(editor.settings).toBeDefined();
             expect(editor.editorSchema).toBeDefined();
         });
 
         it("should log initialization when debug is enabled", () => {
             const consoleSpy = vi
-                .spyOn(console, "log")
+                .spyOn(console, "debug")
                 .mockImplementation(() => {});
             const settings: DjangoProsemirrorSettings = {
-                allowedNodes: ["heading"],
+                allowedNodes: [SchemaNodesEnum.HEADING],
                 debug: true,
             };
 
             new DjangoProsemirror(mockEditorElement, settings);
 
             expect(consoleSpy).toHaveBeenCalledWith(
-                "INITIALIZING PROSE_MIRROR",
+                "%cINITIALIZING DJANGO_PROSE_MIRROR",
+                "color: blue; font-weight: bold; font-size: 1.2rem;",
             );
             consoleSpy.mockRestore();
         });
@@ -148,11 +155,9 @@ describe("DjangoProsemirror", () => {
         let editor: DjangoProsemirror;
 
         beforeEach(() => {
-            editor = new DjangoProsemirror(mockEditorElement);
-        });
-
-        it("should return editor id from input dataset", () => {
-            expect(editor.editorId).toBe("test-id");
+            editor = new DjangoProsemirror(mockEditorElement, {
+                allowedNodes: [],
+            });
         });
 
         it("should return input element from DOM", () => {
@@ -165,7 +170,9 @@ describe("DjangoProsemirror", () => {
         let editor: DjangoProsemirror;
 
         beforeEach(() => {
-            editor = new DjangoProsemirror(mockEditorElement);
+            editor = new DjangoProsemirror(mockEditorElement, {
+                allowedNodes: [],
+            });
         });
 
         it("should parse JSON from input value when available", () => {
@@ -198,7 +205,7 @@ describe("DjangoProsemirror", () => {
                 .spyOn(console, "warn")
                 .mockImplementation(() => {});
             const settings: DjangoProsemirrorSettings = {
-                allowedNodes: ["heading"],
+                allowedNodes: [SchemaNodesEnum.HEADING],
                 debug: true,
             };
             const editor = new DjangoProsemirror(mockEditorElement, settings);
@@ -219,7 +226,9 @@ describe("DjangoProsemirror", () => {
         let editor: DjangoProsemirror;
 
         beforeEach(() => {
-            editor = new DjangoProsemirror(mockEditorElement);
+            editor = new DjangoProsemirror(mockEditorElement, {
+                allowedNodes: [],
+            });
         });
 
         it("should update input value with document JSON", () => {
@@ -238,7 +247,7 @@ describe("DjangoProsemirror", () => {
                 .spyOn(console, "debug")
                 .mockImplementation(() => {});
             const settings: DjangoProsemirrorSettings = {
-                allowedNodes: ["heading"],
+                allowedNodes: [SchemaNodesEnum.HEADING],
                 debug: true,
             };
             const editor = new DjangoProsemirror(mockEditorElement, settings);
@@ -267,7 +276,7 @@ describe("DjangoProsemirror", () => {
             document.getElementById = vi.fn().mockReturnValue(null);
 
             expect(() => {
-                new DjangoProsemirror(mockEditorElement);
+                new DjangoProsemirror(mockEditorElement, { allowedNodes: [] });
             }).toThrow(
                 "You must specify an input element to hold the editor state",
             );
@@ -275,7 +284,9 @@ describe("DjangoProsemirror", () => {
 
         it("should throw error when editor element is null", () => {
             expect(() => {
-                new DjangoProsemirror(null as unknown as HTMLDivElement);
+                new DjangoProsemirror(null as unknown as HTMLDivElement, {
+                    allowedNodes: [],
+                });
             }).toThrow(
                 "You must specify an element in which to mount prose mirror",
             );
@@ -286,7 +297,7 @@ describe("DjangoProsemirror", () => {
                 .spyOn(console, "debug")
                 .mockImplementation(() => {});
             const settings: DjangoProsemirrorSettings = {
-                allowedNodes: ["heading"],
+                allowedNodes: [SchemaNodesEnum.HEADING],
                 debug: true,
             };
 
@@ -305,7 +316,7 @@ describe("DjangoProsemirror", () => {
 
         it("should create editor view with proper configuration", () => {
             expect(() => {
-                new DjangoProsemirror(mockEditorElement);
+                new DjangoProsemirror(mockEditorElement, { allowedNodes: [] });
             }).not.toThrow();
         });
     });
@@ -315,7 +326,9 @@ describe("DjangoProsemirror", () => {
             const editorWithoutDataset = {} as HTMLDivElement;
 
             expect(() => {
-                new DjangoProsemirror(editorWithoutDataset);
+                new DjangoProsemirror(editorWithoutDataset, {
+                    allowedNodes: [],
+                });
             }).toThrow(); // Should throw when input element is not found
         });
     });

@@ -1,7 +1,7 @@
 """Prosemirror schema definitions and validation functions."""
 
 import enum
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from typing import TypeAlias
 
 from django.core.exceptions import ValidationError
@@ -10,7 +10,7 @@ from prosemirror.model import Node, Schema
 from prosemirror.model.schema import MarkSpec, NodeSpec
 from prosemirror.utils import JSONDict
 
-from django_prosemirror.constants import DEFAULT_CLASSES
+from django_prosemirror.constants import DEFAULT_SETTINGS
 from django_prosemirror.exceptions import DjangoProsemirrorException
 
 ProsemirrorDocument: TypeAlias = JSONDict
@@ -66,7 +66,7 @@ def pre_dom(cls, code_cls):
 br_dom = ["br"]
 
 
-def nodes(classes: dict[str, str]) -> dict[str, NodeSpec]:
+def nodes(classes: Mapping[str, str]) -> dict[str, NodeSpec]:
     return {
         "doc": {"content": "block+"},
         "paragraph": {
@@ -125,7 +125,7 @@ def nodes(classes: dict[str, str]) -> dict[str, NodeSpec]:
         "text": {"group": "inline"},
         "image": {
             "inline": True,
-            "attrs": {"src": {}, "alt": {"default": None}, "title": {"default": None}},
+            "attrs": {"src": {}, "alt": {"default": ""}, "title": {"default": None}},
             "group": "inline",
             "draggable": True,
             "parseDOM": [
@@ -167,7 +167,7 @@ def code_dom(cls):
     return ["code", add_cls({}, cls), 0]
 
 
-def marks(classes: dict[str, str]) -> dict[str, MarkSpec]:
+def marks(classes: Mapping[str, str]) -> dict[str, MarkSpec]:
     return {
         "link": {
             "attrs": {"href": {}, "title": {"default": None}},
@@ -198,7 +198,7 @@ def marks(classes: dict[str, str]) -> dict[str, MarkSpec]:
 
 
 def construct_schema_from_spec(
-    spec: SchemaSpec, classes: dict[str, str] = DEFAULT_CLASSES
+    spec: SchemaSpec, classes: Mapping[str, str] = DEFAULT_SETTINGS["classes"]
 ):
     """Construct a Prosemirror Schema from a specification of allowed node types."""
     msg = f"`spec` must be a collection of {AllowedNodeType.__name__} elements"

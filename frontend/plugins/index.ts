@@ -6,8 +6,9 @@ import { gapCursor } from "prosemirror-gapcursor";
 import { menuBar } from "prosemirror-menu";
 import { Schema } from "prosemirror-model";
 import { buildInputRules, buildKeymap } from "prosemirror-example-setup";
-import { DjangoProsemirrorSettings } from "../types/types";
+import { DjangoProsemirrorSettings } from "@/types/types";
 import { buildMenuItems } from "./menubar";
+import { Plugin } from "prosemirror-state";
 
 export interface DjangoProsemirrorSetup {
     /** The model schema of the editor. */
@@ -28,7 +29,11 @@ export interface DjangoProsemirrorSetup {
 export function getDjangoProsemirrorPlugins(
     schema: Schema,
     settings?: DjangoProsemirrorSettings,
-) {
+): (Plugin & {
+    type?: string;
+    config?: { content: unknown };
+    schema?: unknown;
+})[] {
     const plugins = [
         /**
          * Input rules for smart quotes and creating the block types in the schema

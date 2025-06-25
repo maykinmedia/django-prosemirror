@@ -9,8 +9,8 @@
         "type-check": "tsc --noEmit",
         "type-check:watch": "tsc --noEmit --watch",
         "lint": "eslint .",
-        "format": "prettier --write js/",
-        "format:check": "prettier --check js/"
+        "format": "prettier --write frontend/",
+        "format:check": "prettier --check frontend/"
     },
     "devDependencies": {
         "@vitest/coverage-v8": "^3.2.4",

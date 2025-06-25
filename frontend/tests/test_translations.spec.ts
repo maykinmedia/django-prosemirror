@@ -1,7 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { getTranslations, translate } from "../i18n/translations";
+import { getTranslations, translate } from "@/i18n/translations";
 
-import { LanguageCodeEnum } from "../types/types";
+import {
+    DjangoProsemirrorTranslations,
+    LanguageCodeEnum,
+} from "../types/types";
 import { en } from "../i18n/locales/en";
 import { nl } from "../i18n/locales/nl";
 
@@ -55,13 +58,13 @@ describe("i18n/translations", () => {
             enValues.forEach((value) => {
                 expect(value).toBeTruthy();
                 expect(typeof value).toBe("string");
-                expect(value.trim()).not.toBe("");
+                expect((value as string).trim()).not.toBe("");
             });
 
             nlValues.forEach((value) => {
                 expect(value).toBeTruthy();
                 expect(typeof value).toBe("string");
-                expect(value.trim()).not.toBe("");
+                expect((value as string).trim()).not.toBe("");
             });
         });
     });
@@ -168,15 +171,16 @@ describe("i18n/translations", () => {
 
     describe("Translation completeness", () => {
         it("should have translations for all common editor operations", () => {
-            const commonOperations = [
-                "Undo last change",
-                "Redo last undone change",
-                "Select parent node",
-                "Insert horizontal rule",
-                "Change to paragraph",
-                "Change to code block",
-                "Wrap in block quote",
-            ];
+            const commonOperations: Array<keyof DjangoProsemirrorTranslations> =
+                [
+                    "Undo last change",
+                    "Redo last undone change",
+                    "Select parent node",
+                    "Insert horizontal rule",
+                    "Change to paragraph",
+                    "Change to code block",
+                    "Wrap in block quote",
+                ];
 
             commonOperations.forEach((operation) => {
                 const enTranslation = en[operation];

@@ -6,9 +6,11 @@ import {
     NodeSpec,
     ParseRule,
     Schema,
+    SchemaSpec,
     TagParseRule,
 } from "prosemirror-model";
-import { DjangoProsemirrorSettings } from "../types/types";
+import { DjangoProsemirrorSettings } from "@/types/types";
+import { SchemaNodesEnum } from "./choices";
 
 const addCls = (obj: Record<string, unknown>, cls?: string) => {
     if (cls) {
@@ -17,6 +19,14 @@ const addCls = (obj: Record<string, unknown>, cls?: string) => {
     }
     return Object.keys(obj).length > 0 ? obj : undefined;
 };
+
+// type MySchemaNodes = {
+//     [K in SchemaNodesEnum]?: NodeSpec;
+// };
+
+// type Partial<Record<SchemaNodesEnum, MarkSpec>> = {
+//     [K in SchemaNodesEnum]?: MarkSpec;
+// };
 
 // Type implementations to deal with the custom toDOM and parseDOM functions.
 type CustomNodeSpec = Omit<NodeSpec, "toDOM"> & {
@@ -143,7 +153,6 @@ class DjangoProsemirrorSchema {
 
     /**
      * A code listing. Disallows marks or non-text inline nodes by default.
-     * @deprecated until backend validates this node.
      * @example <pre><code>{ content }</code></pre>
      */
     get code_block(): CustomNodeSpec {
@@ -184,7 +193,7 @@ class DjangoProsemirrorSchema {
             inline: true,
             attrs: {
                 src: { validate: "string" },
-                alt: { default: null, validate: "string|null" },
+                alt: { default: "", validate: "string|null" },
                 title: { default: null, validate: "string|null" },
             },
             group: "inline",
@@ -277,7 +286,7 @@ class DjangoProsemirrorSchema {
      * A bullet/unordered list.
      * @example <ul>{ content }</ul>
      */
-    get bullet_list(): CustomNodeSpec {
+    get unordered_list(): CustomNodeSpec {
         const className = this.settings?.classNames?.unordered_list;
         return {
             content: "list_item+",
@@ -372,7 +381,6 @@ class DjangoProsemirrorSchema {
 
     /**
      * An underline mark. Rendered as an `<u>` element.
-     * @deprecated until backend validates this node.
      * @example <u>{ content }</u>
      */
     get underline(): CustomMarkSpec {
@@ -418,7 +426,6 @@ class DjangoProsemirrorSchema {
 
     /**
      * Code font mark.
-     * @deprecated until backend validates this node.
      * @example <code>{ content }</code>
      */
     get code(): CustomMarkSpec {
@@ -435,7 +442,6 @@ class DjangoProsemirrorSchema {
 
     /**
      * A strikethrough mark. Rendered as `<s>` element.
-     * @deprecated until backend validates this node.
      * @example <s>{ content }</s>
      */
     get strikethrough(): CustomMarkSpec {
@@ -456,7 +462,7 @@ class DjangoProsemirrorSchema {
     /**
      * These nodes are required in every Prosemirror editor.
      */
-    get getRequiredNodes(): Record<string, NodeSpec> {
+    get getRequiredNodes(): Partial<Record<SchemaNodesEnum, NodeSpec>> {
         return {
             doc: this.doc,
             text: this.text,
@@ -465,14 +471,14 @@ class DjangoProsemirrorSchema {
     }
 
     // Get the specs of all the nodes.
-    get getNodeSpecs(): Record<string, NodeSpec> {
+    get getNodeSpecs(): Partial<Record<SchemaNodesEnum, NodeSpec>> {
         return {
             ...this.getRequiredNodes,
             heading: this.heading,
             blockquote: this.blockquote,
             image: this.image,
             ordered_list: this.ordered_list,
-            bullet_list: this.bullet_list,
+            unordered_list: this.unordered_list,
             list_item: this.list_item,
             horizontal_rule: this.horizontal_rule,
             code_block: this.code_block,
@@ -480,16 +486,17 @@ class DjangoProsemirrorSchema {
         };
     }
 
-    get getFilteredNodeSpecs(): Record<string, NodeSpec> {
+    get getFilteredNodeSpecs(): Partial<Record<SchemaNodesEnum, NodeSpec>> {
         if (!this.settings?.allowedNodes?.length) return this.getNodeSpecs;
         // Get only the specs of the allowed nodes - start with required nodes.
         return Object.entries(this.getNodeSpecs).reduce(
-            (acc, [key, value]) => {
+            (acc, cur) => {
+                const [key, value] = cur as [SchemaNodesEnum, NodeSpec];
                 const isRequired =
                     key === "doc" || key === "text" || key === "paragraph";
                 const isIncluded = this.settings?.allowedNodes.includes(key);
                 const isListKey =
-                    key === "bullet_list" || key === "ordered_list";
+                    key === "unordered_list" || key === "ordered_list";
 
                 // Always include required nodes
                 if (isRequired) {
@@ -504,12 +511,12 @@ class DjangoProsemirrorSchema {
                 }
                 return acc;
             },
-            {} as Record<string, NodeSpec>,
+            {} as Partial<Record<SchemaNodesEnum, NodeSpec>>,
         );
     }
 
     // Helper method to get all mark specs
-    get getMarkSpecs(): Record<string, MarkSpec> {
+    get getMarkSpecs(): Partial<Record<SchemaNodesEnum, MarkSpec>> {
         return {
             link: this.link,
             em: this.em,
@@ -520,15 +527,15 @@ class DjangoProsemirrorSchema {
         };
     }
 
-    get getFilteredMarkSpecs(): Record<string, MarkSpec> {
+    get getFilteredMarkSpecs(): Partial<Record<SchemaNodesEnum, MarkSpec>> {
         if (!this.settings?.allowedNodes?.length) return this.getMarkSpecs;
         return Object.entries(this.getMarkSpecs).reduce(
-            (acc, [key, value]) => {
-                if (this.settings?.allowedNodes.includes(key))
-                    (acc as Record<string, MarkSpec>)[key] = value;
+            (acc, cur) => {
+                const [key, value] = cur as [SchemaNodesEnum, MarkSpec];
+                if (this.settings?.allowedNodes.includes(key)) acc[key] = value;
                 return acc;
             },
-            {} as Record<string, MarkSpec>,
+            {} as Partial<Record<SchemaNodesEnum, MarkSpec>>,
         );
     }
 
@@ -536,7 +543,7 @@ class DjangoProsemirrorSchema {
         return new Schema({
             marks: this.getFilteredMarkSpecs,
             nodes: this.getFilteredNodeSpecs,
-        });
+        } as SchemaSpec);
     }
 }
 
