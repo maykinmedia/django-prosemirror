@@ -1,0 +1,98 @@
+.prompt {
+  background-color: var(--color-white);
+  padding: var(--spacing-large);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--color-gray-lighter);
+  position: absolute;
+
+  @media (max-width: 480px) {
+    padding: var(--spacing-large);
+
+    &-buttons {
+      flex-direction: column;
+    }
+  }
+
+  * {
+    padding: 0;
+    margin: 0;
+  }
+
+  form > div:not(:last-of-type) {
+    margin-bottom: var(--spacing-medium);
+  }
+
+  input[type="text"] {
+    padding: var(--spacing-large) var(--spacing-large);
+    border: 1px solid var(--color-gray-light);
+    border-radius: var(--border-radius);
+    outline: none;
+    font-size: var(--font-size-body-small);
+    color: var(--color-black);
+    transition: all 200ms ease;
+    font-family: inherit;
+    min-height: unset !important;
+
+    &:focus {
+      background-color: var(--color-white);
+      border-color: var(--color-gray-lighter);
+    }
+
+    &::placeholder {
+      color: rgba(0, 0, 0, 0.6);
+      font-weight: 400;
+    }
+  }
+
+  &-buttons {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: var(--spacing-medium);
+    gap: var(--spacing-large);
+  }
+
+  button {
+    padding: var(--spacing-medium) var(--spacing-extra-large);
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: var(--font-size-body-small);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 200ms ease;
+    font-family: inherit;
+    position: relative;
+    overflow: hidden;
+  }
+
+  &-submit {
+    background-color: var(--color-black);
+    color: var(--color-white);
+
+    &:hover {
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+
+  &-cancel {
+    background-color: var(--color-white);
+    color: var(--color-black);
+
+    &:hover {
+      background-color: var(--color-gray-light);
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: var(--transform-effect-active);
+    }
+  }
+
+  &-invalid {
+    margin-left: var(--spacing-large);
+    font-size: var(--font-size-body-small);
+  }
+}

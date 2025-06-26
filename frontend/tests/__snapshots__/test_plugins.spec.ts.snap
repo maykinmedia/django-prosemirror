@@ -1,0 +1,386 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`plugins/index > getDjangoProsemirrorPlugins > should create menu bar with correct content structure 1`] = `
+{
+  "config": {
+    "content": [
+      [
+        {
+          "title": "Bold",
+        },
+        {
+          "title": "Italic",
+        },
+      ],
+      [
+        {
+          "title": "Heading",
+        },
+      ],
+    ],
+  },
+  "type": "menuBar",
+}
+`;
+
+exports[`plugins/index > getDjangoProsemirrorPlugins > should create menu bar with correct content structure 2`] = `
+[
+  [
+    {
+      "title": "Bold",
+    },
+    {
+      "title": "Italic",
+    },
+  ],
+  [
+    {
+      "title": "Heading",
+    },
+  ],
+]
+`;
+
+exports[`plugins/index > getDjangoProsemirrorPlugins > should include drop cursor plugin 1`] = `
+{
+  "type": "dropCursor",
+}
+`;
+
+exports[`plugins/index > getDjangoProsemirrorPlugins > should include gap cursor plugin 1`] = `
+{
+  "type": "gapCursor",
+}
+`;
+
+exports[`plugins/index > getDjangoProsemirrorPlugins > should include history plugin 1`] = `
+{
+  "type": "history",
+}
+`;
+
+exports[`plugins/index > getDjangoProsemirrorPlugins > should include input rules plugin 1`] = `
+{
+  "schema": {
+    "marks": {
+      "em": {
+        "name": "em",
+      },
+      "strong": {
+        "name": "strong",
+      },
+    },
+    "nodes": {
+      "doc": {
+        "name": "doc",
+      },
+      "paragraph": {
+        "name": "paragraph",
+      },
+      "text": {
+        "name": "text",
+      },
+    },
+  },
+  "type": "inputRules",
+}
+`;
+
+exports[`plugins/index > getDjangoProsemirrorPlugins > should include menu bar plugin 1`] = `
+{
+  "config": {
+    "content": [
+      [
+        {
+          "title": "Bold",
+        },
+        {
+          "title": "Italic",
+        },
+      ],
+      [
+        {
+          "title": "Heading",
+        },
+      ],
+    ],
+  },
+  "type": "menuBar",
+}
+`;
+
+exports[`plugins/index > getDjangoProsemirrorPlugins > should pass default history setting when not specified 1`] = `
+[
+  {
+    "schema": {
+      "marks": {
+        "em": {
+          "name": "em",
+        },
+        "strong": {
+          "name": "strong",
+        },
+      },
+      "nodes": {
+        "doc": {
+          "name": "doc",
+        },
+        "paragraph": {
+          "name": "paragraph",
+        },
+        "text": {
+          "name": "text",
+        },
+      },
+    },
+    "type": "inputRules",
+  },
+  {
+    "keymap": {
+      "Mod-b": "toggleStrong",
+      "schema": {
+        "marks": {
+          "em": {
+            "name": "em",
+          },
+          "strong": {
+            "name": "strong",
+          },
+        },
+        "nodes": {
+          "doc": {
+            "name": "doc",
+          },
+          "paragraph": {
+            "name": "paragraph",
+          },
+          "text": {
+            "name": "text",
+          },
+        },
+      },
+    },
+    "type": "keymap",
+  },
+  {
+    "keymap": {
+      "Mod-y": "redo",
+      "Mod-z": "undo",
+    },
+    "type": "keymap",
+  },
+  {
+    "type": "dropCursor",
+  },
+  {
+    "type": "gapCursor",
+  },
+  {
+    "config": {
+      "content": [
+        [
+          {
+            "title": "Bold",
+          },
+          {
+            "title": "Italic",
+          },
+        ],
+        [
+          {
+            "title": "Heading",
+          },
+        ],
+      ],
+    },
+    "type": "menuBar",
+  },
+  {
+    "type": "history",
+  },
+]
+`;
+
+exports[`plugins/index > getDjangoProsemirrorPlugins > should pass settings to buildMenuItems 1`] = `
+[
+  {
+    "schema": {
+      "marks": {
+        "em": {
+          "name": "em",
+        },
+        "strong": {
+          "name": "strong",
+        },
+      },
+      "nodes": {
+        "doc": {
+          "name": "doc",
+        },
+        "paragraph": {
+          "name": "paragraph",
+        },
+        "text": {
+          "name": "text",
+        },
+      },
+    },
+    "type": "inputRules",
+  },
+  {
+    "keymap": {
+      "Mod-b": "toggleStrong",
+      "schema": {
+        "marks": {
+          "em": {
+            "name": "em",
+          },
+          "strong": {
+            "name": "strong",
+          },
+        },
+        "nodes": {
+          "doc": {
+            "name": "doc",
+          },
+          "paragraph": {
+            "name": "paragraph",
+          },
+          "text": {
+            "name": "text",
+          },
+        },
+      },
+    },
+    "type": "keymap",
+  },
+  {
+    "keymap": {
+      "Mod-y": "redo",
+      "Mod-z": "undo",
+    },
+    "type": "keymap",
+  },
+  {
+    "type": "dropCursor",
+  },
+  {
+    "type": "gapCursor",
+  },
+  {
+    "config": {
+      "content": [
+        [
+          {
+            "title": "Bold",
+          },
+          {
+            "title": "Italic",
+          },
+        ],
+        [
+          {
+            "title": "Heading",
+          },
+        ],
+      ],
+    },
+    "type": "menuBar",
+  },
+  {
+    "type": "history",
+  },
+]
+`;
+
+exports[`plugins/index > getDjangoProsemirrorPlugins > should return array of plugins with default settings 1`] = `
+[
+  {
+    "schema": {
+      "marks": {
+        "em": {
+          "name": "em",
+        },
+        "strong": {
+          "name": "strong",
+        },
+      },
+      "nodes": {
+        "doc": {
+          "name": "doc",
+        },
+        "paragraph": {
+          "name": "paragraph",
+        },
+        "text": {
+          "name": "text",
+        },
+      },
+    },
+    "type": "inputRules",
+  },
+  {
+    "keymap": {
+      "Mod-b": "toggleStrong",
+      "schema": {
+        "marks": {
+          "em": {
+            "name": "em",
+          },
+          "strong": {
+            "name": "strong",
+          },
+        },
+        "nodes": {
+          "doc": {
+            "name": "doc",
+          },
+          "paragraph": {
+            "name": "paragraph",
+          },
+          "text": {
+            "name": "text",
+          },
+        },
+      },
+    },
+    "type": "keymap",
+  },
+  {
+    "keymap": {
+      "Mod-y": "redo",
+      "Mod-z": "undo",
+    },
+    "type": "keymap",
+  },
+  {
+    "type": "dropCursor",
+  },
+  {
+    "type": "gapCursor",
+  },
+  {
+    "config": {
+      "content": [
+        [
+          {
+            "title": "Bold",
+          },
+          {
+            "title": "Italic",
+          },
+        ],
+        [
+          {
+            "title": "Heading",
+          },
+        ],
+      ],
+    },
+    "type": "menuBar",
+  },
+  {
+    "type": "history",
+  },
+]
+`;

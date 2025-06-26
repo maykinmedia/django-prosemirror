@@ -56,3 +56,19 @@ STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "static"
 
 ROOT_URLCONF = "testapp.urls"
+
+DJANGO_PROSEMIRROR_CONFIG = {
+    "classes": {
+        "paragraph": "setting",
+        "heading": "setting",
+        "image": "setting",
+        "link": "setting",
+        "blockquote": "setting",
+        "code_block": "setting",
+        "code": "setting",
+        "ordered_list": "setting",
+        "unordered_list": "setting",
+        "list_item": "setting",
+        "horizontal_rule": "setting",
+    }
+}

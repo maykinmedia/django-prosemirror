@@ -1,0 +1,87 @@
+.form-row {
+  overflow: visible;
+
+  .ProseMirror-menubar form h5 {
+    text-transform: inherit;
+    font-size: inherit;
+    color: inherit;
+    letter-spacing: inherit;
+    padding: 0;
+  }
+
+  input[type="text"] {
+    background-color: transparent;
+  }
+
+  pre,
+  code {
+    overflow-x: auto;
+  }
+}
+
+.module .editor,
+.readonly {
+  p,
+  ul,
+  h3,
+  h4,
+  dl {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  h3 {
+    margin-top: 0;
+  }
+
+  :not(h1, h2, h3, h4, h5, h6) + :is(h1, h2, h3, h4, h5, h6) {
+    margin-top: var(--row-height-small);
+  }
+
+  :is(h1, h2, h3, h4, h5, h6) + :is(h1, h2, h3, h4, h5, h6) {
+    margin-top: 0;
+  }
+
+  // Only not in a blockquote.
+
+  :not(blockquote) > p + h1,
+  :not(blockquote) > p + h2,
+  :not(blockquote) > p + h3 {
+    margin-top: var(--gutter-width);
+  }
+
+  // Each heading that is not placed after an element that can't be a heading.
+  :not(blockquote) > p + h4,
+  :not(blockquote) > p + h5,
+  :not(blockquote) > p + heading-6 {
+    margin-top: var(--row-height-small);
+  }
+
+  h2 {
+    background-color: transparent;
+    padding: 0;
+    color: inherit;
+    font-size: var(--utrecht-heading-2-font-size, revert);
+    font-weight: var(
+      --utrecht-heading-2-font-weight,
+      var(--utrecht-heading-font-weight, bold)
+    );
+  }
+
+  h4 {
+    padding: 0;
+  }
+  h5 {
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  input[type="text"] {
+    padding: var(--spacing-large) var(--spacing-large);
+    border: 1px solid var(--color-gray-light);
+  }
+
+  blockquote {
+    margin-left: 0;
+  }
+}
