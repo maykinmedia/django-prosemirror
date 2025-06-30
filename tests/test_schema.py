@@ -57,6 +57,9 @@ class TestSchemaConstruction:
             "code_block",
             "image",
             "hard_break",
+            "ordered_list",
+            "list_item",
+            "unordered_list",
         }
         expected_marks = {"link", "em", "strong", "code"}
 

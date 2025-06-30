@@ -33,6 +33,9 @@ class AllowedNodeType(enum.Enum):
     HARD_BREAK = "hard_break"
     CODE = "code"
     CODE_BLOCK = "code_block"
+    UNORDERED_LIST = "unordered_list"
+    ORDERED_LIST = "ordered_list"
+    LIST_ITEM = "list_item"
 
 
 SchemaSpec: TypeAlias = Iterable[AllowedNodeType]
@@ -61,6 +64,18 @@ def hr_dom(cls):
 
 def pre_dom(cls, code_cls):
     return ["pre", add_cls({}, cls), code_dom(code_cls)]
+
+
+def ul_dom(cls):
+    return ["ul", add_cls({}, cls), 0]
+
+
+def ol_dom(cls):
+    return ["ol", add_cls({}, cls), 0]
+
+
+def li_dom(cls):
+    return ["li", add_cls({}, cls), 0]
 
 
 br_dom = ["br"]
@@ -155,6 +170,24 @@ def nodes(classes: Mapping[str, str]) -> dict[str, NodeSpec]:
             "selectable": False,
             "parseDOM": [{"tag": "br"}],
             "toDOM": lambda _: br_dom,
+        },
+        "unordered_list": {
+            "content": "list_item+",
+            "group": "block",
+            "parseDOM": [{"tag": "ul"}],
+            "toDOM": lambda _: ul_dom(classes.get("unordered_list", "")),
+        },
+        "ordered_list": {
+            "content": "list_item+",
+            "group": "block",
+            "parseDOM": [{"tag": "ol"}],
+            "toDOM": lambda _: ol_dom(classes.get("ordered_list", "")),
+        },
+        "list_item": {
+            "content": "paragraph block*",
+            "parseDOM": [{"tag": "li"}],
+            "toDOM": lambda _: li_dom(classes.get("list_item", "")),
+            "defining": True,
         },
     }
 
