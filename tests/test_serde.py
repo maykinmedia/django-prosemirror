@@ -341,7 +341,7 @@ class TestHtmlToDoc:
                                     "type": "link",
                                     "attrs": {
                                         "href": "https://example.com",
-                                        "title": None,
+                                        "title": "Example",
                                     },
                                 }
                             ],
