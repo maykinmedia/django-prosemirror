@@ -14,15 +14,21 @@ class TestDocToHtml:
 
         expected_html = (
             "<h1>Main Title</h1><h2>Subtitle</h2>"
-            "<p>This is a paragraph with <strong>bold text</strong>, "
-            "<em>italic text</em>, and <code>inline code</code>. "
-            'Here&#x27;s a <a href="https://example.com" title="Example">link</a>.</p>'
+            "<p>This paragraph includes all marks: <strong>bold</strong>, "
+            "<em>italic</em>, <u>underlined</u>, <s>strikethrough</s>, "
+            "<code>inline code</code>, and "
+            '<a href="https://example.com" title="Example">link</a>.</p>'
             "<blockquote><p>This is a quoted paragraph.</p></blockquote>"
             "<pre><code>function hello() {\n  console.log(&#x27;Hello, world!&#x27;)"
             ";\n}</code></pre>"
             '<p>Here&#x27;s an image: <img src="https://example.com/image.jpg" '
             'alt="Example image" title="An example image"><br>Text after line break.'
-            "</p><hr><p>This document contains all node types.</p>"
+            "</p>"
+            "<ul><li><p>First bullet point</p></li>"
+            "<li><p>Second bullet point</p></li></ul>"
+            "<ol><li><p>First numbered item</p></li>"
+            "<li><p>Second numbered item</p></li></ol>"
+            "<hr><p>This document contains all node and mark types.</p>"
         )
 
         assert html == expected_html

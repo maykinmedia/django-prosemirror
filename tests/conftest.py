@@ -30,25 +30,37 @@ def full_document() -> ProsemirrorDocument:
                 "attrs": {"level": 2},
                 "content": [{"type": "text", "text": "Subtitle"}],
             },
-            # Paragraph with various marks
+            # Paragraph with various marks including all mark types
             {
                 "type": "paragraph",
                 "content": [
-                    {"type": "text", "text": "This is a paragraph with "},
+                    {"type": "text", "text": "This paragraph includes all marks: "},
                     {
                         "type": "text",
                         "marks": [{"type": "strong"}],
-                        "text": "bold text",
+                        "text": "bold",
                     },
                     {"type": "text", "text": ", "},
-                    {"type": "text", "marks": [{"type": "em"}], "text": "italic text"},
-                    {"type": "text", "text": ", and "},
+                    {"type": "text", "marks": [{"type": "em"}], "text": "italic"},
+                    {"type": "text", "text": ", "},
+                    {
+                        "type": "text",
+                        "marks": [{"type": "underline"}],
+                        "text": "underlined",
+                    },
+                    {"type": "text", "text": ", "},
+                    {
+                        "type": "text",
+                        "marks": [{"type": "strikethrough"}],
+                        "text": "strikethrough",
+                    },
+                    {"type": "text", "text": ", "},
                     {
                         "type": "text",
                         "marks": [{"type": "code"}],
                         "text": "inline code",
                     },
-                    {"type": "text", "text": ". Here's a "},
+                    {"type": "text", "text": ", and "},
                     {
                         "type": "text",
                         "marks": [
@@ -106,13 +118,72 @@ def full_document() -> ProsemirrorDocument:
                     {"type": "text", "text": "Text after line break."},
                 ],
             },
+            # Unordered list
+            {
+                "type": "unordered_list",
+                "content": [
+                    {
+                        "type": "list_item",
+                        "content": [
+                            {
+                                "type": "paragraph",
+                                "content": [
+                                    {"type": "text", "text": "First bullet point"}
+                                ],
+                            }
+                        ],
+                    },
+                    {
+                        "type": "list_item",
+                        "content": [
+                            {
+                                "type": "paragraph",
+                                "content": [
+                                    {"type": "text", "text": "Second bullet point"}
+                                ],
+                            }
+                        ],
+                    },
+                ],
+            },
+            # Ordered list
+            {
+                "type": "ordered_list",
+                "content": [
+                    {
+                        "type": "list_item",
+                        "content": [
+                            {
+                                "type": "paragraph",
+                                "content": [
+                                    {"type": "text", "text": "First numbered item"}
+                                ],
+                            }
+                        ],
+                    },
+                    {
+                        "type": "list_item",
+                        "content": [
+                            {
+                                "type": "paragraph",
+                                "content": [
+                                    {"type": "text", "text": "Second numbered item"}
+                                ],
+                            }
+                        ],
+                    },
+                ],
+            },
             # Horizontal rule
             {"type": "horizontal_rule"},
             # Final paragraph
             {
                 "type": "paragraph",
                 "content": [
-                    {"type": "text", "text": "This document contains all node types."}
+                    {
+                        "type": "text",
+                        "text": "This document contains all node and mark types.",
+                    }
                 ],
             },
         ],
