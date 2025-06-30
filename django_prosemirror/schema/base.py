@@ -26,7 +26,7 @@ class ClassMapping:
             attrs = attrs.copy() if attrs else {}
             attrs["class"] = class_name
             return attrs
-        return attrs if attrs else {}
+        return attrs or {}
 
 
 class NodeDefinition(ABC):

@@ -231,13 +231,13 @@ class TestProsemirrorFormField:
                         {"type": "text", "text": "Normal "},
                         {
                             "type": "text",
-                            "marks": [{"type": "strong", "attrs": {}}],
+                            "marks": [{"type": "strong"}],
                             "text": "bold",
                         },
                         {"type": "text", "text": " and "},
                         {
                             "type": "text",
-                            "marks": [{"type": "em", "attrs": {}}],
+                            "marks": [{"type": "em"}],
                             "text": "italic",
                         },
                         {"type": "text", "text": " text"},

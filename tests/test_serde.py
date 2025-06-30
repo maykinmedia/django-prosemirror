@@ -32,6 +32,9 @@ class TestDocToHtml:
         )
 
         assert html == expected_html
+        assert html_to_doc(html, schema=schema) == full_document, (
+            "Round-trip from doc to html to doc is lossless"
+        )
 
     def test_minimal_document_produces_simple_paragraph(self):
         schema = construct_schema_from_spec([])
@@ -302,13 +305,13 @@ class TestHtmlToDoc:
                         {"type": "text", "text": "Plain "},
                         {
                             "type": "text",
-                            "marks": [{"type": "strong", "attrs": {}}],
+                            "marks": [{"type": "strong"}],
                             "text": "bold",
                         },
                         {"type": "text", "text": " and "},
                         {
                             "type": "text",
-                            "marks": [{"type": "em", "attrs": {}}],
+                            "marks": [{"type": "em"}],
                             "text": "italic",
                         },
                         {"type": "text", "text": " text"},
@@ -479,7 +482,7 @@ class TestRoundTripConversion:
                             "content": [
                                 {
                                     "type": "text",
-                                    "marks": [{"type": "strong", "attrs": {}}],
+                                    "marks": [{"type": "strong"}],
                                     "text": "Bold Text",
                                 }
                             ],
@@ -497,7 +500,7 @@ class TestRoundTripConversion:
                             "content": [
                                 {
                                     "type": "text",
-                                    "marks": [{"type": "em", "attrs": {}}],
+                                    "marks": [{"type": "em"}],
                                     "text": "Italic Text",
                                 }
                             ],
@@ -515,7 +518,7 @@ class TestRoundTripConversion:
                             "content": [
                                 {
                                     "type": "text",
-                                    "marks": [{"type": "code", "attrs": {}}],
+                                    "marks": [{"type": "code"}],
                                     "text": "inline code",
                                 }
                             ],
@@ -597,13 +600,13 @@ class TestRoundTripConversion:
                                 {"type": "text", "text": "Text with "},
                                 {
                                     "type": "text",
-                                    "marks": [{"type": "strong", "attrs": {}}],
+                                    "marks": [{"type": "strong"}],
                                     "text": "bold",
                                 },
                                 {"type": "text", "text": " and "},
                                 {
                                     "type": "text",
-                                    "marks": [{"type": "em", "attrs": {}}],
+                                    "marks": [{"type": "em"}],
                                     "text": "italic",
                                 },
                                 {"type": "text", "text": " formatting"},
@@ -652,13 +655,13 @@ class TestRoundTripConversion:
                         {"type": "text", "text": "Plain "},
                         {
                             "type": "text",
-                            "marks": [{"type": "strong", "attrs": {}}],
+                            "marks": [{"type": "strong"}],
                             "text": "bold",
                         },
                         {"type": "text", "text": " and "},
                         {
                             "type": "text",
-                            "marks": [{"type": "em", "attrs": {}}],
+                            "marks": [{"type": "em"}],
                             "text": "italic",
                         },
                     ],
@@ -718,13 +721,13 @@ class TestRoundTripConversion:
                         {"type": "text", "text": "Text with "},
                         {
                             "type": "text",
-                            "marks": [{"type": "strong", "attrs": {}}],
+                            "marks": [{"type": "strong"}],
                             "text": "bold",
                         },
                         {"type": "text", "text": " and "},
                         {
                             "type": "text",
-                            "marks": [{"type": "em", "attrs": {}}],
+                            "marks": [{"type": "em"}],
                             "text": "italic",
                         },
                     ],
