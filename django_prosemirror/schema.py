@@ -36,6 +36,8 @@ class AllowedNodeType(enum.Enum):
     UNORDERED_LIST = "unordered_list"
     ORDERED_LIST = "ordered_list"
     LIST_ITEM = "list_item"
+    UNDERLINE = "underline"
+    STRIKETHROUGH = "strikethrough"
 
 
 SchemaSpec: TypeAlias = Iterable[AllowedNodeType]
@@ -194,6 +196,8 @@ def nodes(classes: Mapping[str, str]) -> dict[str, NodeSpec]:
 
 em_dom = ["em", 0]
 strong_dom = ["strong", 0]
+underline_dom = ["u", 0]
+strikethrough_dom = ["s", 0]
 
 
 def code_dom(cls):
@@ -226,6 +230,20 @@ def marks(classes: Mapping[str, str]) -> dict[str, MarkSpec]:
         "code": {
             "parseDOM": [{"tag": "code"}],
             "toDOM": lambda _, __: code_dom(classes.get("code", "")),
+        },
+        "underline": {
+            "parseDOM": [{"tag": "u"}, {"style": "text-decoration=underline"}],
+            "toDOM": lambda _, __: underline_dom,
+        },
+        "strikethrough": {
+            "parseDOM": [
+                {"tag": "s"},
+                {"tag": "del"},
+                {"tag": "strike"},
+                {"style": "text-decoration=line-through"},
+                {"style": "text-decoration-line=line-through"},
+            ],
+            "toDOM": lambda _, __: strikethrough_dom,
         },
     }
 

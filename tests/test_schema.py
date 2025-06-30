@@ -61,7 +61,7 @@ class TestSchemaConstruction:
             "list_item",
             "unordered_list",
         }
-        expected_marks = {"link", "em", "strong", "code"}
+        expected_marks = {"link", "em", "strong", "code", "strikethrough", "underline"}
 
         assert set(schema.nodes.keys()) == expected_nodes
         assert set(schema.marks.keys()) == expected_marks
