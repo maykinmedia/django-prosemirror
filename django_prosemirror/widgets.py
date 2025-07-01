@@ -2,12 +2,11 @@
 
 import json
 from collections.abc import Mapping
+from typing import Any
 
-from django.conf import settings
 from django.forms.widgets import Widget
 
-from django_prosemirror.constants import DEFAULT_SETTINGS
-from django_prosemirror.schema import SchemaSpec
+from django_prosemirror.schema import MarkType, NodeType, SchemaFactory
 
 
 class ProsemirrorWidget(Widget):
@@ -18,35 +17,45 @@ class ProsemirrorWidget(Widget):
     """
 
     template_name = "widget.html"
-    schema: SchemaSpec
-    classes: Mapping[str, str] | None
+    allowed_node_types: list[NodeType] | None
+    allowed_mark_types: list[MarkType] | None
+    tag_to_classes: Mapping[str, str] | None
     history: bool
 
     def __init__(
         self,
         *args,
-        schema: SchemaSpec,
-        classes: Mapping[str, str] | None = None,
+        allowed_node_types: list[NodeType] | None = None,
+        allowed_mark_types: list[MarkType] | None = None,
+        tag_to_classes: Mapping[str, str] | None = None,
         history: bool = True,
         **kwargs,
     ):
-        """Initialize the widget with a Prosemirror schema."""
+        """Initialize the widget with allowed node and mark types."""
         super().__init__(*args, **kwargs)
-        self.schema = schema
-        self.classes = (
-            classes
-            or getattr(settings, "DJANGO_PROSEMIRROR_CONFIG", DEFAULT_SETTINGS)[
-                "classes"
-            ]
-        )
-        self.history = history or True
+
+        self.allowed_node_types = allowed_node_types
+        self.allowed_mark_types = allowed_mark_types
+        self.tag_to_classes = tag_to_classes
+        self.history = history
 
     def get_context(self, name, value, attrs):
         """Get the context data for rendering the widget template."""
         attrs = super().get_context(name, value, attrs)
-        schema_spec = [s.value for s in self.schema]
-        attrs["schema"] = json.dumps(schema_spec)
-        attrs["classes"] = json.dumps(self.classes)
+
+        # Serialize node and mark types as a single list of strings
+        schema_types = []
+        if self.allowed_node_types:
+            schema_types.extend(
+                node_type.value for node_type in self.allowed_node_types
+            )
+        if self.allowed_mark_types:
+            schema_types.extend(
+                mark_type.value for mark_type in self.allowed_mark_types
+            )
+
+        attrs["schema"] = json.dumps(schema_types)
+        attrs["classes"] = json.dumps(self.tag_to_classes)
         attrs["history"] = "true" if self.history else "false"
 
         return attrs

@@ -35,13 +35,3 @@ class MarkType(enum.Enum):
     CODE = "code"
     UNDERLINE = "underline"
     STRIKETHROUGH = "strikethrough"
-
-
-# For backward compatibility
-AllowedNodeType = enum.Enum(
-    "AllowedNodeType",
-    {
-        **{item.name: item.value for item in NodeType},
-        **{item.name: item.value for item in MarkType},
-    },
-)

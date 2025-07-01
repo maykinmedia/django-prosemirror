@@ -2,13 +2,15 @@ from unittest.mock import Mock
 
 from django_prosemirror.constants import EMPTY_DOC
 from django_prosemirror.fields import ProsemirrorFieldDocument
-from django_prosemirror.schema import AllowedNodeType, construct_schema_from_spec
+from django_prosemirror.schema import NodeType, SchemaFactory
 
 
 class TestProsemirrorFieldDocument:
     def test_init_with_parameters(self):
         """Test field document initialization with and without sync callback."""
-        schema = construct_schema_from_spec([])
+        schema = SchemaFactory.create_schema(
+            allowed_node_types=[], allowed_mark_types=[]
+        )
         doc_data = {"type": "doc", "content": []}
         callback = Mock()
 
@@ -24,7 +26,9 @@ class TestProsemirrorFieldDocument:
         assert doc_minimal._sync_callback is callback
 
     def test_dunder_str_returns_html_representation(self):
-        schema = construct_schema_from_spec([AllowedNodeType.HEADING])
+        schema = SchemaFactory.create_schema(
+            allowed_node_types=[NodeType.HEADING], allowed_mark_types=[]
+        )
         doc_data = {
             "type": "doc",
             "content": [
@@ -40,7 +44,9 @@ class TestProsemirrorFieldDocument:
         assert str(doc) == "<h1>Hello</h1>"
 
     def test_raw_data_contains_document_structure(self):
-        schema = construct_schema_from_spec([])
+        schema = SchemaFactory.create_schema(
+            allowed_node_types=[], allowed_mark_types=[]
+        )
         doc_data = {"type": "doc", "content": []}
 
         doc = ProsemirrorFieldDocument(doc_data, schema=schema)
@@ -48,7 +54,9 @@ class TestProsemirrorFieldDocument:
         assert doc.raw_data == doc_data
 
     def test_doc_property_getter_returns_raw_data(self):
-        schema = construct_schema_from_spec([])
+        schema = SchemaFactory.create_schema(
+            allowed_node_types=[], allowed_mark_types=[]
+        )
         doc_data = {"type": "doc", "content": []}
 
         doc = ProsemirrorFieldDocument(doc_data, schema=schema)
@@ -56,7 +64,9 @@ class TestProsemirrorFieldDocument:
         assert doc.doc == doc_data == doc.raw_data
 
     def test_doc_property_setter_updates_raw_data(self):
-        schema = construct_schema_from_spec([])
+        schema = SchemaFactory.create_schema(
+            allowed_node_types=[], allowed_mark_types=[]
+        )
         original_data = {"type": "doc", "content": []}
         new_data = {
             "type": "doc",
@@ -73,7 +83,9 @@ class TestProsemirrorFieldDocument:
         assert doc._raw_data == new_data
 
     def test_doc_property_setter_calls_sync_callback(self):
-        schema = construct_schema_from_spec([])
+        schema = SchemaFactory.create_schema(
+            allowed_node_types=[], allowed_mark_types=[]
+        )
         original_data = {"type": "doc", "content": []}
         new_data = {
             "type": "doc",
@@ -94,7 +106,9 @@ class TestProsemirrorFieldDocument:
         callback.assert_called_once_with(new_data)
 
     def test_reduce_method_for_pickle_support(self):
-        schema = construct_schema_from_spec([])
+        schema = SchemaFactory.create_schema(
+            allowed_node_types=[], allowed_mark_types=[]
+        )
         doc_data = {"type": "doc", "content": []}
         callback = Mock()
 
@@ -115,7 +129,9 @@ class TestProsemirrorFieldDocument:
         assert restored_doc._sync_callback is None, "Callback should not be preserved"
 
     def test_empty_document_handling(self):
-        schema = construct_schema_from_spec([])
+        schema = SchemaFactory.create_schema(
+            allowed_node_types=[], allowed_mark_types=[]
+        )
 
         doc = ProsemirrorFieldDocument(EMPTY_DOC, schema=schema)
 
@@ -124,7 +140,9 @@ class TestProsemirrorFieldDocument:
         assert doc.raw_data == EMPTY_DOC
 
     def test_sync_to_model_called_when_callback_exists(self):
-        schema = construct_schema_from_spec([])
+        schema = SchemaFactory.create_schema(
+            allowed_node_types=[], allowed_mark_types=[]
+        )
         doc_data = {"type": "doc", "content": []}
         callback = Mock()
 
@@ -138,7 +156,9 @@ class TestProsemirrorFieldDocument:
         callback.assert_called_once_with(doc_data)
 
     def test_sync_to_model_handles_no_callback(self):
-        schema = construct_schema_from_spec([])
+        schema = SchemaFactory.create_schema(
+            allowed_node_types=[], allowed_mark_types=[]
+        )
         doc_data = {"type": "doc", "content": []}
 
         doc = ProsemirrorFieldDocument(doc_data, schema=schema)
@@ -147,7 +167,9 @@ class TestProsemirrorFieldDocument:
         doc._sync_to_model()
 
     def test_html_property_getter_converts_to_html(self):
-        schema = construct_schema_from_spec([])
+        schema = SchemaFactory.create_schema(
+            allowed_node_types=[], allowed_mark_types=[]
+        )
         doc_data = {
             "type": "doc",
             "content": [
@@ -163,7 +185,9 @@ class TestProsemirrorFieldDocument:
         assert doc.html == "<p>Hello world</p>"
 
     def test_html_property_setter_updates_document_from_html(self):
-        schema = construct_schema_from_spec([AllowedNodeType.HEADING])
+        schema = SchemaFactory.create_schema(
+            allowed_node_types=[NodeType.HEADING], allowed_mark_types=[]
+        )
         original_data = {"type": "doc", "content": []}
         callback = Mock()
 
@@ -190,7 +214,9 @@ class TestProsemirrorFieldDocument:
         callback.assert_called_once_with(expected_data)
 
     def test_html_setter_calls_sync_callback(self):
-        schema = construct_schema_from_spec([AllowedNodeType.HEADING])
+        schema = SchemaFactory.create_schema(
+            allowed_node_types=[NodeType.HEADING], allowed_mark_types=[]
+        )
         original_data = {"type": "doc", "content": []}
         callback = Mock()
 
@@ -216,7 +242,9 @@ class TestProsemirrorFieldDocument:
 
     def test_reduce_preserves_complex_document_structure(self):
         """Test that __reduce__ works correctly with complex document structures."""
-        schema = construct_schema_from_spec([AllowedNodeType.HEADING])
+        schema = SchemaFactory.create_schema(
+            allowed_node_types=[NodeType.HEADING], allowed_mark_types=[]
+        )
         doc_data = {
             "type": "doc",
             "content": [
@@ -245,7 +273,9 @@ class TestProsemirrorFieldDocument:
         assert restored_doc._sync_callback is None, "Callback should not be preserved"
 
     def test_document_property_chaining(self):
-        schema = construct_schema_from_spec([AllowedNodeType.HEADING])
+        schema = SchemaFactory.create_schema(
+            allowed_node_types=[NodeType.HEADING], allowed_mark_types=[]
+        )
         original_data = {
             "type": "doc",
             "content": [
@@ -280,7 +310,9 @@ class TestProsemirrorFieldDocument:
 
     def test_sync_callback_not_called_when_none(self):
         """Test that no error occurs when sync callback is None."""
-        schema = construct_schema_from_spec([])
+        schema = SchemaFactory.create_schema(
+            allowed_node_types=[], allowed_mark_types=[]
+        )
         doc_data = {"type": "doc", "content": []}
         doc = ProsemirrorFieldDocument(
             doc_data, schema=schema, sync_to_field_callback=None

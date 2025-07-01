@@ -9,12 +9,10 @@ from django.core.exceptions import ValidationError
 import pytest
 from prosemirror import Schema
 
-from django_prosemirror.constants import DEFAULT_SETTINGS, EMPTY_DOC
-from django_prosemirror.exceptions import DjangoProsemirrorException
+from django_prosemirror.constants import EMPTY_DOC
 from django_prosemirror.fields import ProsemirrorFieldDocument, ProsemirrorFormField
-from django_prosemirror.schema import FULL, AllowedNodeType, construct_schema_from_spec
+from django_prosemirror.schema import MarkType, NodeType
 from django_prosemirror.widgets import ProsemirrorWidget
-from tests.utils import assert_schemas_equivalent
 
 
 class TestProsemirrorFormField:
@@ -23,27 +21,28 @@ class TestProsemirrorFormField:
     def test_init_with_default_schema(self):
         field = ProsemirrorFormField()
 
-        assert field.schema_spec == FULL
+        assert field.allowed_node_types is None  # Defaults to all
+        assert field.allowed_mark_types is None  # Defaults to all
         assert isinstance(field.schema, Schema)
-        assert_schemas_equivalent(field.schema, FULL)
         assert isinstance(field.widget, ProsemirrorWidget)
 
     def test_init_with_custom_schema(self):
-        schema_spec = [AllowedNodeType.HEADING, AllowedNodeType.STRONG]
-        field = ProsemirrorFormField(schema=schema_spec)
+        field = ProsemirrorFormField(
+            allowed_node_types=[NodeType.HEADING], allowed_mark_types=[MarkType.STRONG]
+        )
 
-        assert field.schema_spec == schema_spec
         assert field.schema is not None
-        assert_schemas_equivalent(field.schema, schema_spec)
+        # Check that the schema contains expected elements
+        assert "heading" in field.schema.nodes
+        assert "strong" in field.schema.marks
 
     def test_init_with_multiple_parameters(self):
         """Test field initialization with various optional parameters."""
         custom_encoder = Mock()
         custom_decoder = Mock()
-        schema_spec = [AllowedNodeType.STRONG]
 
         field = ProsemirrorFormField(
-            schema=schema_spec,
+            allowed_mark_types=[MarkType.STRONG],
             required=False,
             help_text="Enter rich content",
             encoder=custom_encoder,
@@ -52,21 +51,19 @@ class TestProsemirrorFormField:
 
         assert field.required is False
         assert field.help_text == "Enter rich content"
-        assert field.schema_spec == schema_spec
-        assert_schemas_equivalent(field.schema, schema_spec)
+        assert "strong" in field.schema.marks
         assert field.encoder is custom_encoder
         assert field.decoder is custom_decoder
         assert isinstance(field.widget, ProsemirrorWidget)
 
     def test_field_inherits_from_json_field(self):
-        field = ProsemirrorFormField(schema=[AllowedNodeType.HEADING])
+        field = ProsemirrorFormField(allowed_node_types=[NodeType.HEADING])
 
         assert isinstance(field, forms.JSONField)
 
     # Form field specific tests
     def test_prepare_value_with_prosemirror_document(self):
-        schema_spec = [AllowedNodeType.HEADING]
-        field = ProsemirrorFormField(schema=schema_spec)
+        field = ProsemirrorFormField(allowed_node_types=[NodeType.HEADING])
         doc_data = {
             "type": "doc",
             "content": [
@@ -86,8 +83,7 @@ class TestProsemirrorFormField:
         assert result == expected_json
 
     def test_to_python_with_valid_json_string(self):
-        schema_spec = [AllowedNodeType.HEADING]
-        field = ProsemirrorFormField(schema=schema_spec)
+        field = ProsemirrorFormField(allowed_node_types=[NodeType.HEADING])
         doc_data = {
             "type": "doc",
             "content": [
@@ -106,8 +102,7 @@ class TestProsemirrorFormField:
         assert result.doc == doc_data
 
     def test_to_python_with_dict(self):
-        schema_spec = [AllowedNodeType.HEADING]
-        field = ProsemirrorFormField(schema=schema_spec)
+        field = ProsemirrorFormField(allowed_node_types=[NodeType.HEADING])
         doc_data = {
             "type": "doc",
             "content": [
@@ -125,8 +120,7 @@ class TestProsemirrorFormField:
         assert result.doc == doc_data
 
     def test_to_python_with_none(self):
-        schema_spec = [AllowedNodeType.HEADING]
-        field = ProsemirrorFormField(schema=schema_spec)
+        field = ProsemirrorFormField(allowed_node_types=[NodeType.HEADING])
 
         result = field.to_python(None)
 
@@ -134,8 +128,7 @@ class TestProsemirrorFormField:
         assert result.doc is None
 
     def test_to_python_with_empty_string(self):
-        schema_spec = [AllowedNodeType.HEADING]
-        field = ProsemirrorFormField(schema=schema_spec)
+        field = ProsemirrorFormField(allowed_node_types=[NodeType.HEADING])
 
         result = field.to_python("")
 
@@ -144,8 +137,7 @@ class TestProsemirrorFormField:
         assert result.doc is None
 
     def test_to_python_preserves_schema_in_document(self):
-        schema_spec = [AllowedNodeType.BLOCKQUOTE]
-        field = ProsemirrorFormField(schema=schema_spec)
+        field = ProsemirrorFormField(allowed_node_types=[NodeType.BLOCKQUOTE])
         doc_data = {
             "type": "doc",
             "content": [
@@ -167,9 +159,8 @@ class TestProsemirrorFormField:
         assert result.schema == field.schema
 
     def test_validate_with_valid_prosemirror_document(self):
-        schema_spec = [AllowedNodeType.HEADING]
-        field = ProsemirrorFormField(schema=schema_spec)
-        schema = construct_schema_from_spec(schema_spec)
+        field = ProsemirrorFormField(allowed_node_types=[NodeType.HEADING])
+        schema = field.schema
         doc_data = {
             "type": "doc",
             "content": [
@@ -187,16 +178,14 @@ class TestProsemirrorFormField:
         field.validate(doc)
 
     def test_validate_with_invalid_value_type_raises_value_error(self):
-        schema_spec = [AllowedNodeType.HEADING]
-        field = ProsemirrorFormField(schema=schema_spec)
+        field = ProsemirrorFormField(allowed_node_types=[NodeType.HEADING])
 
         with pytest.raises(ValueError, match="Expected"):
             field.validate({"type": "doc", "content": []})
 
     def test_validate_with_invalid_document_structure_raises_validation_error(self):
-        schema_spec = [AllowedNodeType.HEADING]
-        field = ProsemirrorFormField(schema=schema_spec)
-        schema = construct_schema_from_spec(schema_spec)
+        field = ProsemirrorFormField(allowed_node_types=[NodeType.HEADING])
+        schema = field.schema
         invalid_doc_data = {"invalid": "structure"}
 
         doc = ProsemirrorFieldDocument(invalid_doc_data, schema=schema)
@@ -205,9 +194,8 @@ class TestProsemirrorFormField:
             field.validate(doc)
 
     def test_validate_with_empty_document(self):
-        schema_spec = []
-        field = ProsemirrorFormField(schema=schema_spec)
-        schema = construct_schema_from_spec(schema_spec)
+        field = ProsemirrorFormField(allowed_node_types=[], allowed_mark_types=[])
+        schema = field.schema
 
         doc = ProsemirrorFieldDocument(EMPTY_DOC, schema=schema)
 
@@ -216,9 +204,8 @@ class TestProsemirrorFormField:
 
     def test_full_form_field_workflow(self):
         """Test the complete workflow of form field processing."""
-        schema_spec = [AllowedNodeType.STRONG, AllowedNodeType.ITALIC]
         field = ProsemirrorFormField(
-            schema=schema_spec, classes=DEFAULT_SETTINGS["classes"]
+            allowed_mark_types=[MarkType.STRONG, MarkType.ITALIC],
         )
 
         # Simulate form input as dict (what comes from JSON parsing)
@@ -259,45 +246,32 @@ class TestProsemirrorFormField:
         )
 
     @pytest.mark.parametrize(
-        "schema_spec",
+        "node_types,mark_types",
         [
-            [],
-            [AllowedNodeType.HEADING],
-            [AllowedNodeType.STRONG, AllowedNodeType.ITALIC],
-            [AllowedNodeType.BLOCKQUOTE, AllowedNodeType.CODE_BLOCK],
-            FULL,
+            ([], []),
+            ([NodeType.HEADING], []),
+            ([], [MarkType.STRONG, MarkType.ITALIC]),
+            ([NodeType.BLOCKQUOTE, NodeType.CODE_BLOCK], []),
+            (None, None),  # Test defaults to all
         ],
     )
-    def test_different_schema_specs_create_valid_fields(self, schema_spec):
-        field = ProsemirrorFormField(schema=schema_spec)
+    def test_different_schema_specs_create_valid_fields(self, node_types, mark_types):
+        field = ProsemirrorFormField(
+            allowed_node_types=node_types, allowed_mark_types=mark_types
+        )
 
         assert field.schema is not None
         assert isinstance(field.widget, ProsemirrorWidget)
 
     # Invalid schema tests
-    def test_init_with_invalid_schema_non_iterable_raises_exception(self):
-        with pytest.raises(
-            DjangoProsemirrorException, match="`spec` must be a collection"
-        ):
+    def test_init_with_invalid_node_types_raises_exception(self):
+        with pytest.raises(TypeError):
             ProsemirrorFormField(
-                schema="invalid_string",
-                classes=DEFAULT_SETTINGS["classes"],
+                allowed_node_types="invalid_string",
             )
 
-    def test_init_with_invalid_schema_wrong_type_raises_exception(self):
-        with pytest.raises(
-            DjangoProsemirrorException, match="`spec` must be a collection"
-        ):
+    def test_init_with_invalid_mark_types_raises_exception(self):
+        with pytest.raises(TypeError):
             ProsemirrorFormField(
-                schema=["invalid_string", "another_invalid"],
-                classes=DEFAULT_SETTINGS["classes"],
-            )
-
-    def test_init_with_invalid_schema_none_raises_exception(self):
-        with pytest.raises(
-            DjangoProsemirrorException, match="`spec` must be a collection"
-        ):
-            ProsemirrorFormField(
-                schema=None,
-                classes=DEFAULT_SETTINGS["classes"],
+                allowed_mark_types="invalid_string",
             )

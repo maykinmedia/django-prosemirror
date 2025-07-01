@@ -3,13 +3,13 @@
 import pytest
 
 from django_prosemirror.constants import EMPTY_DOC
-from django_prosemirror.schema import FULL, AllowedNodeType, construct_schema_from_spec
+from django_prosemirror.schema import MarkType, NodeType, SchemaFactory
 from django_prosemirror.serde import doc_to_html, html_to_doc
 
 
 class TestDocToHtml:
     def test_full_document_produces_expected_html_output(self, full_document):
-        schema = construct_schema_from_spec(FULL)
+        schema = SchemaFactory.create_schema()
         html = doc_to_html(full_document, schema=schema)
 
         expected_html = (
@@ -37,7 +37,9 @@ class TestDocToHtml:
         )
 
     def test_minimal_document_produces_simple_paragraph(self):
-        schema = construct_schema_from_spec([])
+        schema = SchemaFactory.create_schema(
+            allowed_node_types=[], allowed_mark_types=[]
+        )
         doc = {
             "type": "doc",
             "content": [
@@ -62,7 +64,9 @@ class TestDocToHtml:
     def test_empty_or_none_document_returns_empty_string(
         self, input_doc, expected_html
     ):
-        schema = construct_schema_from_spec([])
+        schema = SchemaFactory.create_schema(
+            allowed_node_types=[], allowed_mark_types=[]
+        )
 
         html = doc_to_html(input_doc, schema=schema)
 
@@ -82,7 +86,9 @@ class TestDocToHtml:
     def test_heading_levels_produce_correct_heading_tags(
         self, level, text, expected_tag
     ):
-        schema = construct_schema_from_spec([AllowedNodeType.HEADING])
+        schema = SchemaFactory.create_schema(
+            allowed_node_types=[NodeType.HEADING], allowed_mark_types=[]
+        )
         doc = {
             "type": "doc",
             "content": [
@@ -108,8 +114,9 @@ class TestDocToHtml:
         ],
     )
     def test_text_marks_produce_formatted_text(self, mark_type, text, expected_tag):
-        schema = construct_schema_from_spec(
-            [AllowedNodeType.STRONG, AllowedNodeType.ITALIC, AllowedNodeType.CODE]
+        schema = SchemaFactory.create_schema(
+            allowed_node_types=[],
+            allowed_mark_types=[MarkType.STRONG, MarkType.ITALIC, MarkType.CODE],
         )
         doc = {
             "type": "doc",
@@ -131,7 +138,9 @@ class TestDocToHtml:
         assert html == expected_html
 
     def test_link_produces_anchor_tag_with_href_and_title(self):
-        schema = construct_schema_from_spec([AllowedNodeType.LINK])
+        schema = SchemaFactory.create_schema(
+            allowed_node_types=[], allowed_mark_types=[MarkType.LINK]
+        )
         doc = {
             "type": "doc",
             "content": [
@@ -170,13 +179,13 @@ class TestDocToHtml:
         [
             (
                 "blockquote",
-                AllowedNodeType.BLOCKQUOTE,
+                NodeType.BLOCKQUOTE,
                 "This is a quote",
                 "<blockquote><p>This is a quote</p></blockquote>",
             ),
             (
                 "code_block",
-                AllowedNodeType.CODE_BLOCK,
+                NodeType.CODE_BLOCK,
                 "function test() {\n  return true;\n}",
                 "<pre><code>function test() {\n  return true;\n}</code></pre>",
             ),
@@ -185,7 +194,9 @@ class TestDocToHtml:
     def test_block_elements_produce_correct_tags(
         self, node_type, allowed_node, text, expected_html
     ):
-        schema = construct_schema_from_spec([allowed_node])
+        schema = SchemaFactory.create_schema(
+            allowed_node_types=[allowed_node], allowed_mark_types=[]
+        )
 
         if node_type == "blockquote":
             content = [
@@ -218,7 +229,9 @@ class TestHtmlToDoc:
     def test_simple_paragraph_produces_paragraph_node(
         self,
     ):
-        schema = construct_schema_from_spec([])
+        schema = SchemaFactory.create_schema(
+            allowed_node_types=[], allowed_mark_types=[]
+        )
         html = "<p>Hello world</p>"
 
         doc = html_to_doc(html, schema=schema)
@@ -237,7 +250,9 @@ class TestHtmlToDoc:
     def test_multiple_paragraphs_produce_paragraph_nodes(
         self,
     ):
-        schema = construct_schema_from_spec([])
+        schema = SchemaFactory.create_schema(
+            allowed_node_types=[], allowed_mark_types=[]
+        )
         html = "<p>First paragraph</p><p>Second paragraph</p>"
 
         doc = html_to_doc(html, schema=schema)
@@ -270,7 +285,9 @@ class TestHtmlToDoc:
         ],
     )
     def test_heading_tags_produce_heading_nodes(self, html_tag, level, text):
-        schema = construct_schema_from_spec([AllowedNodeType.HEADING])
+        schema = SchemaFactory.create_schema(
+            allowed_node_types=[NodeType.HEADING], allowed_mark_types=[]
+        )
         html = f"<{html_tag}>{text}</{html_tag}>"
 
         doc = html_to_doc(html, schema=schema)
@@ -289,8 +306,8 @@ class TestHtmlToDoc:
         assert doc == expected_doc
 
     def test_formatted_text_produces_text_marks(self):
-        schema = construct_schema_from_spec(
-            [AllowedNodeType.STRONG, AllowedNodeType.ITALIC]
+        schema = SchemaFactory.create_schema(
+            allowed_node_types=[], allowed_mark_types=[MarkType.STRONG, MarkType.ITALIC]
         )
         html = "<p>Plain <strong>bold</strong> and <em>italic</em> text</p>"
 
@@ -323,7 +340,9 @@ class TestHtmlToDoc:
         assert doc == expected_doc
 
     def test_link_produces_link_mark(self):
-        schema = construct_schema_from_spec([AllowedNodeType.LINK])
+        schema = SchemaFactory.create_schema(
+            allowed_node_types=[], allowed_mark_types=[MarkType.LINK]
+        )
         html = (
             '<p>Visit <a href="https://example.com" title="Example">this link</a></p>'
         )
@@ -363,13 +382,13 @@ class TestHtmlToDoc:
             (
                 "<blockquote><p>This is a quote</p></blockquote>",
                 "blockquote",
-                AllowedNodeType.BLOCKQUOTE,
+                NodeType.BLOCKQUOTE,
                 "This is a quote",
             ),
             (
                 "<pre><code>function test() { return true; }</code></pre>",
                 "code_block",
-                AllowedNodeType.CODE_BLOCK,
+                NodeType.CODE_BLOCK,
                 "function test() { return true; }",
             ),
         ],
@@ -377,7 +396,9 @@ class TestHtmlToDoc:
     def test_block_elements_produce_correct_nodes(
         self, html, node_type, allowed_node, text
     ):
-        schema = construct_schema_from_spec([allowed_node])
+        schema = SchemaFactory.create_schema(
+            allowed_node_types=[allowed_node], allowed_mark_types=[]
+        )
 
         doc = html_to_doc(html, schema=schema)
 
@@ -416,14 +437,18 @@ class TestHtmlToDoc:
         ],
     )
     def test_empty_or_whitespace_string_produces_empty_document(self, input_html):
-        schema = construct_schema_from_spec([])
+        schema = SchemaFactory.create_schema(
+            allowed_node_types=[], allowed_mark_types=[]
+        )
 
         doc = html_to_doc(input_html, schema=schema)
 
         assert doc == EMPTY_DOC
 
     def test_horizontal_rule_produces_hr_node(self):
-        schema = construct_schema_from_spec([AllowedNodeType.HORIZONTAL_RULE])
+        schema = SchemaFactory.create_schema(
+            allowed_node_types=[NodeType.HORIZONTAL_RULE], allowed_mark_types=[]
+        )
         html = "<p>Before</p><hr><p>After</p>"
 
         doc = html_to_doc(html, schema=schema)
@@ -444,10 +469,11 @@ class TestRoundTripConversion:
     """Tests for round-trip conversion between document and HTML."""
 
     @pytest.mark.parametrize(
-        "node_types,original_doc",
+        "node_types,mark_types,original_doc",
         [
             (
-                [AllowedNodeType.HEADING],
+                [NodeType.HEADING],
+                [],
                 {
                     "type": "doc",
                     "content": [
@@ -460,7 +486,8 @@ class TestRoundTripConversion:
                 },
             ),
             (
-                [AllowedNodeType.HEADING],
+                [NodeType.HEADING],
+                [],
                 {
                     "type": "doc",
                     "content": [
@@ -473,7 +500,8 @@ class TestRoundTripConversion:
                 },
             ),
             (
-                [AllowedNodeType.STRONG],
+                [],
+                [MarkType.STRONG],
                 {
                     "type": "doc",
                     "content": [
@@ -491,7 +519,8 @@ class TestRoundTripConversion:
                 },
             ),
             (
-                [AllowedNodeType.ITALIC],
+                [],
+                [MarkType.ITALIC],
                 {
                     "type": "doc",
                     "content": [
@@ -509,7 +538,8 @@ class TestRoundTripConversion:
                 },
             ),
             (
-                [AllowedNodeType.CODE],
+                [],
+                [MarkType.CODE],
                 {
                     "type": "doc",
                     "content": [
@@ -527,7 +557,8 @@ class TestRoundTripConversion:
                 },
             ),
             (
-                [AllowedNodeType.BLOCKQUOTE],
+                [NodeType.BLOCKQUOTE],
+                [],
                 {
                     "type": "doc",
                     "content": [
@@ -546,7 +577,8 @@ class TestRoundTripConversion:
                 },
             ),
             (
-                [AllowedNodeType.CODE_BLOCK],
+                [NodeType.CODE_BLOCK],
+                [],
                 {
                     "type": "doc",
                     "content": [
@@ -563,7 +595,8 @@ class TestRoundTripConversion:
                 },
             ),
             (
-                [AllowedNodeType.LINK],
+                [],
+                [MarkType.LINK],
                 {
                     "type": "doc",
                     "content": [
@@ -590,7 +623,8 @@ class TestRoundTripConversion:
                 },
             ),
             (
-                [AllowedNodeType.STRONG, AllowedNodeType.ITALIC],
+                [],
+                [MarkType.STRONG, MarkType.ITALIC],
                 {
                     "type": "doc",
                     "content": [
@@ -617,8 +651,12 @@ class TestRoundTripConversion:
             ),
         ],
     )
-    def test_round_trip_preserves_single_node_types(self, node_types, original_doc):
-        schema = construct_schema_from_spec(node_types)
+    def test_round_trip_preserves_single_node_types(
+        self, node_types, mark_types, original_doc
+    ):
+        schema = SchemaFactory.create_schema(
+            allowed_node_types=node_types, allowed_mark_types=mark_types
+        )
 
         html = doc_to_html(original_doc, schema=schema)
         converted_doc = html_to_doc(html, schema=schema)
@@ -626,7 +664,9 @@ class TestRoundTripConversion:
         assert converted_doc == original_doc
 
     def test_simple_paragraph_preserves_content(self):
-        schema = construct_schema_from_spec([])
+        schema = SchemaFactory.create_schema(
+            allowed_node_types=[], allowed_mark_types=[]
+        )
         original_doc = {
             "type": "doc",
             "content": [
@@ -643,8 +683,8 @@ class TestRoundTripConversion:
         assert converted_doc == original_doc
 
     def test_formatted_text_preserves_content(self):
-        schema = construct_schema_from_spec(
-            [AllowedNodeType.STRONG, AllowedNodeType.ITALIC]
+        schema = SchemaFactory.create_schema(
+            allowed_node_types=[], allowed_mark_types=[MarkType.STRONG, MarkType.ITALIC]
         )
         original_doc = {
             "type": "doc",
@@ -676,12 +716,9 @@ class TestRoundTripConversion:
         assert converted_doc == original_doc
 
     def test_complex_markup_preserves_structure(self):
-        schema = construct_schema_from_spec(
-            [
-                AllowedNodeType.HEADING,
-                AllowedNodeType.STRONG,
-                AllowedNodeType.BLOCKQUOTE,
-            ]
+        schema = SchemaFactory.create_schema(
+            allowed_node_types=[NodeType.HEADING, NodeType.BLOCKQUOTE],
+            allowed_mark_types=[MarkType.STRONG],
         )
         original_html = (
             "<h1>Title</h1><blockquote><p><strong>Quote</strong> text</p></blockquote>"
@@ -697,13 +734,9 @@ class TestRoundTripConversion:
         self, full_document
     ):
         # Test with a subset of features to ensure round-trip works
-        schema = construct_schema_from_spec(
-            [
-                AllowedNodeType.HEADING,
-                AllowedNodeType.STRONG,
-                AllowedNodeType.ITALIC,
-                AllowedNodeType.BLOCKQUOTE,
-            ]
+        schema = SchemaFactory.create_schema(
+            allowed_node_types=[NodeType.HEADING, NodeType.BLOCKQUOTE],
+            allowed_mark_types=[MarkType.STRONG, MarkType.ITALIC],
         )
 
         # Create a simplified version of full_document with only supported features

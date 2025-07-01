@@ -3,7 +3,7 @@
 from django.db import models
 
 from django_prosemirror.fields import ProsemirrorModelField
-from django_prosemirror.schema import FULL, AllowedNodeType
+from django_prosemirror.schema import MarkType, NodeType
 
 
 def get_default_full_content():
@@ -50,14 +50,14 @@ class TestModel(models.Model):  # noqa: DJ008
     """Test model with various ProseMirror field configurations."""
 
     full_schema_with_default = ProsemirrorModelField(
-        schema=FULL,
+        # All node and mark types (default)
         verbose_name="Full Schema Rich Text",
         help_text="Rich text field with all node types enabled and default content",
         default=get_default_full_content,
     )
 
     full_schema_nullable = ProsemirrorModelField(
-        schema=FULL,
+        # All node and mark types (default)
         null=True,
         blank=True,
         verbose_name="Full Schema (Nullable)",
@@ -65,7 +65,8 @@ class TestModel(models.Model):  # noqa: DJ008
     )
 
     basic_text_only = ProsemirrorModelField(
-        schema=[],  # Only doc and paragraph nodes (core nodes)
+        allowed_node_types=[NodeType.PARAGRAPH],  # Only paragraph nodes
+        allowed_mark_types=[],  # No marks
         null=False,
         blank=True,
         verbose_name="Basic Text Only",
@@ -74,20 +75,21 @@ class TestModel(models.Model):  # noqa: DJ008
     )
 
     text_formatting_only = ProsemirrorModelField(
-        schema=[AllowedNodeType.STRONG, AllowedNodeType.ITALIC, AllowedNodeType.CODE],
+        allowed_node_types=[NodeType.PARAGRAPH],
+        allowed_mark_types=[MarkType.STRONG, MarkType.ITALIC, MarkType.CODE],
         verbose_name="Text Formatting Only",
         help_text="Text with basic formatting (bold, italic, code), no block elements",
         default=get_default_formatted_text,
     )
 
     headings_and_blocks = ProsemirrorModelField(
-        schema=[
-            AllowedNodeType.HEADING,
-            AllowedNodeType.BLOCKQUOTE,
-            AllowedNodeType.HORIZONTAL_RULE,
-            AllowedNodeType.STRONG,
-            AllowedNodeType.ITALIC,
+        allowed_node_types=[
+            NodeType.PARAGRAPH,
+            NodeType.HEADING,
+            NodeType.BLOCKQUOTE,
+            NodeType.HORIZONTAL_RULE,
         ],
+        allowed_mark_types=[MarkType.STRONG, MarkType.ITALIC],
         null=True,
         blank=True,
         verbose_name="Headings and Blocks (Nullable)",
@@ -95,12 +97,8 @@ class TestModel(models.Model):  # noqa: DJ008
     )
 
     code_content_nullable = ProsemirrorModelField(
-        schema=[
-            AllowedNodeType.CODE,
-            AllowedNodeType.CODE_BLOCK,
-            AllowedNodeType.STRONG,
-            AllowedNodeType.ITALIC,
-        ],
+        allowed_node_types=[NodeType.PARAGRAPH, NodeType.CODE_BLOCK],
+        allowed_mark_types=[MarkType.CODE, MarkType.STRONG, MarkType.ITALIC],
         null=True,
         verbose_name="Code Content (Nullable)",
         help_text="Technical content with inline and block code support",

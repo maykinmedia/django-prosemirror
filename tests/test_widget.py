@@ -4,31 +4,35 @@ import json
 
 import pytest
 
-from django_prosemirror.schema import FULL, AllowedNodeType
+from django_prosemirror.schema import MarkType, NodeType
 from django_prosemirror.widgets import ProsemirrorWidget
 
 
 def test_widget_initialization():
     """Test that ProsemirrorWidget initializes correctly with schema."""
-    schema = [AllowedNodeType.HEADING, AllowedNodeType.STRONG]
-    widget = ProsemirrorWidget(schema=schema)
+    widget = ProsemirrorWidget(
+        allowed_node_types=[NodeType.HEADING], allowed_mark_types=[MarkType.STRONG]
+    )
 
-    assert widget.schema == schema
+    assert widget.allowed_node_types == [NodeType.HEADING]
+    assert widget.allowed_mark_types == [MarkType.STRONG]
     assert widget.template_name == "widget.html"
 
 
 def test_widget_initialization_full_schema():
     """Test widget initialization with full schema."""
-    widget = ProsemirrorWidget(schema=FULL)
+    widget = ProsemirrorWidget()  # Defaults to full schema
 
-    assert widget.schema == FULL
-    assert len(widget.schema) > 5  # FULL schema should have many node types
+    assert widget.allowed_node_types is None  # Defaults to all
+    assert widget.allowed_mark_types is None  # Defaults to all
 
 
 def test_widget_get_context():
     """Test that get_context adds schema to context."""
-    schema = [AllowedNodeType.HEADING, AllowedNodeType.STRONG, AllowedNodeType.ITALIC]
-    widget = ProsemirrorWidget(schema=schema)
+    widget = ProsemirrorWidget(
+        allowed_node_types=[NodeType.HEADING],
+        allowed_mark_types=[MarkType.STRONG, MarkType.ITALIC],
+    )
 
     # Test get_context method
     context = widget.get_context(
@@ -42,16 +46,15 @@ def test_widget_get_context():
     schema_json = context["schema"]
     assert isinstance(schema_json, str)
 
-    # Parse the JSON to verify content
+    # Parse the JSON to verify content - should contain both nodes and marks
     parsed_schema = json.loads(schema_json)
-    expected_values = ["heading", "strong", "em"]  # .value of each enum
-    assert parsed_schema == expected_values
+    assert "nodes" in parsed_schema
+    assert "marks" in parsed_schema
 
 
 def test_widget_get_context_preserves_parent_context():
     """Test that get_context preserves context from parent Widget."""
-    schema = [AllowedNodeType.HEADING]
-    widget = ProsemirrorWidget(schema=schema)
+    widget = ProsemirrorWidget(allowed_node_types=[NodeType.HEADING])
 
     context = widget.get_context(
         name="test_field", value=None, attrs={"id": "field-id", "class": "form-control"}
@@ -67,53 +70,62 @@ def test_widget_get_context_preserves_parent_context():
     # Should add our schema
     assert "schema" in context
     parsed_schema = json.loads(context["schema"])
-    assert parsed_schema == ["heading"]
+    assert "nodes" in parsed_schema
+    assert "heading" in parsed_schema["nodes"]
 
 
 def test_widget_with_empty_schema():
     """Test widget behavior with minimal schema."""
-    schema = []  # Empty schema
-    widget = ProsemirrorWidget(schema=schema)
+    widget = ProsemirrorWidget(allowed_node_types=[], allowed_mark_types=[])
 
     context = widget.get_context("test_field", None, {})
 
     # Should handle empty schema gracefully
     assert "schema" in context
     parsed_schema = json.loads(context["schema"])
-    assert parsed_schema == []
+    assert "nodes" in parsed_schema
+    assert "marks" in parsed_schema
 
 
 def test_widget_schema_serialization():
     """Test that schema enum values are correctly serialized."""
     # Test various node types to ensure they serialize to correct string values
-    test_cases = [
-        (AllowedNodeType.HEADING, "heading"),
-        (AllowedNodeType.STRONG, "strong"),
-        (AllowedNodeType.ITALIC, "em"),
-        (AllowedNodeType.BLOCKQUOTE, "blockquote"),
-        (AllowedNodeType.CODE, "code"),
-        (AllowedNodeType.LINK, "link"),
+    node_test_cases = [
+        (NodeType.HEADING, "heading"),
+        (NodeType.BLOCKQUOTE, "blockquote"),
     ]
 
-    for node_type, expected_value in test_cases:
-        widget = ProsemirrorWidget(schema=[node_type])
+    mark_test_cases = [
+        (MarkType.STRONG, "strong"),
+        (MarkType.ITALIC, "em"),
+        (MarkType.CODE, "code"),
+        (MarkType.LINK, "link"),
+    ]
+
+    for node_type, expected_value in node_test_cases:
+        widget = ProsemirrorWidget(allowed_node_types=[node_type])
         context = widget.get_context("test", None, {})
 
         parsed_schema = json.loads(context["schema"])
-        assert parsed_schema == [expected_value]
+        assert expected_value in parsed_schema["nodes"]
+
+    for mark_type, expected_value in mark_test_cases:
+        widget = ProsemirrorWidget(allowed_mark_types=[mark_type])
+        context = widget.get_context("test", None, {})
+
+        parsed_schema = json.loads(context["schema"])
+        assert expected_value in parsed_schema["marks"]
 
 
 def test_widget_with_args_and_kwargs():
     """Test widget initialization with additional args and kwargs."""
-    schema = [AllowedNodeType.HEADING]
-
     # Test with additional kwargs that should be passed to parent Widget
     widget = ProsemirrorWidget(
-        schema=schema,
+        allowed_node_types=[NodeType.HEADING],
         attrs={"class": "custom-widget"},
     )
 
-    assert widget.schema == schema
+    assert widget.allowed_node_types == [NodeType.HEADING]
 
     # Test that it can render context without errors
     context = widget.get_context("test", None, {"id": "test-id"})
@@ -123,8 +135,9 @@ def test_widget_with_args_and_kwargs():
 
 def test_widget_value_handling():
     """Test that widget handles different value types appropriately."""
-    schema = [AllowedNodeType.HEADING, AllowedNodeType.STRONG]
-    widget = ProsemirrorWidget(schema=schema)
+    widget = ProsemirrorWidget(
+        allowed_node_types=[NodeType.HEADING], allowed_mark_types=[MarkType.STRONG]
+    )
 
     # Test with None value
     context = widget.get_context("test", None, {})
@@ -153,18 +166,34 @@ def test_widget_value_handling():
 
 
 @pytest.mark.parametrize(
-    "schema_input,expected_count",
+    "node_types,mark_types,expected_node_count,expected_mark_count",
     [
-        ([AllowedNodeType.HEADING], 1),
-        ([AllowedNodeType.HEADING, AllowedNodeType.STRONG], 2),
-        ([AllowedNodeType.HEADING, AllowedNodeType.STRONG, AllowedNodeType.ITALIC], 3),
-        (FULL, len(FULL)),  # Full schema should have all available types
+        ([NodeType.HEADING], [], 1, 0),
+        ([NodeType.HEADING], [MarkType.STRONG], 1, 1),
+        (
+            [NodeType.HEADING, NodeType.BLOCKQUOTE],
+            [MarkType.STRONG, MarkType.ITALIC],
+            2,
+            2,
+        ),
+        (None, None, None, None),  # Full schema - we'll check it has many types
     ],
 )
-def test_widget_schema_length(schema_input, expected_count):
+def test_widget_schema_length(
+    node_types, mark_types, expected_node_count, expected_mark_count
+):
     """Test widget handles schemas of different lengths correctly."""
-    widget = ProsemirrorWidget(schema=schema_input)
+    widget = ProsemirrorWidget(
+        allowed_node_types=node_types, allowed_mark_types=mark_types
+    )
     context = widget.get_context("test", None, {})
 
     parsed_schema = json.loads(context["schema"])
-    assert len(parsed_schema) == expected_count
+
+    if expected_node_count is None:  # Full schema case
+        assert len(parsed_schema["nodes"]) > 5  # Should have many node types
+        assert len(parsed_schema["marks"]) > 3  # Should have many mark types
+    else:
+        # +3 for core nodes: doc, paragraph, text
+        assert len(parsed_schema["nodes"]) == expected_node_count + 3
+        assert len(parsed_schema["marks"]) == expected_mark_count

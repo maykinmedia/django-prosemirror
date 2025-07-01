@@ -6,17 +6,15 @@ from collections.abc import Callable, Mapping
 from typing import Any, Self, cast
 
 from django import forms
-from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 
 from prosemirror import Schema
 
-from django_prosemirror.constants import DEFAULT_SETTINGS
 from django_prosemirror.schema import (
-    FULL,
-    SchemaSpec,
-    construct_schema_from_spec,
+    MarkType,
+    NodeType,
+    SchemaFactory,
     validate_doc,
 )
 from django_prosemirror.serde import ProsemirrorDocument, doc_to_html, html_to_doc
@@ -334,8 +332,9 @@ class ProsemirrorModelField(models.JSONField):
 
     description = "Prosemirror content stored as JSON"
     schema: Schema
-    schema_spec: SchemaSpec
-    classes: Mapping[str, str]
+    allowed_node_types: list[NodeType] | None
+    allowed_mark_types: list[MarkType] | None
+    tag_to_classes: Mapping[str, str]
     history: bool | None
 
     def __init__(
@@ -346,10 +345,11 @@ class ProsemirrorModelField(models.JSONField):
         decoder: Any | None = None,
         *,
         default: Callable[[], ProsemirrorDocument] | None = None,
-        schema: SchemaSpec = FULL,
-        classes: Mapping[str, str] | None = None,
+        allowed_node_types: list[NodeType] | None = None,
+        allowed_mark_types: list[MarkType] | None = None,
+        tag_to_classes: Mapping[str, str] | None = None,
         history: bool | None = None,
-        **kwargs: Any,
+        **kwargs: Any,  # type: ignore[misc]
     ):
         """Initialize the Prosemirror model field.
 
@@ -359,22 +359,34 @@ class ProsemirrorModelField(models.JSONField):
             encoder: JSON encoder (inherited from JSONField)
             decoder: JSON decoder (inherited from JSONField)
             default: Callable that returns default document data
-            schema: Prosemirror schema specification
+            allowed_node_types: List of NodeType enums to allow
+            allowed_mark_types: List of MarkType enums to allow
+            tag_to_classes: Mapping of tag names to CSS classes
             **kwargs: Additional field options
 
         Raises:
             ValueError: If default is not callable
             ValidationError: If default callable returns invalid document
         """
-        # Construct schema first, before validation
-        self.classes = (
-            classes
-            or getattr(settings, "DJANGO_PROSEMIRROR_CONFIG", DEFAULT_SETTINGS)[
-                "classes"
-            ]
+        # Validate input types
+        if allowed_node_types is not None and not isinstance(allowed_node_types, list):
+            raise TypeError(
+                "allowed_node_types must be a list of NodeType enums or None"
+            )
+        if allowed_mark_types is not None and not isinstance(allowed_mark_types, list):
+            raise TypeError(
+                "allowed_mark_types must be a list of MarkType enums or None"
+            )
+
+        self.allowed_node_types = allowed_node_types
+        self.allowed_mark_types = allowed_mark_types
+        self.tag_to_classes = tag_to_classes
+
+        self.schema = SchemaFactory.create_schema(
+            allowed_node_types=self.allowed_node_types,
+            allowed_mark_types=self.allowed_mark_types,
+            tag_to_classes=self.tag_to_classes,
         )
-        self.schema = construct_schema_from_spec(schema, self.classes)
-        self.schema_spec = schema
         self.history = history
 
         # Validate default callable if provided
@@ -402,8 +414,9 @@ class ProsemirrorModelField(models.JSONField):
     def formfield(self, *args, **kwargs):
         defaults = {
             "form_class": ProsemirrorFormField,
-            "schema": self.schema_spec,
-            "classes": self.classes,
+            "allowed_node_types": self.allowed_node_types,
+            "allowed_mark_types": self.allowed_mark_types,
+            "tag_to_classes": self.tag_to_classes,
             "history": self.history,
         }
         defaults.update(kwargs)
@@ -450,7 +463,10 @@ class ProsemirrorModelField(models.JSONField):
 
     def deconstruct(self):
         name, path, args, kwargs = super().deconstruct()
-        kwargs["schema"] = self.schema_spec
+        kwargs["tag_to_classes"] = self.tag_to_classes
+        kwargs["allowed_node_types"] = self.allowed_node_types
+        kwargs["allowed_mark_types"] = self.allowed_mark_types
+        kwargs["history"] = self.history
         return name, path, args, kwargs
 
 
@@ -462,8 +478,9 @@ class ProsemirrorFormField(forms.JSONField):
     """
 
     schema: Schema
-    schema_spec: SchemaSpec
-    classes: Mapping[str, str]
+    allowed_node_types: list[NodeType] | None
+    allowed_mark_types: list[MarkType] | None
+    tag_to_classes: Mapping[str, str]
     history: bool
     widget = ProsemirrorWidget
 
@@ -472,30 +489,47 @@ class ProsemirrorFormField(forms.JSONField):
         encoder=None,
         decoder=None,
         *,
-        schema: SchemaSpec = FULL,
-        classes: Mapping[str, str] | None = None,
+        allowed_node_types: list[NodeType] | None = None,
+        allowed_mark_types: list[MarkType] | None = None,
+        tag_to_classes: Mapping[str, str] | None = None,
         history: bool = True,
-        **kwargs,
+        **kwargs: Any,  # type: ignore[misc]
     ):
         """Initialize the Prosemirror form field.
 
         Args:
             encoder: JSON encoder (inherited from JSONField)
             decoder: JSON decoder (inherited from JSONField)
-            schema: Prosemirror schema specification
+            allowed_node_types: List of NodeType enums to allow
+            allowed_mark_types: List of MarkType enums to allow
+            tag_to_classes: Mapping of tag names to CSS classes
             **kwargs: Additional field options
         """
-        self.classes = (
-            classes
-            or getattr(settings, "DJANGO_PROSEMIRROR_CONFIG", DEFAULT_SETTINGS)[
-                "classes"
-            ]
+        # Validate input types
+        if allowed_node_types is not None and not isinstance(allowed_node_types, list):
+            raise TypeError(
+                "allowed_node_types must be a list of NodeType enums or None"
+            )
+        if allowed_mark_types is not None and not isinstance(allowed_mark_types, list):
+            raise TypeError(
+                "allowed_mark_types must be a list of MarkType enums or None"
+            )
+
+        self.allowed_node_types = allowed_node_types
+        self.allowed_mark_types = allowed_mark_types
+        self.tag_to_classes = tag_to_classes
+
+        self.schema = SchemaFactory.create_schema(
+            allowed_node_types=self.allowed_node_types,
+            allowed_mark_types=self.allowed_mark_types,
+            tag_to_classes=self.tag_to_classes,
         )
-        self.schema = construct_schema_from_spec(schema, self.classes)
-        self.schema_spec = schema
         self.history = history
         kwargs["widget"] = self.widget(
-            schema=schema, classes=self.classes, history=self.history
+            allowed_node_types=self.allowed_node_types,
+            allowed_mark_types=self.allowed_mark_types,
+            tag_to_classes=self.tag_to_classes,
+            history=self.history,
         )
         super().__init__(encoder, decoder, **kwargs)
 
