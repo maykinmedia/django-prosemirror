@@ -2,15 +2,66 @@
 
 import pytest
 
+from django_prosemirror.config import ProsemirrorConfig
 from django_prosemirror.constants import EMPTY_DOC
-from django_prosemirror.schema import MarkType, NodeType, SchemaFactory
+from django_prosemirror.schema import MarkType, NodeType
 from django_prosemirror.serde import doc_to_html, html_to_doc
 
 
 class TestDocToHtml:
+
+    def test_full_document_fixture_contains_all_node_and_mark_types(
+        self, full_document
+    ):
+        """Test that full_document fixture contains all NodeType and MarkType values."""
+        def extract_types_from_document(doc, node_types=None, mark_types=None):
+            """Recursively extract all node and mark types from a document."""
+            if node_types is None:
+                node_types = set()
+            if mark_types is None:
+                mark_types = set()
+            
+            if isinstance(doc, dict) and "type" in doc:
+                node_types.add(doc["type"])
+                
+                # Extract mark types from marks
+                if "marks" in doc:
+                    for mark in doc["marks"]:
+                        if isinstance(mark, dict) and "type" in mark:
+                            mark_types.add(mark["type"])
+                
+                # Recursively process content
+                if "content" in doc:
+                    for item in doc["content"]:
+                        extract_types_from_document(item, node_types, mark_types)
+            
+            return node_types, mark_types
+        
+        found_node_types, found_mark_types = extract_types_from_document(full_document)
+        
+        # Expected node types (all NodeType enum values converted to string values)
+        expected_node_types = {node_type.value for node_type in NodeType}
+        expected_node_types.update({"doc", "text"})  # Core ProseMirror types
+        
+        # Expected mark types (all MarkType enum values converted to string values)
+        expected_mark_types = {mark_type.value for mark_type in MarkType}
+        
+        # Verify all expected node types are present
+        missing_node_types = expected_node_types - found_node_types
+        assert not missing_node_types, (
+            f"Missing node types in full_document: {missing_node_types}"
+        )
+        
+        # Verify all expected mark types are present
+        missing_mark_types = expected_mark_types - found_mark_types
+        assert not missing_mark_types, (
+            f"Missing mark types in full_document: {missing_mark_types}"
+        )
+
+        
     def test_full_document_produces_expected_html_output(self, full_document):
-        schema = SchemaFactory.create_schema()
-        html = doc_to_html(full_document, schema=schema)
+        config = ProsemirrorConfig()
+        html = doc_to_html(full_document, schema=config.schema)
 
         expected_html = (
             "<h1>Main Title</h1><h2>Subtitle</h2>"
@@ -32,14 +83,14 @@ class TestDocToHtml:
         )
 
         assert html == expected_html
-        assert html_to_doc(html, schema=schema) == full_document, (
-            "Round-trip from doc to html to doc is lossless"
+        assert html_to_doc(html, schema=config.schema) == full_document, (
+            "Round-trip from document to html is lossless"
         )
 
     def test_minimal_document_produces_simple_paragraph(self):
-        schema = SchemaFactory.create_schema(
-            allowed_node_types=[], allowed_mark_types=[]
-        )
+        config = ProsemirrorConfig(
+            allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[])
+        schema = config.schema
         doc = {
             "type": "doc",
             "content": [
@@ -64,9 +115,9 @@ class TestDocToHtml:
     def test_empty_or_none_document_returns_empty_string(
         self, input_doc, expected_html
     ):
-        schema = SchemaFactory.create_schema(
-            allowed_node_types=[], allowed_mark_types=[]
-        )
+        config = ProsemirrorConfig(
+            allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[])
+        schema = config.schema
 
         html = doc_to_html(input_doc, schema=schema)
 
@@ -86,9 +137,9 @@ class TestDocToHtml:
     def test_heading_levels_produce_correct_heading_tags(
         self, level, text, expected_tag
     ):
-        schema = SchemaFactory.create_schema(
-            allowed_node_types=[NodeType.HEADING], allowed_mark_types=[]
-        )
+        config = ProsemirrorConfig(
+            allowed_node_types=[NodeType.PARAGRAPH, NodeType.HEADING], allowed_mark_types=[])
+        schema = config.schema
         doc = {
             "type": "doc",
             "content": [
@@ -114,10 +165,10 @@ class TestDocToHtml:
         ],
     )
     def test_text_marks_produce_formatted_text(self, mark_type, text, expected_tag):
-        schema = SchemaFactory.create_schema(
-            allowed_node_types=[],
-            allowed_mark_types=[MarkType.STRONG, MarkType.ITALIC, MarkType.CODE],
-        )
+        config = ProsemirrorConfig(
+            allowed_node_types=[NodeType.PARAGRAPH],
+            allowed_mark_types=[MarkType.STRONG, MarkType.ITALIC, MarkType.CODE])
+        schema = config.schema
         doc = {
             "type": "doc",
             "content": [
@@ -138,9 +189,9 @@ class TestDocToHtml:
         assert html == expected_html
 
     def test_link_produces_anchor_tag_with_href_and_title(self):
-        schema = SchemaFactory.create_schema(
-            allowed_node_types=[], allowed_mark_types=[MarkType.LINK]
-        )
+        config = ProsemirrorConfig(
+            allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[MarkType.LINK])
+        schema = config.schema
         doc = {
             "type": "doc",
             "content": [
@@ -194,9 +245,8 @@ class TestDocToHtml:
     def test_block_elements_produce_correct_tags(
         self, node_type, allowed_node, text, expected_html
     ):
-        schema = SchemaFactory.create_schema(
-            allowed_node_types=[allowed_node], allowed_mark_types=[]
-        )
+        config = ProsemirrorConfig(allowed_node_types=[NodeType.PARAGRAPH] + [allowed_node], allowed_mark_types=[])
+        schema = config.schema
 
         if node_type == "blockquote":
             content = [
@@ -229,9 +279,8 @@ class TestHtmlToDoc:
     def test_simple_paragraph_produces_paragraph_node(
         self,
     ):
-        schema = SchemaFactory.create_schema(
-            allowed_node_types=[], allowed_mark_types=[]
-        )
+        config = ProsemirrorConfig(allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[])
+        schema = config.schema
         html = "<p>Hello world</p>"
 
         doc = html_to_doc(html, schema=schema)
@@ -250,9 +299,8 @@ class TestHtmlToDoc:
     def test_multiple_paragraphs_produce_paragraph_nodes(
         self,
     ):
-        schema = SchemaFactory.create_schema(
-            allowed_node_types=[], allowed_mark_types=[]
-        )
+        config = ProsemirrorConfig(allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[])
+        schema = config.schema
         html = "<p>First paragraph</p><p>Second paragraph</p>"
 
         doc = html_to_doc(html, schema=schema)
@@ -285,9 +333,8 @@ class TestHtmlToDoc:
         ],
     )
     def test_heading_tags_produce_heading_nodes(self, html_tag, level, text):
-        schema = SchemaFactory.create_schema(
-            allowed_node_types=[NodeType.HEADING], allowed_mark_types=[]
-        )
+        config = ProsemirrorConfig(allowed_node_types=[NodeType.PARAGRAPH] + [NodeType.HEADING], allowed_mark_types=[])
+        schema = config.schema
         html = f"<{html_tag}>{text}</{html_tag}>"
 
         doc = html_to_doc(html, schema=schema)
@@ -306,9 +353,8 @@ class TestHtmlToDoc:
         assert doc == expected_doc
 
     def test_formatted_text_produces_text_marks(self):
-        schema = SchemaFactory.create_schema(
-            allowed_node_types=[], allowed_mark_types=[MarkType.STRONG, MarkType.ITALIC]
-        )
+        config = ProsemirrorConfig(allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[MarkType.STRONG, MarkType.ITALIC])
+        schema = config.schema
         html = "<p>Plain <strong>bold</strong> and <em>italic</em> text</p>"
 
         doc = html_to_doc(html, schema=schema)
@@ -340,9 +386,8 @@ class TestHtmlToDoc:
         assert doc == expected_doc
 
     def test_link_produces_link_mark(self):
-        schema = SchemaFactory.create_schema(
-            allowed_node_types=[], allowed_mark_types=[MarkType.LINK]
-        )
+        config = ProsemirrorConfig(allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[MarkType.LINK])
+        schema = config.schema
         html = (
             '<p>Visit <a href="https://example.com" title="Example">this link</a></p>'
         )
@@ -396,9 +441,8 @@ class TestHtmlToDoc:
     def test_block_elements_produce_correct_nodes(
         self, html, node_type, allowed_node, text
     ):
-        schema = SchemaFactory.create_schema(
-            allowed_node_types=[allowed_node], allowed_mark_types=[]
-        )
+        config = ProsemirrorConfig(allowed_node_types=[NodeType.PARAGRAPH] + [allowed_node], allowed_mark_types=[])
+        schema = config.schema
 
         doc = html_to_doc(html, schema=schema)
 
@@ -437,18 +481,16 @@ class TestHtmlToDoc:
         ],
     )
     def test_empty_or_whitespace_string_produces_empty_document(self, input_html):
-        schema = SchemaFactory.create_schema(
-            allowed_node_types=[], allowed_mark_types=[]
-        )
+        config = ProsemirrorConfig(allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[])
+        schema = config.schema
 
         doc = html_to_doc(input_html, schema=schema)
 
         assert doc == EMPTY_DOC
 
     def test_horizontal_rule_produces_hr_node(self):
-        schema = SchemaFactory.create_schema(
-            allowed_node_types=[NodeType.HORIZONTAL_RULE], allowed_mark_types=[]
-        )
+        config = ProsemirrorConfig(allowed_node_types=[NodeType.PARAGRAPH] + [NodeType.HORIZONTAL_RULE], allowed_mark_types=[])
+        schema = config.schema
         html = "<p>Before</p><hr><p>After</p>"
 
         doc = html_to_doc(html, schema=schema)
@@ -654,9 +696,9 @@ class TestRoundTripConversion:
     def test_round_trip_preserves_single_node_types(
         self, node_types, mark_types, original_doc
     ):
-        schema = SchemaFactory.create_schema(
-            allowed_node_types=node_types, allowed_mark_types=mark_types
-        )
+        node_types_with_paragraph = [NodeType.PARAGRAPH] + node_types if node_types else [NodeType.PARAGRAPH]
+        config = ProsemirrorConfig(allowed_node_types=node_types_with_paragraph, allowed_mark_types=mark_types)
+        schema = config.schema
 
         html = doc_to_html(original_doc, schema=schema)
         converted_doc = html_to_doc(html, schema=schema)
@@ -664,9 +706,8 @@ class TestRoundTripConversion:
         assert converted_doc == original_doc
 
     def test_simple_paragraph_preserves_content(self):
-        schema = SchemaFactory.create_schema(
-            allowed_node_types=[], allowed_mark_types=[]
-        )
+        config = ProsemirrorConfig(allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[])
+        schema = config.schema
         original_doc = {
             "type": "doc",
             "content": [
@@ -683,9 +724,8 @@ class TestRoundTripConversion:
         assert converted_doc == original_doc
 
     def test_formatted_text_preserves_content(self):
-        schema = SchemaFactory.create_schema(
-            allowed_node_types=[], allowed_mark_types=[MarkType.STRONG, MarkType.ITALIC]
-        )
+        config = ProsemirrorConfig(allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[MarkType.STRONG, MarkType.ITALIC])
+        schema = config.schema
         original_doc = {
             "type": "doc",
             "content": [
@@ -716,10 +756,8 @@ class TestRoundTripConversion:
         assert converted_doc == original_doc
 
     def test_complex_markup_preserves_structure(self):
-        schema = SchemaFactory.create_schema(
-            allowed_node_types=[NodeType.HEADING, NodeType.BLOCKQUOTE],
-            allowed_mark_types=[MarkType.STRONG],
-        )
+        config = ProsemirrorConfig(allowed_node_types=[NodeType.PARAGRAPH] + [NodeType.HEADING, NodeType.BLOCKQUOTE], allowed_mark_types=[MarkType.STRONG])
+        schema = config.schema
         original_html = (
             "<h1>Title</h1><blockquote><p><strong>Quote</strong> text</p></blockquote>"
         )
@@ -734,10 +772,8 @@ class TestRoundTripConversion:
         self, full_document
     ):
         # Test with a subset of features to ensure round-trip works
-        schema = SchemaFactory.create_schema(
-            allowed_node_types=[NodeType.HEADING, NodeType.BLOCKQUOTE],
-            allowed_mark_types=[MarkType.STRONG, MarkType.ITALIC],
-        )
+        config = ProsemirrorConfig(allowed_node_types=[NodeType.PARAGRAPH] + [NodeType.HEADING, NodeType.BLOCKQUOTE], allowed_mark_types=[MarkType.STRONG, MarkType.ITALIC])
+        schema = config.schema
 
         # Create a simplified version of full_document with only supported features
         simplified_doc = {

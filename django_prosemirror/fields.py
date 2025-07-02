@@ -11,10 +11,10 @@ from django.db import models
 
 from prosemirror import Schema
 
+from django_prosemirror.config import ProsemirrorConfig
 from django_prosemirror.schema import (
     MarkType,
     NodeType,
-    SchemaFactory,
     validate_doc,
 )
 from django_prosemirror.serde import ProsemirrorDocument, doc_to_html, html_to_doc
@@ -331,11 +331,7 @@ class ProsemirrorModelField(models.JSONField):
     """
 
     description = "Prosemirror content stored as JSON"
-    schema: Schema
-    allowed_node_types: list[NodeType] | None
-    allowed_mark_types: list[MarkType] | None
-    tag_to_classes: Mapping[str, str]
-    history: bool | None
+    config: ProsemirrorConfig
 
     def __init__(
         self,
@@ -378,16 +374,12 @@ class ProsemirrorModelField(models.JSONField):
                 "allowed_mark_types must be a list of MarkType enums or None"
             )
 
-        self.allowed_node_types = allowed_node_types
-        self.allowed_mark_types = allowed_mark_types
-        self.tag_to_classes = tag_to_classes
-
-        self.schema = SchemaFactory.create_schema(
-            allowed_node_types=self.allowed_node_types,
-            allowed_mark_types=self.allowed_mark_types,
-            tag_to_classes=self.tag_to_classes,
+        self.config = ProsemirrorConfig(
+            allowed_node_types=allowed_node_types,
+            allowed_mark_types=allowed_mark_types,
+            tag_to_classes=tag_to_classes,
+            history=history,
         )
-        self.history = history
 
         # Validate default callable if provided
         if default:
@@ -395,7 +387,7 @@ class ProsemirrorModelField(models.JSONField):
                 raise ValueError(f"`default` must be a callable, got {type(default)}")
 
             try:
-                validate_doc(default(), schema=self.schema)
+                validate_doc(default(), schema=self.config.schema)
             except ValidationError:
                 raise ValidationError(
                     "Your `default` callable returns a document that would be invalid "
@@ -414,10 +406,10 @@ class ProsemirrorModelField(models.JSONField):
     def formfield(self, *args, **kwargs):
         defaults = {
             "form_class": ProsemirrorFormField,
-            "allowed_node_types": self.allowed_node_types,
-            "allowed_mark_types": self.allowed_mark_types,
-            "tag_to_classes": self.tag_to_classes,
-            "history": self.history,
+            "allowed_node_types": self.config.allowed_node_types,
+            "allowed_mark_types": self.config.allowed_mark_types,
+            "tag_to_classes": self.config.tag_to_classes,
+            "history": self.config.history,
         }
         defaults.update(kwargs)
         return super().formfield(*args, **defaults)
@@ -427,7 +419,7 @@ class ProsemirrorModelField(models.JSONField):
         setattr(
             cls,
             name,
-            ProsemirrorFieldDescriptor(self, schema=self.schema),
+            ProsemirrorFieldDescriptor(self, schema=self.config.schema),
         )
 
     def get_prep_value(self, value):
@@ -463,10 +455,10 @@ class ProsemirrorModelField(models.JSONField):
 
     def deconstruct(self):
         name, path, args, kwargs = super().deconstruct()
-        kwargs["tag_to_classes"] = self.tag_to_classes
-        kwargs["allowed_node_types"] = self.allowed_node_types
-        kwargs["allowed_mark_types"] = self.allowed_mark_types
-        kwargs["history"] = self.history
+        kwargs["tag_to_classes"] = self.config.tag_to_classes
+        kwargs["allowed_node_types"] = self.config.allowed_node_types
+        kwargs["allowed_mark_types"] = self.config.allowed_mark_types
+        kwargs["history"] = self.config.history
         return name, path, args, kwargs
 
 
@@ -477,11 +469,7 @@ class ProsemirrorFormField(forms.JSONField):
     provides the appropriate widget for rendering the editor.
     """
 
-    schema: Schema
-    allowed_node_types: list[NodeType] | None
-    allowed_mark_types: list[MarkType] | None
-    tag_to_classes: Mapping[str, str]
-    history: bool
+    config: ProsemirrorConfig
     widget = ProsemirrorWidget
 
     def __init__(
@@ -515,28 +503,24 @@ class ProsemirrorFormField(forms.JSONField):
                 "allowed_mark_types must be a list of MarkType enums or None"
             )
 
-        self.allowed_node_types = allowed_node_types
-        self.allowed_mark_types = allowed_mark_types
-        self.tag_to_classes = tag_to_classes
-
-        self.schema = SchemaFactory.create_schema(
-            allowed_node_types=self.allowed_node_types,
-            allowed_mark_types=self.allowed_mark_types,
-            tag_to_classes=self.tag_to_classes,
+        self.config = ProsemirrorConfig(
+            allowed_node_types=allowed_node_types,
+            allowed_mark_types=allowed_mark_types,
+            tag_to_classes=tag_to_classes,
+            history=history,
         )
-        self.history = history
         kwargs["widget"] = self.widget(
-            allowed_node_types=self.allowed_node_types,
-            allowed_mark_types=self.allowed_mark_types,
-            tag_to_classes=self.tag_to_classes,
-            history=self.history,
+            allowed_node_types=self.config.allowed_node_types,
+            allowed_mark_types=self.config.allowed_mark_types,
+            tag_to_classes=self.config.tag_to_classes,
+            history=self.config.history,
         )
         super().__init__(encoder, decoder, **kwargs)
 
     def to_python(self, value) -> ProsemirrorFieldDocument:
         """Convert form input to Python representation."""
         python_value = super().to_python(value)
-        return ProsemirrorFieldDocument(python_value, schema=self.schema)
+        return ProsemirrorFieldDocument(python_value, schema=self.config.schema)
 
     def validate(self, value):
         """Validate the form field value."""
@@ -547,4 +531,4 @@ class ProsemirrorFormField(forms.JSONField):
 
         super().validate(value.doc)
         if value.doc is not None:
-            validate_doc(value.doc, schema=self.schema)
+            validate_doc(value.doc, schema=self.config.schema)

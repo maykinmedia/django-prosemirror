@@ -7,8 +7,8 @@ from django import forms
 from django.core.exceptions import ValidationError
 
 import pytest
-from prosemirror import Schema
 
+from django_prosemirror.config import ProsemirrorConfig
 from django_prosemirror.constants import EMPTY_DOC
 from django_prosemirror.fields import ProsemirrorFieldDocument, ProsemirrorFormField
 from django_prosemirror.schema import MarkType, NodeType
@@ -20,15 +20,13 @@ class TestProsemirrorFormField:
 
     def test_init_with_default_schema(self):
         field = ProsemirrorFormField()
-
-        assert field.allowed_node_types is None  # Defaults to all
-        assert field.allowed_mark_types is None  # Defaults to all
-        assert isinstance(field.schema, Schema)
+        assert isinstance(field.config, ProsemirrorConfig)
         assert isinstance(field.widget, ProsemirrorWidget)
 
     def test_init_with_custom_schema(self):
         field = ProsemirrorFormField(
-            allowed_node_types=[NodeType.HEADING], allowed_mark_types=[MarkType.STRONG]
+            allowed_node_types=[NodeType.PARAGRAPH, NodeType.HEADING],
+            allowed_mark_types=[MarkType.STRONG],
         )
 
         assert field.schema is not None
@@ -57,13 +55,17 @@ class TestProsemirrorFormField:
         assert isinstance(field.widget, ProsemirrorWidget)
 
     def test_field_inherits_from_json_field(self):
-        field = ProsemirrorFormField(allowed_node_types=[NodeType.HEADING])
+        field = ProsemirrorFormField(
+            allowed_node_types=[NodeType.PARAGRAPH, NodeType.HEADING]
+        )
 
         assert isinstance(field, forms.JSONField)
 
     # Form field specific tests
     def test_prepare_value_with_prosemirror_document(self):
-        field = ProsemirrorFormField(allowed_node_types=[NodeType.HEADING])
+        field = ProsemirrorFormField(
+            allowed_node_types=[NodeType.PARAGRAPH, NodeType.HEADING]
+        )
         doc_data = {
             "type": "doc",
             "content": [
@@ -83,7 +85,9 @@ class TestProsemirrorFormField:
         assert result == expected_json
 
     def test_to_python_with_valid_json_string(self):
-        field = ProsemirrorFormField(allowed_node_types=[NodeType.HEADING])
+        field = ProsemirrorFormField(
+            allowed_node_types=[NodeType.PARAGRAPH, NodeType.HEADING]
+        )
         doc_data = {
             "type": "doc",
             "content": [
@@ -102,7 +106,9 @@ class TestProsemirrorFormField:
         assert result.doc == doc_data
 
     def test_to_python_with_dict(self):
-        field = ProsemirrorFormField(allowed_node_types=[NodeType.HEADING])
+        field = ProsemirrorFormField(
+            allowed_node_types=[NodeType.PARAGRAPH, NodeType.HEADING]
+        )
         doc_data = {
             "type": "doc",
             "content": [
@@ -120,7 +126,9 @@ class TestProsemirrorFormField:
         assert result.doc == doc_data
 
     def test_to_python_with_none(self):
-        field = ProsemirrorFormField(allowed_node_types=[NodeType.HEADING])
+        field = ProsemirrorFormField(
+            allowed_node_types=[NodeType.PARAGRAPH, NodeType.HEADING]
+        )
 
         result = field.to_python(None)
 
@@ -128,7 +136,9 @@ class TestProsemirrorFormField:
         assert result.doc is None
 
     def test_to_python_with_empty_string(self):
-        field = ProsemirrorFormField(allowed_node_types=[NodeType.HEADING])
+        field = ProsemirrorFormField(
+            allowed_node_types=[NodeType.PARAGRAPH, NodeType.HEADING]
+        )
 
         result = field.to_python("")
 
@@ -159,7 +169,9 @@ class TestProsemirrorFormField:
         assert result.schema == field.schema
 
     def test_validate_with_valid_prosemirror_document(self):
-        field = ProsemirrorFormField(allowed_node_types=[NodeType.HEADING])
+        field = ProsemirrorFormField(
+            allowed_node_types=[NodeType.PARAGRAPH, NodeType.HEADING]
+        )
         schema = field.schema
         doc_data = {
             "type": "doc",
@@ -178,13 +190,17 @@ class TestProsemirrorFormField:
         field.validate(doc)
 
     def test_validate_with_invalid_value_type_raises_value_error(self):
-        field = ProsemirrorFormField(allowed_node_types=[NodeType.HEADING])
+        field = ProsemirrorFormField(
+            allowed_node_types=[NodeType.PARAGRAPH, NodeType.HEADING]
+        )
 
         with pytest.raises(ValueError, match="Expected"):
             field.validate({"type": "doc", "content": []})
 
     def test_validate_with_invalid_document_structure_raises_validation_error(self):
-        field = ProsemirrorFormField(allowed_node_types=[NodeType.HEADING])
+        field = ProsemirrorFormField(
+            allowed_node_types=[NodeType.PARAGRAPH, NodeType.HEADING]
+        )
         schema = field.schema
         invalid_doc_data = {"invalid": "structure"}
 

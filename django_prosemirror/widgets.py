@@ -6,7 +6,8 @@ from typing import Any
 
 from django.forms.widgets import Widget
 
-from django_prosemirror.schema import MarkType, NodeType, SchemaFactory
+from django_prosemirror.config import ProsemirrorConfig
+from django_prosemirror.schema import MarkType, NodeType
 
 
 class ProsemirrorWidget(Widget):
@@ -17,10 +18,7 @@ class ProsemirrorWidget(Widget):
     """
 
     template_name = "widget.html"
-    allowed_node_types: list[NodeType] | None
-    allowed_mark_types: list[MarkType] | None
-    tag_to_classes: Mapping[str, str] | None
-    history: bool
+    config: ProsemirrorConfig
 
     def __init__(
         self,
@@ -28,37 +26,26 @@ class ProsemirrorWidget(Widget):
         allowed_node_types: list[NodeType] | None = None,
         allowed_mark_types: list[MarkType] | None = None,
         tag_to_classes: Mapping[str, str] | None = None,
-        history: bool = True,
+        history: bool | None = None,
         **kwargs,
     ):
         """Initialize the widget with allowed node and mark types."""
         super().__init__(*args, **kwargs)
-
-        self.allowed_node_types = allowed_node_types
-        self.allowed_mark_types = allowed_mark_types
-        self.tag_to_classes = tag_to_classes
-        self.history = history
+        self.config = ProsemirrorConfig(
+            allowed_node_types=allowed_node_types,
+            allowed_mark_types=allowed_mark_types,
+            tag_to_classes=tag_to_classes,
+            history=history,
+        )
 
     def get_context(self, name, value, attrs):
         """Get the context data for rendering the widget template."""
         attrs = super().get_context(name, value, attrs)
-
-        # Serialize node and mark types as a single list of strings
-        schema_types = []
-        if self.allowed_node_types:
-            schema_types.extend(
-                node_type.value for node_type in self.allowed_node_types
-            )
-        if self.allowed_mark_types:
-            schema_types.extend(
-                mark_type.value for mark_type in self.allowed_mark_types
-            )
-
-        attrs["schema"] = json.dumps(schema_types)
-        attrs["classes"] = json.dumps(self.tag_to_classes)
-        attrs["history"] = "true" if self.history else "false"
-
+        attrs["schema"] = json.dumps(self.config.all_schema_types)
+        attrs["classes"] = json.dumps(self.config.tag_to_classes)
+        attrs["history"] = json.dumps(self.config.history)
         return attrs
+
 
     class Media:
         js = ("js/django-prosemirror.js",)
