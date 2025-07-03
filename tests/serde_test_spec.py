@@ -432,6 +432,48 @@ LIST_CASES = [
             "</li></ol>"
         ),
     ),
+    SerdeTestCase(
+        name="ordered_list_with_start_attribute",
+        description="Ordered list with start=5 preserves start attribute in round trip",
+        config_node_types=[
+            NodeType.PARAGRAPH,
+            NodeType.ORDERED_LIST,
+            NodeType.LIST_ITEM,
+        ],
+        config_mark_types=[],
+        document={
+            "type": "doc",
+            "content": [
+                {
+                    "type": "ordered_list",
+                    "attrs": {"start": 5},
+                    "content": [
+                        {
+                            "type": "list_item",
+                            "content": [
+                                {
+                                    "type": "paragraph",
+                                    "content": [{"type": "text", "text": "Fifth item"}],
+                                }
+                            ],
+                        },
+                        {
+                            "type": "list_item",
+                            "content": [
+                                {
+                                    "type": "paragraph",
+                                    "content": [{"type": "text", "text": "Sixth item"}],
+                                }
+                            ],
+                        },
+                    ],
+                }
+            ],
+        },
+        expected_html=(
+            '<ol start="5"><li><p>Fifth item</p></li><li><p>Sixth item</p></li></ol>'
+        ),
+    ),
 ]
 
 # Test cases for inline elements
