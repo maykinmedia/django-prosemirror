@@ -75,7 +75,8 @@ class ProsemirrorConfig:
             self.allowed_mark_types = allowed_mark_types
 
         self.history = get_setting("history") if history is None else history
-        self.tag_to_classes = tag_to_classes or get_setting("tag_to_classes")
+        default_tag_to_classes = get_setting("tag_to_classes")
+        self.tag_to_classes = default_tag_to_classes | (tag_to_classes or {})
 
         # Validate node types
         try:

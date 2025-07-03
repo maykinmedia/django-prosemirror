@@ -2,7 +2,6 @@
 
 import json
 from collections.abc import Mapping
-from typing import Any
 
 from django.forms.widgets import Widget
 
@@ -45,7 +44,6 @@ class ProsemirrorWidget(Widget):
         attrs["classes"] = json.dumps(self.config.tag_to_classes)
         attrs["history"] = json.dumps(self.config.history)
         return attrs
-
 
     class Media:
         js = ("js/django-prosemirror.js",)

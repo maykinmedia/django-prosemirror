@@ -9,7 +9,9 @@ from django_prosemirror.schema import NodeType
 class TestProsemirrorFieldDocument:
     def test_init_with_parameters(self):
         """Test field document initialization with and without sync callback."""
-        config = ProsemirrorConfig(allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[])
+        config = ProsemirrorConfig(
+            allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[]
+        )
         schema = config.schema
         doc_data = {"type": "doc", "content": []}
         callback = Mock()
@@ -26,7 +28,10 @@ class TestProsemirrorFieldDocument:
         assert doc_minimal._sync_callback is callback
 
     def test_dunder_str_returns_html_representation(self):
-        config = ProsemirrorConfig(allowed_node_types=[NodeType.PARAGRAPH, NodeType.HEADING], allowed_mark_types=[])
+        config = ProsemirrorConfig(
+            allowed_node_types=[NodeType.PARAGRAPH, NodeType.HEADING],
+            allowed_mark_types=[],
+        )
         schema = config.schema
         doc_data = {
             "type": "doc",
@@ -43,7 +48,9 @@ class TestProsemirrorFieldDocument:
         assert str(doc) == "<h1>Hello</h1>"
 
     def test_raw_data_contains_document_structure(self):
-        config = ProsemirrorConfig(allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[])
+        config = ProsemirrorConfig(
+            allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[]
+        )
         schema = config.schema
         doc_data = {"type": "doc", "content": []}
 
@@ -52,7 +59,9 @@ class TestProsemirrorFieldDocument:
         assert doc.raw_data == doc_data
 
     def test_doc_property_getter_returns_raw_data(self):
-        config = ProsemirrorConfig(allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[])
+        config = ProsemirrorConfig(
+            allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[]
+        )
         schema = config.schema
         doc_data = {"type": "doc", "content": []}
 
@@ -61,7 +70,9 @@ class TestProsemirrorFieldDocument:
         assert doc.doc == doc_data == doc.raw_data
 
     def test_doc_property_setter_updates_raw_data(self):
-        config = ProsemirrorConfig(allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[])
+        config = ProsemirrorConfig(
+            allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[]
+        )
         schema = config.schema
         original_data = {"type": "doc", "content": []}
         new_data = {
@@ -79,7 +90,9 @@ class TestProsemirrorFieldDocument:
         assert doc._raw_data == new_data
 
     def test_doc_property_setter_calls_sync_callback(self):
-        config = ProsemirrorConfig(allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[])
+        config = ProsemirrorConfig(
+            allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[]
+        )
         schema = config.schema
         original_data = {"type": "doc", "content": []}
         new_data = {
@@ -101,7 +114,9 @@ class TestProsemirrorFieldDocument:
         callback.assert_called_once_with(new_data)
 
     def test_reduce_method_for_pickle_support(self):
-        config = ProsemirrorConfig(allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[])
+        config = ProsemirrorConfig(
+            allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[]
+        )
         schema = config.schema
         doc_data = {"type": "doc", "content": []}
         callback = Mock()
@@ -123,7 +138,9 @@ class TestProsemirrorFieldDocument:
         assert restored_doc._sync_callback is None, "Callback should not be preserved"
 
     def test_empty_document_handling(self):
-        config = ProsemirrorConfig(allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[])
+        config = ProsemirrorConfig(
+            allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[]
+        )
         schema = config.schema
 
         doc = ProsemirrorFieldDocument(EMPTY_DOC, schema=schema)
@@ -133,7 +150,9 @@ class TestProsemirrorFieldDocument:
         assert doc.raw_data == EMPTY_DOC
 
     def test_sync_to_model_called_when_callback_exists(self):
-        config = ProsemirrorConfig(allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[])
+        config = ProsemirrorConfig(
+            allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[]
+        )
         schema = config.schema
         doc_data = {"type": "doc", "content": []}
         callback = Mock()
@@ -148,7 +167,9 @@ class TestProsemirrorFieldDocument:
         callback.assert_called_once_with(doc_data)
 
     def test_sync_to_model_handles_no_callback(self):
-        config = ProsemirrorConfig(allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[])
+        config = ProsemirrorConfig(
+            allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[]
+        )
         schema = config.schema
         doc_data = {"type": "doc", "content": []}
 
@@ -158,7 +179,9 @@ class TestProsemirrorFieldDocument:
         doc._sync_to_model()
 
     def test_html_property_getter_converts_to_html(self):
-        config = ProsemirrorConfig(allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[])
+        config = ProsemirrorConfig(
+            allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[]
+        )
         schema = config.schema
         doc_data = {
             "type": "doc",
@@ -175,7 +198,10 @@ class TestProsemirrorFieldDocument:
         assert doc.html == "<p>Hello world</p>"
 
     def test_html_property_setter_updates_document_from_html(self):
-        config = ProsemirrorConfig(allowed_node_types=[NodeType.PARAGRAPH, NodeType.HEADING], allowed_mark_types=[])
+        config = ProsemirrorConfig(
+            allowed_node_types=[NodeType.PARAGRAPH, NodeType.HEADING],
+            allowed_mark_types=[],
+        )
         schema = config.schema
         original_data = {"type": "doc", "content": []}
         callback = Mock()
@@ -203,7 +229,10 @@ class TestProsemirrorFieldDocument:
         callback.assert_called_once_with(expected_data)
 
     def test_html_setter_calls_sync_callback(self):
-        config = ProsemirrorConfig(allowed_node_types=[NodeType.PARAGRAPH, NodeType.HEADING], allowed_mark_types=[])
+        config = ProsemirrorConfig(
+            allowed_node_types=[NodeType.PARAGRAPH, NodeType.HEADING],
+            allowed_mark_types=[],
+        )
         schema = config.schema
         original_data = {"type": "doc", "content": []}
         callback = Mock()
@@ -230,7 +259,10 @@ class TestProsemirrorFieldDocument:
 
     def test_reduce_preserves_complex_document_structure(self):
         """Test that __reduce__ works correctly with complex document structures."""
-        config = ProsemirrorConfig(allowed_node_types=[NodeType.PARAGRAPH, NodeType.HEADING], allowed_mark_types=[])
+        config = ProsemirrorConfig(
+            allowed_node_types=[NodeType.PARAGRAPH, NodeType.HEADING],
+            allowed_mark_types=[],
+        )
         schema = config.schema
         doc_data = {
             "type": "doc",
@@ -260,7 +292,10 @@ class TestProsemirrorFieldDocument:
         assert restored_doc._sync_callback is None, "Callback should not be preserved"
 
     def test_document_property_chaining(self):
-        config = ProsemirrorConfig(allowed_node_types=[NodeType.PARAGRAPH, NodeType.HEADING], allowed_mark_types=[])
+        config = ProsemirrorConfig(
+            allowed_node_types=[NodeType.PARAGRAPH, NodeType.HEADING],
+            allowed_mark_types=[],
+        )
         schema = config.schema
         original_data = {
             "type": "doc",
@@ -296,7 +331,9 @@ class TestProsemirrorFieldDocument:
 
     def test_sync_callback_not_called_when_none(self):
         """Test that no error occurs when sync callback is None."""
-        config = ProsemirrorConfig(allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[])
+        config = ProsemirrorConfig(
+            allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[]
+        )
         schema = config.schema
         doc_data = {"type": "doc", "content": []}
         doc = ProsemirrorFieldDocument(

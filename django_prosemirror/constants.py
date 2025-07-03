@@ -17,22 +17,10 @@ EMPTY_DOC = {"type": "doc", "content": []}
 SETTINGS_KEY = "DJANGO_PROSEMIRROR"
 
 DEFAULT_SETTINGS: ProseMirrorConfig = {
-    "tag_to_classes": {
-        "paragraph": "",
-        "heading": "",
-        "image": "",
-        "link": "",
-        "blockquote": "",
-        "code_block": "",
-        "code": "",
-        "ordered_list": "",
-        "unordered_list": "",
-        "list_item": "",
-        "horizontal_rule": "",
-    },
+    "tag_to_classes": {},
     "allowed_node_types": [
         "paragraph",
-        "blockquote", 
+        "blockquote",
         "horizontal_rule",
         "heading",
         "image",
@@ -45,7 +33,7 @@ DEFAULT_SETTINGS: ProseMirrorConfig = {
     "allowed_mark_types": [
         "strong",
         "em",
-        "link", 
+        "link",
         "code",
         "underline",
         "strikethrough",

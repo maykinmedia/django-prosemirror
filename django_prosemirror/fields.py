@@ -68,7 +68,7 @@ class ProsemirrorFieldDocument:
         return self._raw_data
 
     # Mark the setter as altering data
-    raw_data.fset.alters_data = True
+    raw_data.fset.alters_data = True  # type: ignore[attr-defined]
 
     @property
     def html(self) -> str:
@@ -87,7 +87,7 @@ class ProsemirrorFieldDocument:
         return self.html
 
     # Mark the setter as altering data
-    html.fset.alters_data = True
+    html.fset.alters_data = True  # type: ignore[attr-defined]
 
     @property
     def doc(self) -> ProsemirrorDocument:
@@ -102,7 +102,7 @@ class ProsemirrorFieldDocument:
         return self._raw_data
 
     # Mark the setter as altering data
-    doc.fset.alters_data = True
+    doc.fset.alters_data = True  # type: ignore[attr-defined]
 
     def _sync_to_model(self):
         """Sync changes back to the model instance"""
@@ -333,6 +333,10 @@ class ProsemirrorModelField(models.JSONField):
     description = "Prosemirror content stored as JSON"
     config: ProsemirrorConfig
 
+    def __new__(cls, *args: Any, **kwargs: Any) -> "ProsemirrorModelField":
+        """Create a new instance of ProsemirrorModelField."""
+        return cast("ProsemirrorModelField", super().__new__(cls))
+
     def __init__(
         self,
         verbose_name: str | None = None,
@@ -345,7 +349,7 @@ class ProsemirrorModelField(models.JSONField):
         allowed_mark_types: list[MarkType] | None = None,
         tag_to_classes: Mapping[str, str] | None = None,
         history: bool | None = None,
-        **kwargs: Any,  # type: ignore[misc]
+        **kwargs: Any,
     ):
         """Initialize the Prosemirror model field.
 
@@ -358,12 +362,14 @@ class ProsemirrorModelField(models.JSONField):
             allowed_node_types: List of NodeType enums to allow
             allowed_mark_types: List of MarkType enums to allow
             tag_to_classes: Mapping of tag names to CSS classes
+            history: Whether to enable history support
             **kwargs: Additional field options
 
         Raises:
             ValueError: If default is not callable
             ValidationError: If default callable returns invalid document
         """
+
         # Validate input types
         if allowed_node_types is not None and not isinstance(allowed_node_types, list):
             raise TypeError(
@@ -387,19 +393,22 @@ class ProsemirrorModelField(models.JSONField):
                 raise ValueError(f"`default` must be a callable, got {type(default)}")
 
             try:
-                validate_doc(default(), schema=self.config.schema)
+                validate_doc(
+                    cast(ProsemirrorDocument, default()), schema=self.config.schema
+                )
             except ValidationError:
                 raise ValidationError(
                     "Your `default` callable returns a document that would be invalid "
                     " according to your schema."
                 ) from None
 
+        # Call parent constructor with remaining args
         super().__init__(
-            verbose_name,
-            name,
-            default=default,
+            verbose_name=verbose_name,
+            name=name,
             encoder=encoder,
             decoder=decoder,
+            default=default,
             **kwargs,
         )
 
@@ -462,7 +471,7 @@ class ProsemirrorModelField(models.JSONField):
         return name, path, args, kwargs
 
 
-class ProsemirrorFormField(forms.JSONField):
+class ProsemirrorFormField(forms.JSONField):  # type: ignore[misc]
     """Django form field for Prosemirror rich text content.
 
     This form field handles Prosemirror document validation and
@@ -481,7 +490,7 @@ class ProsemirrorFormField(forms.JSONField):
         allowed_mark_types: list[MarkType] | None = None,
         tag_to_classes: Mapping[str, str] | None = None,
         history: bool = True,
-        **kwargs: Any,  # type: ignore[misc]
+        **kwargs: Any,
     ):
         """Initialize the Prosemirror form field.
 
@@ -515,7 +524,7 @@ class ProsemirrorFormField(forms.JSONField):
             tag_to_classes=self.config.tag_to_classes,
             history=self.config.history,
         )
-        super().__init__(encoder, decoder, **kwargs)
+        super().__init__(encoder, decoder, **kwargs)  # type: ignore[misc]
 
     def to_python(self, value) -> ProsemirrorFieldDocument:
         """Convert form input to Python representation."""

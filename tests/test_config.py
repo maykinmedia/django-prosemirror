@@ -169,7 +169,9 @@ class TestProsemirrorConfigExplicitValues:
         custom_classes = {"paragraph": "my-paragraph", "heading": "my-heading"}
         config = ProsemirrorConfig(tag_to_classes=custom_classes)
 
-        assert config.tag_to_classes == custom_classes
+        assert (
+            config.tag_to_classes == DEFAULT_SETTINGS["tag_to_classes"] | custom_classes
+        )
 
     def test_empty_mark_types_allowed(self):
         """Test that empty mark types list is allowed."""
@@ -209,7 +211,6 @@ class TestProsemirrorConfigSchema:
 
         # Should have no marks beyond core
         assert len(schema.spec["marks"]) == 0
-
 
     def test_create_schema_with_empty_spec_creates_minimal_schema(
         self,
