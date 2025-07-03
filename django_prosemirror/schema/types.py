@@ -21,7 +21,7 @@ class NodeType(enum.Enum):
     IMAGE = "image"
     HARD_BREAK = "hard_break"
     CODE_BLOCK = "code_block"
-    UNORDERED_LIST = "unordered_list"
+    BULLET_LIST = "bullet_list"
     ORDERED_LIST = "ordered_list"
     LIST_ITEM = "list_item"
 

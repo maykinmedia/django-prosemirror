@@ -341,11 +341,11 @@ BLOCK_ELEMENT_CASES = [
 # Test cases for list elements
 LIST_CASES = [
     SerdeTestCase(
-        name="unordered_list",
-        description="Unordered list produces ul with li elements",
+        name="bullet_list",
+        description="Bullet list produces ul with li elements",
         config_node_types=[
             NodeType.PARAGRAPH,
-            NodeType.UNORDERED_LIST,
+            NodeType.BULLET_LIST,
             NodeType.LIST_ITEM,
         ],
         config_mark_types=[],
@@ -353,7 +353,7 @@ LIST_CASES = [
             "type": "doc",
             "content": [
                 {
-                    "type": "unordered_list",
+                    "type": "bullet_list",
                     "content": [
                         {
                             "type": "list_item",
@@ -400,6 +400,7 @@ LIST_CASES = [
             "content": [
                 {
                     "type": "ordered_list",
+                    "attrs": {"start": 1},
                     "content": [
                         {
                             "type": "list_item",

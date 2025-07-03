@@ -15,6 +15,7 @@ from .marks import (
 )
 from .nodes import (
     BlockquoteNode,
+    BulletListNode,
     CodeBlockNode,
     HardBreakNode,
     HeadingNode,
@@ -23,7 +24,6 @@ from .nodes import (
     ListItemNode,
     OrderedListNode,
     ParagraphNode,
-    UnorderedListNode,
 )
 from .types import MarkType, NodeType, ProsemirrorDocument
 
@@ -73,7 +73,7 @@ __all__ = [
     "CodeBlockNode",
     "ImageNode",
     "HardBreakNode",
-    "UnorderedListNode",
+    "BulletListNode",
     "OrderedListNode",
     "ListItemNode",
     # Mark types

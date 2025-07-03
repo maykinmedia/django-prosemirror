@@ -120,7 +120,7 @@ def full_document() -> ProsemirrorDocument:
             },
             # Unordered list
             {
-                "type": "unordered_list",
+                "type": "bullet_list",
                 "content": [
                     {
                         "type": "list_item",
@@ -149,6 +149,7 @@ def full_document() -> ProsemirrorDocument:
             # Ordered list
             {
                 "type": "ordered_list",
+                "attrs": {"start": 1},
                 "content": [
                     {
                         "type": "list_item",

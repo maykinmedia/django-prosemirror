@@ -26,7 +26,7 @@ DEFAULT_SETTINGS: ProseMirrorConfig = {
         "image",
         "hard_break",
         "code_block",
-        "unordered_list",
+        "bullet_list",
         "ordered_list",
         "list_item",
     ],

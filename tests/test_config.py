@@ -246,7 +246,7 @@ class TestProsemirrorConfigSchema:
             "hard_break",
             "ordered_list",
             "list_item",
-            "unordered_list",
+            "bullet_list",
         }
         expected_marks = {"link", "em", "strong", "code", "strikethrough", "underline"}
 

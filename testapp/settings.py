@@ -67,7 +67,7 @@ PROSEMIRROR_CONFIG = {
         "code_block": "from_settings",
         "code": "from_settings",
         "ordered_list": "from_settings",
-        "unordered_list": "from_settings",
+        "bullet_list": "from_settings",
         "list_item": "from_settings",
         "horizontal_rule": "from_settings",
     }

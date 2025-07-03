@@ -18,6 +18,7 @@ from django_prosemirror.schema.marks import (
 )
 from django_prosemirror.schema.nodes import (
     BlockquoteNode,
+    BulletListNode,
     CodeBlockNode,
     HardBreakNode,
     HeadingNode,
@@ -26,7 +27,6 @@ from django_prosemirror.schema.nodes import (
     ListItemNode,
     OrderedListNode,
     ParagraphNode,
-    UnorderedListNode,
 )
 from django_prosemirror.schema.types import MarkType, NodeType
 
@@ -117,7 +117,7 @@ class ProsemirrorConfig:
             NodeType.CODE_BLOCK: CodeBlockNode(class_mapping),
             NodeType.IMAGE: ImageNode(class_mapping),
             NodeType.HARD_BREAK: HardBreakNode(class_mapping),
-            NodeType.UNORDERED_LIST: UnorderedListNode(class_mapping),
+            NodeType.BULLET_LIST: BulletListNode(class_mapping),
             NodeType.ORDERED_LIST: OrderedListNode(class_mapping),
             NodeType.LIST_ITEM: ListItemNode(class_mapping),
         }
