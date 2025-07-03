@@ -39,7 +39,7 @@ Documentation = "http://django_prosemirror.readthedocs.io/en/latest/"
 
 [project.optional-dependencies]
 tests = [
-    "pytest",
+    "pytest-playwright",
     "pytest-django",
     "pytest-cov",
     "tox",
