@@ -98,13 +98,12 @@ def simple_form_view(request):
 @csrf_exempt
 def model_form_view(request):
     """Model form view for testing ProseMirror model fields."""
-    form = TestModelForm(request.POST)
-    print(request.POST)
     if request.method == "POST":
-        form.is_valid()
-        form.clean()
-        saved_instance = form.save()
-        form = TestModelForm(instance=saved_instance)
+        form = TestModelForm(request.POST)
+        if form.is_valid():
+            form.save()
+    else:
+        form = TestModelForm()
 
     template = Template(FORM_TEMPLATE)
     context = RequestContext(
