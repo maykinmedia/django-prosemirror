@@ -41,6 +41,12 @@ class ProsemirrorWidget(Widget):
         """Get the context data for rendering the widget template."""
         attrs = super().get_context(name, value, attrs)
         attrs["schema"] = json.dumps(self.config.all_schema_types)
+        attrs["allowed_node_types"] = json.dumps(
+            [n.value for n in self.config.allowed_node_types]
+        )
+        attrs["allowed_mark_types"] = json.dumps(
+            [n.value for n in self.config.allowed_mark_types]
+        )
         attrs["classes"] = json.dumps(self.config.tag_to_classes)
         attrs["history"] = json.dumps(self.config.history)
         return attrs
