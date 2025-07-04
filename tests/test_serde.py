@@ -2,740 +2,175 @@
 
 import pytest
 
+from django_prosemirror.config import ProsemirrorConfig
 from django_prosemirror.constants import EMPTY_DOC
-from django_prosemirror.schema import FULL, AllowedNodeType, construct_schema_from_spec
+from django_prosemirror.schema import MarkType, NodeType
 from django_prosemirror.serde import doc_to_html, html_to_doc
 
+from .serde_test_spec import SERDE_TEST_CASES
 
-class TestDocToHtml:
-    def test_full_document_produces_expected_html_output(self, full_document):
-        schema = construct_schema_from_spec(FULL)
-        html = doc_to_html(full_document, schema=schema)
 
-        expected_html = (
-            "<h1>Main Title</h1><h2>Subtitle</h2>"
-            "<p>This is a paragraph with <strong>bold text</strong>, "
-            "<em>italic text</em>, and <code>inline code</code>. "
-            'Here&#x27;s a <a href="https://example.com" title="Example">link</a>.</p>'
-            "<blockquote><p>This is a quoted paragraph.</p></blockquote>"
-            "<pre><code>function hello() {\n  console.log(&#x27;Hello, world!&#x27;)"
-            ";\n}</code></pre>"
-            '<p>Here&#x27;s an image: <img src="https://example.com/image.jpg" '
-            'alt="Example image" title="An example image"><br>Text after line break.'
-            "</p><hr><p>This document contains all node types.</p>"
-        )
+def test_full_document_fixture_contains_all_node_and_mark_types(full_document):
+    # Ensure our full document fixture is in synx with all node and mark types
+    def extract_types_from_document(doc, node_types=None, mark_types=None):
+        """Recursively extract all node and mark types from a document."""
+        if node_types is None:
+            node_types = set()
+        if mark_types is None:
+            mark_types = set()
 
-        assert html == expected_html
+        if isinstance(doc, dict) and "type" in doc:
+            node_types.add(doc["type"])
 
-    def test_minimal_document_produces_simple_paragraph(self):
-        schema = construct_schema_from_spec([])
-        doc = {
-            "type": "doc",
-            "content": [
-                {
-                    "type": "paragraph",
-                    "content": [{"type": "text", "text": "Hello world"}],
-                }
-            ],
-        }
+            # Extract mark types from marks
+            if "marks" in doc:
+                for mark in doc["marks"]:
+                    if isinstance(mark, dict) and "type" in mark:
+                        mark_types.add(mark["type"])
 
-        html = doc_to_html(doc, schema=schema)
+            # Recursively process content
+            if "content" in doc:
+                for item in doc["content"]:
+                    extract_types_from_document(item, node_types, mark_types)
 
-        assert html == "<p>Hello world</p>"
+        return node_types, mark_types
 
-    @pytest.mark.parametrize(
-        "input_doc,expected_html",
-        [
-            ({}, ""),
-            (None, ""),
-        ],
+    found_node_types, found_mark_types = extract_types_from_document(full_document)
+
+    # Expected node types (all NodeType enum values converted to string values)
+    expected_node_types = {node_type.value for node_type in NodeType}
+    expected_node_types.update({"doc", "text"})  # Core ProseMirror types
+
+    # Expected mark types (all MarkType enum values converted to string values)
+    expected_mark_types = {mark_type.value for mark_type in MarkType}
+
+    # Verify all expected node types are present
+    missing_node_types = expected_node_types - found_node_types
+    assert not missing_node_types, (
+        f"Missing node types in full_document: {missing_node_types}"
     )
-    def test_empty_or_none_document_returns_empty_string(
-        self, input_doc, expected_html
-    ):
-        schema = construct_schema_from_spec([])
 
-        html = doc_to_html(input_doc, schema=schema)
-
-        assert html == expected_html
-
-    @pytest.mark.parametrize(
-        "level,text,expected_tag",
-        [
-            (1, "Main Title", "h1"),
-            (2, "Subtitle", "h2"),
-            (3, "Section Header", "h3"),
-            (4, "Subsection", "h4"),
-            (5, "Minor Header", "h5"),
-            (6, "Smallest Header", "h6"),
-        ],
+    # Verify all expected mark types are present
+    missing_mark_types = expected_mark_types - found_mark_types
+    assert not missing_mark_types, (
+        f"Missing mark types in full_document: {missing_mark_types}"
     )
-    def test_heading_levels_produce_correct_heading_tags(
-        self, level, text, expected_tag
-    ):
-        schema = construct_schema_from_spec([AllowedNodeType.HEADING])
-        doc = {
-            "type": "doc",
-            "content": [
-                {
-                    "type": "heading",
-                    "attrs": {"level": level},
-                    "content": [{"type": "text", "text": text}],
-                }
-            ],
-        }
 
-        html = doc_to_html(doc, schema=schema)
 
-        expected_html = f"<{expected_tag}>{text}</{expected_tag}>"
-        assert html == expected_html
+def test_full_document_produces_expected_html_output(full_document):
+    config = ProsemirrorConfig()
+    html = doc_to_html(full_document, schema=config.schema)
 
-    @pytest.mark.parametrize(
-        "mark_type,text,expected_tag",
-        [
-            ("strong", "bold text", "strong"),
-            ("em", "italic text", "em"),
-            ("code", "inline code", "code"),
-        ],
+    expected_html = (
+        "<h1>Main Title</h1><h2>Subtitle</h2>"
+        "<p>This paragraph includes all marks: <strong>bold</strong>, "
+        "<em>italic</em>, <u>underlined</u>, <s>strikethrough</s>, "
+        "<code>inline code</code>, and "
+        '<a href="https://example.com" title="Example">link</a>.</p>'
+        "<blockquote><p>This is a quoted paragraph.</p></blockquote>"
+        "<pre><code>function hello() {\n  console.log(&#x27;Hello, world!&#x27;)"
+        ";\n}</code></pre>"
+        '<p>Here&#x27;s an image: <img src="https://example.com/image.jpg" '
+        'alt="Example image" title="An example image"><br>Text after line break.'
+        "</p>"
+        "<ul><li><p>First bullet point</p></li>"
+        "<li><p>Second bullet point</p></li></ul>"
+        "<ol><li><p>First numbered item</p></li>"
+        "<li><p>Second numbered item</p></li></ol>"
+        "<hr><p>This document contains all node and mark types.</p>"
     )
-    def test_text_marks_produce_formatted_text(self, mark_type, text, expected_tag):
-        schema = construct_schema_from_spec(
-            [AllowedNodeType.STRONG, AllowedNodeType.ITALIC, AllowedNodeType.CODE]
-        )
-        doc = {
-            "type": "doc",
-            "content": [
-                {
-                    "type": "paragraph",
-                    "content": [
-                        {"type": "text", "text": "Plain "},
-                        {"type": "text", "marks": [{"type": mark_type}], "text": text},
-                        {"type": "text", "text": " text"},
-                    ],
-                }
-            ],
-        }
 
-        html = doc_to_html(doc, schema=schema)
-
-        expected_html = f"<p>Plain <{expected_tag}>{text}</{expected_tag}> text</p>"
-        assert html == expected_html
-
-    def test_link_produces_anchor_tag_with_href_and_title(self):
-        schema = construct_schema_from_spec([AllowedNodeType.LINK])
-        doc = {
-            "type": "doc",
-            "content": [
-                {
-                    "type": "paragraph",
-                    "content": [
-                        {"type": "text", "text": "Visit "},
-                        {
-                            "type": "text",
-                            "marks": [
-                                {
-                                    "type": "link",
-                                    "attrs": {
-                                        "href": "https://example.com",
-                                        "title": "Example Site",
-                                    },
-                                }
-                            ],
-                            "text": "this link",
-                        },
-                    ],
-                }
-            ],
-        }
-
-        html = doc_to_html(doc, schema=schema)
-
-        expected_html = (
-            '<p>Visit <a href="https://example.com" title="Example Site">'
-            "this link</a></p>"
-        )
-        assert html == expected_html
-
-    @pytest.mark.parametrize(
-        "node_type,allowed_node,text,expected_html",
-        [
-            (
-                "blockquote",
-                AllowedNodeType.BLOCKQUOTE,
-                "This is a quote",
-                "<blockquote><p>This is a quote</p></blockquote>",
-            ),
-            (
-                "code_block",
-                AllowedNodeType.CODE_BLOCK,
-                "function test() {\n  return true;\n}",
-                "<pre><code>function test() {\n  return true;\n}</code></pre>",
-            ),
-        ],
+    assert html == expected_html
+    assert html_to_doc(html, schema=config.schema) == full_document, (
+        "Round-trip from document to html is lossless"
     )
-    def test_block_elements_produce_correct_tags(
-        self, node_type, allowed_node, text, expected_html
-    ):
-        schema = construct_schema_from_spec([allowed_node])
-
-        if node_type == "blockquote":
-            content = [
-                {
-                    "type": "paragraph",
-                    "content": [{"type": "text", "text": text}],
-                }
-            ]
-        else:  # code_block
-            content = [{"type": "text", "text": text}]
-
-        doc = {
-            "type": "doc",
-            "content": [
-                {
-                    "type": node_type,
-                    "content": content,
-                }
-            ],
-        }
-
-        html = doc_to_html(doc, schema=schema)
-
-        assert html == expected_html
 
 
-class TestHtmlToDoc:
-    """Tests for html_to_doc function."""
+@pytest.mark.parametrize("test_case", SERDE_TEST_CASES, ids=lambda tc: tc.name)
+def test_document_to_html_conversion(test_case):
+    """Test document to HTML conversion for all node and mark types."""
+    # Skip None documents for doc_to_html tests
+    if test_case.document is None:
+        pytest.skip("None document not applicable for doc_to_html")
 
-    def test_simple_paragraph_produces_paragraph_node(
-        self,
-    ):
-        schema = construct_schema_from_spec([])
-        html = "<p>Hello world</p>"
-
-        doc = html_to_doc(html, schema=schema)
-
-        expected = {
-            "type": "doc",
-            "content": [
-                {
-                    "type": "paragraph",
-                    "content": [{"type": "text", "text": "Hello world"}],
-                }
-            ],
-        }
-        assert doc == expected
-
-    def test_multiple_paragraphs_produce_paragraph_nodes(
-        self,
-    ):
-        schema = construct_schema_from_spec([])
-        html = "<p>First paragraph</p><p>Second paragraph</p>"
-
-        doc = html_to_doc(html, schema=schema)
-
-        expected_doc = {
-            "type": "doc",
-            "content": [
-                {
-                    "type": "paragraph",
-                    "content": [{"type": "text", "text": "First paragraph"}],
-                },
-                {
-                    "type": "paragraph",
-                    "content": [{"type": "text", "text": "Second paragraph"}],
-                },
-            ],
-        }
-
-        assert doc == expected_doc
-
-    @pytest.mark.parametrize(
-        "html_tag,level,text",
-        [
-            ("h1", 1, "Main Title"),
-            ("h2", 2, "Subtitle"),
-            ("h3", 3, "Section Header"),
-            ("h4", 4, "Subsection"),
-            ("h5", 5, "Minor Header"),
-            ("h6", 6, "Smallest Header"),
-        ],
+    config = ProsemirrorConfig(
+        allowed_node_types=test_case.config_node_types,
+        allowed_mark_types=test_case.config_mark_types,
     )
-    def test_heading_tags_produce_heading_nodes(self, html_tag, level, text):
-        schema = construct_schema_from_spec([AllowedNodeType.HEADING])
-        html = f"<{html_tag}>{text}</{html_tag}>"
+    schema = config.schema
 
-        doc = html_to_doc(html, schema=schema)
+    html = doc_to_html(test_case.document, schema=schema)
 
-        expected_doc = {
-            "type": "doc",
-            "content": [
-                {
-                    "type": "heading",
-                    "attrs": {"level": level},
-                    "content": [{"type": "text", "text": text}],
-                }
-            ],
-        }
-
-        assert doc == expected_doc
-
-    def test_formatted_text_produces_text_marks(self):
-        schema = construct_schema_from_spec(
-            [AllowedNodeType.STRONG, AllowedNodeType.ITALIC]
-        )
-        html = "<p>Plain <strong>bold</strong> and <em>italic</em> text</p>"
-
-        doc = html_to_doc(html, schema=schema)
-
-        expected_doc = {
-            "type": "doc",
-            "content": [
-                {
-                    "type": "paragraph",
-                    "content": [
-                        {"type": "text", "text": "Plain "},
-                        {
-                            "type": "text",
-                            "marks": [{"type": "strong", "attrs": {}}],
-                            "text": "bold",
-                        },
-                        {"type": "text", "text": " and "},
-                        {
-                            "type": "text",
-                            "marks": [{"type": "em", "attrs": {}}],
-                            "text": "italic",
-                        },
-                        {"type": "text", "text": " text"},
-                    ],
-                }
-            ],
-        }
-
-        assert doc == expected_doc
-
-    def test_link_produces_link_mark(self):
-        schema = construct_schema_from_spec([AllowedNodeType.LINK])
-        html = (
-            '<p>Visit <a href="https://example.com" title="Example">this link</a></p>'
-        )
-
-        doc = html_to_doc(html, schema=schema)
-
-        expected_doc = {
-            "type": "doc",
-            "content": [
-                {
-                    "type": "paragraph",
-                    "content": [
-                        {"type": "text", "text": "Visit "},
-                        {
-                            "type": "text",
-                            "marks": [
-                                {
-                                    "type": "link",
-                                    "attrs": {
-                                        "href": "https://example.com",
-                                        "title": None,
-                                    },
-                                }
-                            ],
-                            "text": "this link",
-                        },
-                    ],
-                }
-            ],
-        }
-
-        assert doc == expected_doc
-
-    @pytest.mark.parametrize(
-        "html,node_type,allowed_node,text",
-        [
-            (
-                "<blockquote><p>This is a quote</p></blockquote>",
-                "blockquote",
-                AllowedNodeType.BLOCKQUOTE,
-                "This is a quote",
-            ),
-            (
-                "<pre><code>function test() { return true; }</code></pre>",
-                "code_block",
-                AllowedNodeType.CODE_BLOCK,
-                "function test() { return true; }",
-            ),
-        ],
+    assert html == test_case.expected_html, (
+        f"Failed for {test_case.name}: {test_case.description}"
     )
-    def test_block_elements_produce_correct_nodes(
-        self, html, node_type, allowed_node, text
-    ):
-        schema = construct_schema_from_spec([allowed_node])
 
-        doc = html_to_doc(html, schema=schema)
 
-        if node_type == "blockquote":
-            content = [
-                {
-                    "type": "paragraph",
-                    "content": [{"type": "text", "text": text}],
-                }
-            ]
-        else:  # code_block
-            content = [{"type": "text", "text": text}]
+@pytest.mark.parametrize("test_case", SERDE_TEST_CASES, ids=lambda tc: tc.name)
+def test_html_to_document_conversion(test_case):
+    """Test HTML to document conversion for all node and mark types."""
+    # Skip cases that aren't round-trip compatible or have special handling
+    if not test_case.round_trip_compatible:
+        pytest.skip(f"Skipping {test_case.name}: not round-trip compatible")
 
-        expected_doc = {
-            "type": "doc",
-            "content": [
-                {
-                    "type": node_type,
-                    "content": content,
-                }
-            ],
-        }
-
-        assert doc == expected_doc
-
-    @pytest.mark.parametrize(
-        "input_html",
-        [
-            "",
-            "   \n\t  ",
-            "   ",
-            "\n",
-            "\t",
-            "\r\n",
-            "\t\r\n",
-        ],
+    config = ProsemirrorConfig(
+        allowed_node_types=test_case.config_node_types,
+        allowed_mark_types=test_case.config_mark_types,
     )
-    def test_empty_or_whitespace_string_produces_empty_document(self, input_html):
-        schema = construct_schema_from_spec([])
+    schema = config.schema
 
-        doc = html_to_doc(input_html, schema=schema)
+    doc = html_to_doc(test_case.expected_html, schema=schema)
 
-        assert doc == EMPTY_DOC
-
-    def test_horizontal_rule_produces_hr_node(self):
-        schema = construct_schema_from_spec([AllowedNodeType.HORIZONTAL_RULE])
-        html = "<p>Before</p><hr><p>After</p>"
-
-        doc = html_to_doc(html, schema=schema)
-
-        expected_doc = {
-            "type": "doc",
-            "content": [
-                {"type": "paragraph", "content": [{"type": "text", "text": "Before"}]},
-                {"type": "horizontal_rule"},
-                {"type": "paragraph", "content": [{"type": "text", "text": "After"}]},
-            ],
-        }
-
-        assert doc == expected_doc
-
-
-class TestRoundTripConversion:
-    """Tests for round-trip conversion between document and HTML."""
-
-    @pytest.mark.parametrize(
-        "node_types,original_doc",
-        [
-            (
-                [AllowedNodeType.HEADING],
-                {
-                    "type": "doc",
-                    "content": [
-                        {
-                            "type": "heading",
-                            "attrs": {"level": 1},
-                            "content": [{"type": "text", "text": "Main Heading"}],
-                        }
-                    ],
-                },
-            ),
-            (
-                [AllowedNodeType.HEADING],
-                {
-                    "type": "doc",
-                    "content": [
-                        {
-                            "type": "heading",
-                            "attrs": {"level": 3},
-                            "content": [{"type": "text", "text": "Sub Heading"}],
-                        }
-                    ],
-                },
-            ),
-            (
-                [AllowedNodeType.STRONG],
-                {
-                    "type": "doc",
-                    "content": [
-                        {
-                            "type": "paragraph",
-                            "content": [
-                                {
-                                    "type": "text",
-                                    "marks": [{"type": "strong", "attrs": {}}],
-                                    "text": "Bold Text",
-                                }
-                            ],
-                        }
-                    ],
-                },
-            ),
-            (
-                [AllowedNodeType.ITALIC],
-                {
-                    "type": "doc",
-                    "content": [
-                        {
-                            "type": "paragraph",
-                            "content": [
-                                {
-                                    "type": "text",
-                                    "marks": [{"type": "em", "attrs": {}}],
-                                    "text": "Italic Text",
-                                }
-                            ],
-                        }
-                    ],
-                },
-            ),
-            (
-                [AllowedNodeType.CODE],
-                {
-                    "type": "doc",
-                    "content": [
-                        {
-                            "type": "paragraph",
-                            "content": [
-                                {
-                                    "type": "text",
-                                    "marks": [{"type": "code", "attrs": {}}],
-                                    "text": "inline code",
-                                }
-                            ],
-                        }
-                    ],
-                },
-            ),
-            (
-                [AllowedNodeType.BLOCKQUOTE],
-                {
-                    "type": "doc",
-                    "content": [
-                        {
-                            "type": "blockquote",
-                            "content": [
-                                {
-                                    "type": "paragraph",
-                                    "content": [
-                                        {"type": "text", "text": "Quoted Text"}
-                                    ],
-                                }
-                            ],
-                        }
-                    ],
-                },
-            ),
-            (
-                [AllowedNodeType.CODE_BLOCK],
-                {
-                    "type": "doc",
-                    "content": [
-                        {
-                            "type": "code_block",
-                            "content": [
-                                {
-                                    "type": "text",
-                                    "text": "function hello() {\n  return 'world';\n}",
-                                }
-                            ],
-                        }
-                    ],
-                },
-            ),
-            (
-                [AllowedNodeType.LINK],
-                {
-                    "type": "doc",
-                    "content": [
-                        {
-                            "type": "paragraph",
-                            "content": [
-                                {"type": "text", "text": "Check out "},
-                                {
-                                    "type": "text",
-                                    "marks": [
-                                        {
-                                            "type": "link",
-                                            "attrs": {
-                                                "href": "https://example.com",
-                                                "title": None,
-                                            },
-                                        }
-                                    ],
-                                    "text": "this link",
-                                },
-                            ],
-                        }
-                    ],
-                },
-            ),
-            (
-                [AllowedNodeType.STRONG, AllowedNodeType.ITALIC],
-                {
-                    "type": "doc",
-                    "content": [
-                        {
-                            "type": "paragraph",
-                            "content": [
-                                {"type": "text", "text": "Text with "},
-                                {
-                                    "type": "text",
-                                    "marks": [{"type": "strong", "attrs": {}}],
-                                    "text": "bold",
-                                },
-                                {"type": "text", "text": " and "},
-                                {
-                                    "type": "text",
-                                    "marks": [{"type": "em", "attrs": {}}],
-                                    "text": "italic",
-                                },
-                                {"type": "text", "text": " formatting"},
-                            ],
-                        }
-                    ],
-                },
-            ),
-        ],
+    assert doc == test_case.document, (
+        f"Failed for {test_case.name}: {test_case.description}"
     )
-    def test_round_trip_preserves_single_node_types(self, node_types, original_doc):
-        schema = construct_schema_from_spec(node_types)
 
-        html = doc_to_html(original_doc, schema=schema)
-        converted_doc = html_to_doc(html, schema=schema)
 
-        assert converted_doc == original_doc
+@pytest.mark.parametrize("test_case", SERDE_TEST_CASES, ids=lambda tc: tc.name)
+def test_round_trip_conversion(test_case):
+    """Test round-trip conversion from document to HTML and back."""
+    # Skip cases that aren't round-trip compatible
+    if not test_case.round_trip_compatible:
+        pytest.skip(f"Skipping {test_case.name}: not round-trip compatible")
 
-    def test_simple_paragraph_preserves_content(self):
-        schema = construct_schema_from_spec([])
-        original_doc = {
-            "type": "doc",
-            "content": [
-                {
-                    "type": "paragraph",
-                    "content": [{"type": "text", "text": "Hello world"}],
-                }
-            ],
-        }
+    config = ProsemirrorConfig(
+        allowed_node_types=test_case.config_node_types,
+        allowed_mark_types=test_case.config_mark_types,
+    )
+    schema = config.schema
 
-        html = doc_to_html(original_doc, schema=schema)
-        converted_doc = html_to_doc(html, schema=schema)
+    # Test document -> HTML -> document
+    html = doc_to_html(test_case.document, schema=schema)
+    round_trip_doc = html_to_doc(html, schema=schema)
 
-        assert converted_doc == original_doc
+    assert round_trip_doc == test_case.document, (
+        f"Round-trip failed for {test_case.name}: {test_case.description}"
+    )
 
-    def test_formatted_text_preserves_content(self):
-        schema = construct_schema_from_spec(
-            [AllowedNodeType.STRONG, AllowedNodeType.ITALIC]
-        )
-        original_doc = {
-            "type": "doc",
-            "content": [
-                {
-                    "type": "paragraph",
-                    "content": [
-                        {"type": "text", "text": "Plain "},
-                        {
-                            "type": "text",
-                            "marks": [{"type": "strong", "attrs": {}}],
-                            "text": "bold",
-                        },
-                        {"type": "text", "text": " and "},
-                        {
-                            "type": "text",
-                            "marks": [{"type": "em", "attrs": {}}],
-                            "text": "italic",
-                        },
-                    ],
-                }
-            ],
-        }
+    # Also verify the HTML matches expected
+    assert html == test_case.expected_html, (
+        f"HTML output didn't match expected for {test_case.name}"
+    )
 
-        html = doc_to_html(original_doc, schema=schema)
-        converted_doc = html_to_doc(html, schema=schema)
 
-        # Round-trip should preserve the document exactly
-        assert converted_doc == original_doc
+@pytest.mark.parametrize(
+    "input_html",
+    [
+        "",
+        "   \n\t  ",
+        "   ",
+        "\n",
+        "\t",
+        "\r\n",
+        "\t\r\n",
+    ],
+)
+def test_empty_or_whitespace_string_produces_empty_document(input_html):
+    config = ProsemirrorConfig(
+        allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[]
+    )
+    schema = config.schema
 
-    def test_complex_markup_preserves_structure(self):
-        schema = construct_schema_from_spec(
-            [
-                AllowedNodeType.HEADING,
-                AllowedNodeType.STRONG,
-                AllowedNodeType.BLOCKQUOTE,
-            ]
-        )
-        original_html = (
-            "<h1>Title</h1><blockquote><p><strong>Quote</strong> text</p></blockquote>"
-        )
+    doc = html_to_doc(input_html, schema=schema)
 
-        doc = html_to_doc(original_html, schema=schema)
-        converted_html = doc_to_html(doc, schema=schema)
-
-        # Round-trip should preserve the HTML exactly
-        assert converted_html == original_html
-
-    def test_subset_of_full_document_preserves_structure_and_content(
-        self, full_document
-    ):
-        # Test with a subset of features to ensure round-trip works
-        schema = construct_schema_from_spec(
-            [
-                AllowedNodeType.HEADING,
-                AllowedNodeType.STRONG,
-                AllowedNodeType.ITALIC,
-                AllowedNodeType.BLOCKQUOTE,
-            ]
-        )
-
-        # Create a simplified version of full_document with only supported features
-        simplified_doc = {
-            "type": "doc",
-            "content": [
-                {
-                    "type": "heading",
-                    "attrs": {"level": 1},
-                    "content": [{"type": "text", "text": "Main Title"}],
-                },
-                {
-                    "type": "paragraph",
-                    "content": [
-                        {"type": "text", "text": "Text with "},
-                        {
-                            "type": "text",
-                            "marks": [{"type": "strong", "attrs": {}}],
-                            "text": "bold",
-                        },
-                        {"type": "text", "text": " and "},
-                        {
-                            "type": "text",
-                            "marks": [{"type": "em", "attrs": {}}],
-                            "text": "italic",
-                        },
-                    ],
-                },
-                {
-                    "type": "blockquote",
-                    "content": [
-                        {
-                            "type": "paragraph",
-                            "content": [{"type": "text", "text": "Quote"}],
-                        }
-                    ],
-                },
-            ],
-        }
-
-        html = doc_to_html(simplified_doc, schema=schema)
-        converted_doc = html_to_doc(html, schema=schema)
-
-        assert converted_doc == simplified_doc
+    assert doc == EMPTY_DOC

@@ -17,11 +17,12 @@ jobs:
       matrix:
         python: ['3.12', '3.13']
         django: ['4.2', '5.2']
+        browser: ['chromium', 'firefox', 'webkit']
         exclude:
           - python: '3.13'
             django: '4.2'
 
-    name: Run the test suite (Python ${{ matrix.python }}, Django ${{ matrix.django }})
+    name: Run the test suite (Python ${{ matrix.python }}, Django ${{ matrix.django }}, ${{ matrix.browser }})
 
     steps:
       - uses: actions/checkout@v4
@@ -32,11 +33,25 @@ jobs:
       - name: Install dependencies
         run: pip install tox tox-gh-actions
 
+      - name: Install Playwright system dependencies
+        run: |
+          pip install playwright
+          playwright install-deps
+
       - name: Run tests
         run: tox
         env:
           PYTHON_VERSION: ${{ matrix.python }}
           DJANGO: ${{ matrix.django }}
+          PLAYWRIGHT_BROWSER: ${{ matrix.browser }}
+
+      - name: Upload Playwright videos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-videos-py${{ matrix.python }}-django${{ matrix.django }}-${{ matrix.browser }}
+          path: playwright-videos/
+          if-no-files-found: ignore
 
       - name: Publish coverage report
         uses: codecov/codecov-action@v5

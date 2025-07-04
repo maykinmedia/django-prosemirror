@@ -3,11 +3,10 @@
 import json
 from collections.abc import Mapping
 
-from django.conf import settings
 from django.forms.widgets import Widget
 
-from django_prosemirror.constants import DEFAULT_SETTINGS
-from django_prosemirror.schema import SchemaSpec
+from django_prosemirror.config import ProsemirrorConfig
+from django_prosemirror.schema import MarkType, NodeType
 
 
 class ProsemirrorWidget(Widget):
@@ -18,37 +17,38 @@ class ProsemirrorWidget(Widget):
     """
 
     template_name = "widget.html"
-    schema: SchemaSpec
-    classes: Mapping[str, str] | None
-    history: bool
+    config: ProsemirrorConfig
 
     def __init__(
         self,
         *args,
-        schema: SchemaSpec,
-        classes: Mapping[str, str] | None = None,
-        history: bool = True,
+        allowed_node_types: list[NodeType] | None = None,
+        allowed_mark_types: list[MarkType] | None = None,
+        tag_to_classes: Mapping[str, str] | None = None,
+        history: bool | None = None,
         **kwargs,
     ):
-        """Initialize the widget with a Prosemirror schema."""
+        """Initialize the widget with allowed node and mark types."""
         super().__init__(*args, **kwargs)
-        self.schema = schema
-        self.classes = (
-            classes
-            or getattr(settings, "DJANGO_PROSEMIRROR_CONFIG", DEFAULT_SETTINGS)[
-                "classes"
-            ]
+        self.config = ProsemirrorConfig(
+            allowed_node_types=allowed_node_types,
+            allowed_mark_types=allowed_mark_types,
+            tag_to_classes=tag_to_classes,
+            history=history,
         )
-        self.history = history or True
 
     def get_context(self, name, value, attrs):
         """Get the context data for rendering the widget template."""
         attrs = super().get_context(name, value, attrs)
-        schema_spec = [s.value for s in self.schema]
-        attrs["schema"] = json.dumps(schema_spec)
-        attrs["classes"] = json.dumps(self.classes)
-        attrs["history"] = "true" if self.history else "false"
-
+        attrs["schema"] = json.dumps(self.config.all_schema_types)
+        attrs["allowed_node_types"] = json.dumps(
+            [n.value for n in self.config.allowed_node_types]
+        )
+        attrs["allowed_mark_types"] = json.dumps(
+            [n.value for n in self.config.allowed_mark_types]
+        )
+        attrs["classes"] = json.dumps(self.config.tag_to_classes)
+        attrs["history"] = json.dumps(self.config.history)
         return attrs
 
     class Media:

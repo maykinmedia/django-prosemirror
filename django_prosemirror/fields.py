@@ -6,17 +6,15 @@ from collections.abc import Callable, Mapping
 from typing import Any, Self, cast
 
 from django import forms
-from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 
 from prosemirror import Schema
 
-from django_prosemirror.constants import DEFAULT_SETTINGS
+from django_prosemirror.config import ProsemirrorConfig
 from django_prosemirror.schema import (
-    FULL,
-    SchemaSpec,
-    construct_schema_from_spec,
+    MarkType,
+    NodeType,
     validate_doc,
 )
 from django_prosemirror.serde import ProsemirrorDocument, doc_to_html, html_to_doc
@@ -70,7 +68,7 @@ class ProsemirrorFieldDocument:
         return self._raw_data
 
     # Mark the setter as altering data
-    raw_data.fset.alters_data = True
+    raw_data.fset.alters_data = True  # type: ignore[attr-defined]
 
     @property
     def html(self) -> str:
@@ -89,7 +87,7 @@ class ProsemirrorFieldDocument:
         return self.html
 
     # Mark the setter as altering data
-    html.fset.alters_data = True
+    html.fset.alters_data = True  # type: ignore[attr-defined]
 
     @property
     def doc(self) -> ProsemirrorDocument:
@@ -104,7 +102,7 @@ class ProsemirrorFieldDocument:
         return self._raw_data
 
     # Mark the setter as altering data
-    doc.fset.alters_data = True
+    doc.fset.alters_data = True  # type: ignore[attr-defined]
 
     def _sync_to_model(self):
         """Sync changes back to the model instance"""
@@ -333,10 +331,11 @@ class ProsemirrorModelField(models.JSONField):
     """
 
     description = "Prosemirror content stored as JSON"
-    schema: Schema
-    schema_spec: SchemaSpec
-    classes: Mapping[str, str]
-    history: bool | None
+    config: ProsemirrorConfig
+
+    def __new__(cls, *args: Any, **kwargs: Any) -> "ProsemirrorModelField":
+        """Create a new instance of ProsemirrorModelField."""
+        return cast("ProsemirrorModelField", super().__new__(cls))
 
     def __init__(
         self,
@@ -346,8 +345,9 @@ class ProsemirrorModelField(models.JSONField):
         decoder: Any | None = None,
         *,
         default: Callable[[], ProsemirrorDocument] | None = None,
-        schema: SchemaSpec = FULL,
-        classes: Mapping[str, str] | None = None,
+        allowed_node_types: list[NodeType] | None = None,
+        allowed_mark_types: list[MarkType] | None = None,
+        tag_to_classes: Mapping[str, str] | None = None,
         history: bool | None = None,
         **kwargs: Any,
     ):
@@ -359,23 +359,33 @@ class ProsemirrorModelField(models.JSONField):
             encoder: JSON encoder (inherited from JSONField)
             decoder: JSON decoder (inherited from JSONField)
             default: Callable that returns default document data
-            schema: Prosemirror schema specification
+            allowed_node_types: List of NodeType enums to allow
+            allowed_mark_types: List of MarkType enums to allow
+            tag_to_classes: Mapping of tag names to CSS classes
+            history: Whether to enable history support
             **kwargs: Additional field options
 
         Raises:
             ValueError: If default is not callable
             ValidationError: If default callable returns invalid document
         """
-        # Construct schema first, before validation
-        self.classes = (
-            classes
-            or getattr(settings, "DJANGO_PROSEMIRROR_CONFIG", DEFAULT_SETTINGS)[
-                "classes"
-            ]
+
+        # Validate input types
+        if allowed_node_types is not None and not isinstance(allowed_node_types, list):
+            raise TypeError(
+                "allowed_node_types must be a list of NodeType enums or None"
+            )
+        if allowed_mark_types is not None and not isinstance(allowed_mark_types, list):
+            raise TypeError(
+                "allowed_mark_types must be a list of MarkType enums or None"
+            )
+
+        self.config = ProsemirrorConfig(
+            allowed_node_types=allowed_node_types,
+            allowed_mark_types=allowed_mark_types,
+            tag_to_classes=tag_to_classes,
+            history=history,
         )
-        self.schema = construct_schema_from_spec(schema, self.classes)
-        self.schema_spec = schema
-        self.history = history
 
         # Validate default callable if provided
         if default:
@@ -383,28 +393,32 @@ class ProsemirrorModelField(models.JSONField):
                 raise ValueError(f"`default` must be a callable, got {type(default)}")
 
             try:
-                validate_doc(default(), schema=self.schema)
+                validate_doc(
+                    cast(ProsemirrorDocument, default()), schema=self.config.schema
+                )
             except ValidationError:
                 raise ValidationError(
                     "Your `default` callable returns a document that would be invalid "
                     " according to your schema."
                 ) from None
 
+        # Call parent constructor with remaining args
         super().__init__(
-            verbose_name,
-            name,
-            default=default,
+            verbose_name=verbose_name,
+            name=name,
             encoder=encoder,
             decoder=decoder,
+            default=default,
             **kwargs,
         )
 
     def formfield(self, *args, **kwargs):
         defaults = {
             "form_class": ProsemirrorFormField,
-            "schema": self.schema_spec,
-            "classes": self.classes,
-            "history": self.history,
+            "allowed_node_types": self.config.allowed_node_types,
+            "allowed_mark_types": self.config.allowed_mark_types,
+            "tag_to_classes": self.config.tag_to_classes,
+            "history": self.config.history,
         }
         defaults.update(kwargs)
         return super().formfield(*args, **defaults)
@@ -414,7 +428,7 @@ class ProsemirrorModelField(models.JSONField):
         setattr(
             cls,
             name,
-            ProsemirrorFieldDescriptor(self, schema=self.schema),
+            ProsemirrorFieldDescriptor(self, schema=self.config.schema),
         )
 
     def get_prep_value(self, value):
@@ -450,21 +464,21 @@ class ProsemirrorModelField(models.JSONField):
 
     def deconstruct(self):
         name, path, args, kwargs = super().deconstruct()
-        kwargs["schema"] = self.schema_spec
+        kwargs["tag_to_classes"] = self.config.tag_to_classes
+        kwargs["allowed_node_types"] = self.config.allowed_node_types
+        kwargs["allowed_mark_types"] = self.config.allowed_mark_types
+        kwargs["history"] = self.config.history
         return name, path, args, kwargs
 
 
-class ProsemirrorFormField(forms.JSONField):
+class ProsemirrorFormField(forms.JSONField):  # type: ignore[misc]
     """Django form field for Prosemirror rich text content.
 
     This form field handles Prosemirror document validation and
     provides the appropriate widget for rendering the editor.
     """
 
-    schema: Schema
-    schema_spec: SchemaSpec
-    classes: Mapping[str, str]
-    history: bool
+    config: ProsemirrorConfig
     widget = ProsemirrorWidget
 
     def __init__(
@@ -472,37 +486,50 @@ class ProsemirrorFormField(forms.JSONField):
         encoder=None,
         decoder=None,
         *,
-        schema: SchemaSpec = FULL,
-        classes: Mapping[str, str] | None = None,
+        allowed_node_types: list[NodeType] | None = None,
+        allowed_mark_types: list[MarkType] | None = None,
+        tag_to_classes: Mapping[str, str] | None = None,
         history: bool = True,
-        **kwargs,
+        **kwargs: Any,
     ):
         """Initialize the Prosemirror form field.
 
         Args:
             encoder: JSON encoder (inherited from JSONField)
             decoder: JSON decoder (inherited from JSONField)
-            schema: Prosemirror schema specification
+            allowed_node_types: List of NodeType enums to allow
+            allowed_mark_types: List of MarkType enums to allow
+            tag_to_classes: Mapping of tag names to CSS classes
             **kwargs: Additional field options
         """
-        self.classes = (
-            classes
-            or getattr(settings, "DJANGO_PROSEMIRROR_CONFIG", DEFAULT_SETTINGS)[
-                "classes"
-            ]
+        # Validate input types
+        if allowed_node_types is not None and not isinstance(allowed_node_types, list):
+            raise TypeError(
+                "allowed_node_types must be a list of NodeType enums or None"
+            )
+        if allowed_mark_types is not None and not isinstance(allowed_mark_types, list):
+            raise TypeError(
+                "allowed_mark_types must be a list of MarkType enums or None"
+            )
+
+        self.config = ProsemirrorConfig(
+            allowed_node_types=allowed_node_types,
+            allowed_mark_types=allowed_mark_types,
+            tag_to_classes=tag_to_classes,
+            history=history,
         )
-        self.schema = construct_schema_from_spec(schema, self.classes)
-        self.schema_spec = schema
-        self.history = history
         kwargs["widget"] = self.widget(
-            schema=schema, classes=self.classes, history=self.history
+            allowed_node_types=self.config.allowed_node_types,
+            allowed_mark_types=self.config.allowed_mark_types,
+            tag_to_classes=self.config.tag_to_classes,
+            history=self.config.history,
         )
-        super().__init__(encoder, decoder, **kwargs)
+        super().__init__(encoder, decoder, **kwargs)  # type: ignore[misc]
 
     def to_python(self, value) -> ProsemirrorFieldDocument:
         """Convert form input to Python representation."""
         python_value = super().to_python(value)
-        return ProsemirrorFieldDocument(python_value, schema=self.schema)
+        return ProsemirrorFieldDocument(python_value, schema=self.config.schema)
 
     def validate(self, value):
         """Validate the form field value."""
@@ -513,4 +540,4 @@ class ProsemirrorFormField(forms.JSONField):
 
         super().validate(value.doc)
         if value.doc is not None:
-            validate_doc(value.doc, schema=self.schema)
+            validate_doc(value.doc, schema=self.config.schema)

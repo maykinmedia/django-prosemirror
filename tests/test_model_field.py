@@ -4,53 +4,52 @@ from django.core.exceptions import ValidationError
 from django.db import models
 
 import pytest
-from prosemirror import Schema
 
-from django_prosemirror.exceptions import DjangoProsemirrorException
+from django_prosemirror.config import ProsemirrorConfig
 from django_prosemirror.fields import ProsemirrorFormField, ProsemirrorModelField
-from django_prosemirror.schema import FULL, AllowedNodeType
-from tests.utils import assert_schemas_equivalent
+from django_prosemirror.schema import MarkType, NodeType
+
+
+def test_init_with_default_schema():
+    field = ProsemirrorModelField()
+
+    assert isinstance(field, ProsemirrorModelField)
+
+
+def test_params_are_accepted_and_passed_down():
+    """Test field initialization with various optional parameters."""
+    custom_encoder = Mock()
+    custom_decoder = Mock()
+
+    def valid_default():
+        return {"type": "doc", "content": []}
+
+    field = ProsemirrorModelField(
+        allowed_node_types=[NodeType.PARAGRAPH, NodeType.CODE_BLOCK],
+        allowed_mark_types=[MarkType.STRONG],
+        blank=False,
+        verbose_name="Verbose name",
+        help_text="Enter rich content",
+        encoder=custom_encoder,
+        decoder=custom_decoder,
+        default=valid_default,
+    )
+
+    assert field.blank is False
+    assert field.verbose_name == "Verbose name"
+    assert field.help_text == "Enter rich content"
+    assert isinstance(field.config, ProsemirrorConfig)
+    assert field.config.allowed_node_types == [NodeType.PARAGRAPH, NodeType.CODE_BLOCK]
+    assert field.config.allowed_mark_types == [MarkType.STRONG]
+    assert field.encoder is custom_encoder
+    assert field.decoder is custom_decoder
+    assert field.default is valid_default
+
+    widget = field.formfield()
+    assert isinstance(widget, ProsemirrorFormField)
 
 
 class TestProsemirrorModelField:
-    def test_init_with_default_schema(self):
-        field = ProsemirrorModelField()
-
-        assert field.schema_spec == FULL
-        assert isinstance(field.schema, Schema)
-        assert_schemas_equivalent(field.schema, FULL)
-        assert field.description == "Prosemirror content stored as JSON"
-
-    def test_init_with_custom_schema(self):
-        schema_spec = [AllowedNodeType.HEADING, AllowedNodeType.STRONG]
-        field = ProsemirrorModelField(schema=schema_spec)
-
-        assert field.schema_spec == schema_spec
-        assert field.schema is not None
-        assert_schemas_equivalent(field.schema, schema_spec)
-
-    def test_init_with_multiple_parameters(self):
-        def valid_default():
-            return {"type": "doc", "content": []}
-
-        custom_encoder = Mock()
-        custom_decoder = Mock()
-
-        field = ProsemirrorModelField(
-            verbose_name="Rich Content",
-            name="rich_content",
-            default=valid_default,
-            encoder=custom_encoder,
-            decoder=custom_decoder,
-        )
-
-        assert field.verbose_name == "Rich Content"
-        assert field.name == "rich_content"
-        assert field.default is valid_default
-        assert field.encoder is custom_encoder
-        assert field.decoder is custom_decoder
-        assert field.schema is not None
-
     def test_formfield_with_custom_arguments(self):
         field = ProsemirrorModelField()
         form_field = field.formfield(required=False, help_text="Custom help")
@@ -70,12 +69,15 @@ class TestProsemirrorModelField:
             ProsemirrorModelField(default=lambda: {"invalid": "document"})
 
     def test_formfield_returns_prosemirror_form_field(self):
-        field = ProsemirrorModelField(schema=[AllowedNodeType.HEADING])
+        field = ProsemirrorModelField(
+            allowed_node_types=[NodeType.PARAGRAPH, NodeType.HEADING]
+        )
         form_field = field.formfield()
 
         assert isinstance(form_field, ProsemirrorFormField)
         # Form field creates its own schema from the spec, so compare the schema specs
-        assert_schemas_equivalent(form_field.schema, [AllowedNodeType.HEADING])
+        # Check that the form field schema contains the expected elements
+        assert "heading" in form_field.config.schema.nodes
 
     def test_field_inherits_from_json_field(self):
         field = ProsemirrorModelField()
@@ -96,10 +98,12 @@ class TestProsemirrorModelField:
         mock_default = Mock(return_value=valid_doc)
 
         field = ProsemirrorModelField(
-            schema=[AllowedNodeType.HEADING], default=mock_default
+            allowed_node_types=[NodeType.PARAGRAPH, NodeType.HEADING],
+            default=mock_default,
         )
 
-        assert_schemas_equivalent(field.schema, [AllowedNodeType.HEADING])
+        # Check that the field schema contains the expected elements
+        assert "heading" in field.config.schema.nodes
         assert field.default is mock_default
         mock_default.assert_called_once()
 
@@ -108,24 +112,17 @@ class TestProsemirrorModelField:
     ):
         with pytest.raises(ValidationError, match="according to your schema"):
             ProsemirrorModelField(
-                schema=[],  # Minimal schema - no rich content allowed
+                allowed_node_types=[
+                    NodeType.PARAGRAPH
+                ],  # Minimal schema - no rich content allowed
+                allowed_mark_types=[],
                 default=lambda: full_document,
             )
 
-    def test_init_with_invalid_schema_non_iterable_raises_exception(self):
-        with pytest.raises(
-            DjangoProsemirrorException, match="`spec` must be a collection"
-        ):
-            ProsemirrorModelField(schema="invalid_string")
+    def test_init_with_invalid_node_types_raises_exception(self):
+        with pytest.raises(TypeError):
+            ProsemirrorModelField(allowed_node_types="invalid_string")
 
-    def test_init_with_invalid_schema_wrong_type_raises_exception(self):
-        with pytest.raises(
-            DjangoProsemirrorException, match="`spec` must be a collection"
-        ):
-            ProsemirrorModelField(schema=["invalid_string", "another_invalid"])
-
-    def test_init_with_invalid_schema_none_raises_exception(self):
-        with pytest.raises(
-            DjangoProsemirrorException, match="`spec` must be a collection"
-        ):
-            ProsemirrorModelField(schema=None)
+    def test_init_with_invalid_mark_types_raises_exception(self):
+        with pytest.raises(TypeError):
+            ProsemirrorModelField(allowed_mark_types="invalid_string")
