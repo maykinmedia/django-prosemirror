@@ -27,7 +27,7 @@ Features
 * **Bidirectional conversion**: Seamless conversion between HTML and ProseMirror
   document format
 * **Configurable schemas**: Fine-grained control over allowed content (headings, links,
-  images, etc.)
+  images, tables, etc.)
 * **Native ProseMirror storage**: Documents are stored in their native Prosemirror
   format, preserving structure and enabling programmatic manipulation without HTML parsing
 
@@ -68,14 +68,25 @@ Use ``ProseMirrorModelField`` in your Django models:
 
     from django.db import models
     from django_prosemirror.fields import ProseMirrorModelField
-    from django_prosemirror.schema import FULL, AllowedNodeType
+    from django_prosemirror.schema import NodeType, MarkType
 
     class BlogPost(models.Model):
         title = models.CharField(max_length=200)
         
-        # Full-featured rich text content
-        content = ProseMirrorModelField(
-            schema=FULL,
+        # Full-featured rich text content (uses default configuration allowing all node
+        # and mark types)
+        content = ProseMirrorModelField()
+        
+        # Limited schema - only headings and paragraphs with bold text
+        summary = ProseMirrorModelField(
+            allowed_node_types=[NodeType.PARAGRAPH, NodeType.HEADING],
+            allowed_mark_types=[MarkType.STRONG],
+            null=True,
+            blank=True
+        )
+
+        # Default document
+        content_with_prompt = ProseMirrorModelField(
             default=lambda: {
                 "type": "doc",
                 "content": [
@@ -85,13 +96,6 @@ Use ``ProseMirrorModelField`` in your Django models:
                     }
                 ]
             }
-        )
-        
-        # Limited schema - only headings and paragraphs
-        summary = ProseMirrorModelField(
-            schema=[AllowedNodeType.HEADING, AllowedNodeType.STRONG],
-            null=True,
-            blank=True
         )
 
 Accessing Content
@@ -129,6 +133,23 @@ The field provides both document and HTML representations:
     # Modify content from HTML, which will be converted to a Prosemirror document internally
     post.content.html = "<h2>New heading</h2><p>Updated content</p>"
     post.save()
+    
+    # After modification, the document structure is updated
+    updated_doc = post.content.doc
+    # Output: {
+    #     "type": "doc",
+    #     "content": [
+    #         {
+    #             "type": "heading",
+    #             "attrs": {"level": 2},
+    #             "content": [{"type": "text", "text": "New heading"}]
+    #         },
+    #         {
+    #             "type": "paragraph",
+    #             "content": [{"type": "text", "text": "Updated content"}]
+    #         }
+    #     ]
+    # }
 
 Form Field
 ----------
@@ -139,59 +160,98 @@ Use ``ProsemirrorFormField`` in Django forms:
 
     from django import forms
     from django_prosemirror.fields import ProsemirrorFormField
-    from django_prosemirror.schema import FULL, AllowedNodeType
+    from django_prosemirror.schema import NodeType, MarkType
 
     class BlogPostForm(forms.Form):
         title = forms.CharField(max_length=200)
         
-        # Full-featured editor
-        content = ProsemirrorFormField(schema=FULL)
+        # Full-featured editor (uses default configuration)
+        content = ProsemirrorFormField()
         
-        # Limited to headings only
+        # Limited to headings and paragraphs with basic formatting
         summary = ProsemirrorFormField(
-            schema=[AllowedNodeType.HEADING],
+            allowed_node_types=[NodeType.PARAGRAPH, NodeType.HEADING],
+            allowed_mark_types=[MarkType.STRONG, MarkType.ITALIC],
             required=False
         )
 
 Schema Configuration
 --------------------
 
-Control exactly what content types are allowed:
+Control exactly what content types are allowed using node and mark types:
+
+.. important::
+   You must always include ``NodeType.PARAGRAPH`` in your ``allowed_node_types`` list. 
+   The field will raise a ``ValueError`` if omitted.
 
 .. code-block:: python
 
-    from django_prosemirror.schema import AllowedNodeType
+    from django_prosemirror.schema import NodeType, MarkType
 
     # Available node types
-    AllowedNodeType.STRONG          # Bold text
-    AllowedNodeType.ITALIC          # Italic text  
-    AllowedNodeType.BLOCKQUOTE      # Quote blocks
-    AllowedNodeType.HORIZONTAL_RULE # Horizontal rules
-    AllowedNodeType.HEADING         # Headings (h1-h6)
-    AllowedNodeType.IMAGE           # Images
-    AllowedNodeType.LINK            # Links
-    AllowedNodeType.HARD_BREAK      # Line breaks
-    AllowedNodeType.CODE            # Inline code
-    AllowedNodeType.CODE_BLOCK      # Code blocks
+    NodeType.PARAGRAPH         # Paragraphs (required)
+    NodeType.HEADING           # Headings (h1-h6)
+    NodeType.BLOCKQUOTE        # Quote blocks
+    NodeType.HORIZONTAL_RULE   # Horizontal rules
+    NodeType.CODE_BLOCK        # Code blocks
+    NodeType.IMAGE             # Images
+    NodeType.HARD_BREAK        # Line breaks
+    NodeType.BULLET_LIST       # Bullet lists
+    NodeType.ORDERED_LIST      # Numbered lists
+    NodeType.LIST_ITEM         # List items
+    NodeType.TABLE             # Tables
+    NodeType.TABLE_ROW         # Table rows
+    NodeType.TABLE_CELL        # Table data cells
+    NodeType.TABLE_HEADER      # Table header cells
 
-    # Predefined schema
-    from django_prosemirror.schema import FULL
+    # Available mark types
+    MarkType.STRONG            # Bold text
+    MarkType.ITALIC            # Italic text (em)
+    MarkType.UNDERLINE         # Underlined text
+    MarkType.STRIKETHROUGH     # Strikethrough text
+    MarkType.CODE              # Inline code
+    MarkType.LINK              # Links
     
-    # Custom schemas
-    BASIC_SCHEMA = [
-        AllowedNodeType.STRONG,
-        AllowedNodeType.ITALIC,
-        AllowedNodeType.LINK,
-    ]
+    # Custom configurations
+    BASIC_FORMATTING = {
+        'allowed_node_types': [NodeType.PARAGRAPH, NodeType.HEADING],
+        'allowed_mark_types': [MarkType.STRONG, MarkType.ITALIC, MarkType.LINK],
+    }
     
-    BLOG_SCHEMA = [
-        AllowedNodeType.HEADING,
-        AllowedNodeType.STRONG,
-        AllowedNodeType.ITALIC,
-        AllowedNodeType.BLOCKQUOTE,
-        AllowedNodeType.LINK,
-        AllowedNodeType.IMAGE,
-    ]
+    BLOG_EDITOR = {
+        'allowed_node_types': [
+            NodeType.PARAGRAPH,
+            NodeType.HEADING,
+            NodeType.BLOCKQUOTE,
+            NodeType.IMAGE,
+            NodeType.BULLET_LIST,
+            NodeType.ORDERED_LIST,
+            NodeType.LIST_ITEM,
+        ],
+        'allowed_mark_types': [
+            MarkType.STRONG,
+            MarkType.ITALIC,
+            MarkType.LINK,
+            MarkType.CODE,
+        ],
+    }
+
+    TABLE_EDITOR = {
+        'allowed_node_types': [
+            NodeType.PARAGRAPH,
+            NodeType.HEADING,
+            NodeType.TABLE,
+            NodeType.TABLE_ROW,
+            NodeType.TABLE_CELL,
+            NodeType.TABLE_HEADER,
+        ],
+        'allowed_mark_types': [MarkType.STRONG, MarkType.ITALIC],
+    }
+
+    # Use in fields
+    class DocumentModel(models.Model):
+        blog_content = ProseMirrorModelField(**BLOG_EDITOR)
+        table_content = ProseMirrorModelField(**TABLE_EDITOR)
 
 Default Values
 --------------
@@ -203,13 +263,11 @@ Always use callables for default values returning valid ProseMirror documents:
     class Article(models.Model):
         # ✅ Correct: Using a callable
         content = ProseMirrorModelField(
-            schema=FULL,
             default=lambda: {"type": "doc", "content": []}
         )
         
         # ❌ Wrong: Static dict (validation error)
         # content = ProseMirrorModelField(
-        #     schema=FULL, 
         #     default={"type": "doc", "content": []}
         # )
 
@@ -226,7 +284,11 @@ The field works automatically with Django admin:
     @admin.register(BlogPost)
     class BlogPostAdmin(admin.ModelAdmin):
         fields = ['title', 'content', 'summary']
-        # ProseMirror editor will be rendered automatically
+        readonly_fields = ['summary']  # Read-only fields render as HTML
+        
+        # Editable fields: Render the full ProseMirror rich-text editor
+        # Read-only fields: Render as formatted HTML output
+
 
 Frontend Integration
 --------------------
@@ -284,6 +346,7 @@ Create ProseMirror content programmatically:
     }
     
     article = Article.objects.create(content=content)
+
 
 Local development
 =================
