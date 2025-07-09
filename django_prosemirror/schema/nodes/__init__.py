@@ -10,6 +10,10 @@ from .image import ImageNode
 from .list_item import ListItemNode
 from .ordered_list import OrderedListNode
 from .paragraph import ParagraphNode
+from .table import TableNode
+from .table_cell import TableCellNode
+from .table_header import TableHeaderNode
+from .table_row import TableRowNode
 
 __all__ = [
     "BlockquoteNode",
@@ -22,4 +26,8 @@ __all__ = [
     "OrderedListNode",
     "ParagraphNode",
     "BulletListNode",
+    "TableNode",
+    "TableCellNode",
+    "TableHeaderNode",
+    "TableRowNode",
 ]

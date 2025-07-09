@@ -247,6 +247,10 @@ class TestProsemirrorConfigSchema:
             "ordered_list",
             "list_item",
             "bullet_list",
+            "table",
+            "table_row",
+            "table_header",
+            "table_cell",
         }
         expected_marks = {"link", "em", "strong", "code", "strikethrough", "underline"}
 

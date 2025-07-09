@@ -177,13 +177,92 @@ def full_document() -> ProsemirrorDocument:
             },
             # Horizontal rule
             {"type": "horizontal_rule"},
+            # Table with all table node types
+            {
+                "type": "table",
+                "content": [
+                    {
+                        "type": "table_row",
+                        "content": [
+                            {
+                                "type": "table_header",
+                                "attrs": {
+                                    "colspan": 1,
+                                    "rowspan": 1,
+                                    "colwidth": None,
+                                },
+                                "content": [
+                                    {
+                                        "type": "paragraph",
+                                        "content": [
+                                            {"type": "text", "text": "Header 1"}
+                                        ],
+                                    }
+                                ],
+                            },
+                            {
+                                "type": "table_header",
+                                "attrs": {
+                                    "colspan": 1,
+                                    "rowspan": 1,
+                                    "colwidth": None,
+                                },
+                                "content": [
+                                    {
+                                        "type": "paragraph",
+                                        "content": [
+                                            {"type": "text", "text": "Header 2"}
+                                        ],
+                                    }
+                                ],
+                            },
+                        ],
+                    },
+                    {
+                        "type": "table_row",
+                        "content": [
+                            {
+                                "type": "table_cell",
+                                "attrs": {
+                                    "colspan": 1,
+                                    "rowspan": 1,
+                                    "colwidth": None,
+                                },
+                                "content": [
+                                    {
+                                        "type": "paragraph",
+                                        "content": [{"type": "text", "text": "Cell 1"}],
+                                    }
+                                ],
+                            },
+                            {
+                                "type": "table_cell",
+                                "attrs": {
+                                    "colspan": 1,
+                                    "rowspan": 1,
+                                    "colwidth": None,
+                                },
+                                "content": [
+                                    {
+                                        "type": "paragraph",
+                                        "content": [{"type": "text", "text": "Cell 2"}],
+                                    }
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            },
             # Final paragraph
             {
                 "type": "paragraph",
                 "content": [
                     {
                         "type": "text",
-                        "text": "This document contains all node and mark types.",
+                        "text": (
+                            "This document contains all node and mark types including "
+                            "tables."
+                        ),
                     }
                 ],
             },
