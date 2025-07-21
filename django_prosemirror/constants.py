@@ -29,6 +29,10 @@ DEFAULT_SETTINGS: ProseMirrorConfig = {
         "bullet_list",
         "ordered_list",
         "list_item",
+        "table",
+        "table_row",
+        "table_cell",
+        "table_header",
     ],
     "allowed_mark_types": [
         "strong",

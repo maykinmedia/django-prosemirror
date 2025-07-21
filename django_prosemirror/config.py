@@ -27,6 +27,10 @@ from django_prosemirror.schema.nodes import (
     ListItemNode,
     OrderedListNode,
     ParagraphNode,
+    TableCellNode,
+    TableHeaderNode,
+    TableNode,
+    TableRowNode,
 )
 from django_prosemirror.schema.types import MarkType, NodeType
 
@@ -120,6 +124,10 @@ class ProsemirrorConfig:
             NodeType.BULLET_LIST: BulletListNode(class_mapping),
             NodeType.ORDERED_LIST: OrderedListNode(class_mapping),
             NodeType.LIST_ITEM: ListItemNode(class_mapping),
+            NodeType.TABLE: TableNode(class_mapping),
+            NodeType.TABLE_ROW: TableRowNode(class_mapping),
+            NodeType.TABLE_CELL: TableCellNode(class_mapping),
+            NodeType.TABLE_HEADER: TableHeaderNode(class_mapping),
         }
 
     @staticmethod

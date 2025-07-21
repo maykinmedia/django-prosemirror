@@ -25,6 +25,12 @@ class NodeType(enum.Enum):
     ORDERED_LIST = "ordered_list"
     LIST_ITEM = "list_item"
 
+    # Table nodes
+    TABLE = "table"
+    TABLE_ROW = "table_row"
+    TABLE_CELL = "table_cell"
+    TABLE_HEADER = "table_header"
+
 
 class MarkType(enum.Enum):
     """Enumeration of mark types that can be used in Prosemirror schemas."""

@@ -77,7 +77,10 @@ def test_full_document_produces_expected_html_output(full_document):
         "<li><p>Second bullet point</p></li></ul>"
         "<ol><li><p>First numbered item</p></li>"
         "<li><p>Second numbered item</p></li></ol>"
-        "<hr><p>This document contains all node and mark types.</p>"
+        "<hr>"
+        "<table><tbody><tr><th><p>Header 1</p></th><th><p>Header 2</p></th></tr>"
+        "<tr><td><p>Cell 1</p></td><td><p>Cell 2</p></td></tr></tbody></table>"
+        "<p>This document contains all node and mark types including tables.</p>"
     )
 
     assert html == expected_html

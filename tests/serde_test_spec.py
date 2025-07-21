@@ -554,6 +554,467 @@ EDGE_CASES = [
     ),
 ]
 
+# Test cases for table elements
+TABLE_CASES = [
+    SerdeTestCase(
+        name="simple_table",
+        description="Simple table with header and data cells",
+        config_node_types=[
+            NodeType.PARAGRAPH,
+            NodeType.TABLE,
+            NodeType.TABLE_ROW,
+            NodeType.TABLE_CELL,
+            NodeType.TABLE_HEADER,
+        ],
+        config_mark_types=[],
+        document={
+            "type": "doc",
+            "content": [
+                {
+                    "type": "table",
+                    "content": [
+                        {
+                            "type": "table_row",
+                            "content": [
+                                {
+                                    "type": "table_header",
+                                    "attrs": {
+                                        "colspan": 1,
+                                        "rowspan": 1,
+                                        "colwidth": None,
+                                    },
+                                    "content": [
+                                        {
+                                            "type": "paragraph",
+                                            "content": [
+                                                {"type": "text", "text": "Header 1"}
+                                            ],
+                                        }
+                                    ],
+                                },
+                                {
+                                    "type": "table_header",
+                                    "attrs": {
+                                        "colspan": 1,
+                                        "rowspan": 1,
+                                        "colwidth": None,
+                                    },
+                                    "content": [
+                                        {
+                                            "type": "paragraph",
+                                            "content": [
+                                                {"type": "text", "text": "Header 2"}
+                                            ],
+                                        }
+                                    ],
+                                },
+                            ],
+                        },
+                        {
+                            "type": "table_row",
+                            "content": [
+                                {
+                                    "type": "table_cell",
+                                    "attrs": {
+                                        "colspan": 1,
+                                        "rowspan": 1,
+                                        "colwidth": None,
+                                    },
+                                    "content": [
+                                        {
+                                            "type": "paragraph",
+                                            "content": [
+                                                {"type": "text", "text": "Cell 1"}
+                                            ],
+                                        }
+                                    ],
+                                },
+                                {
+                                    "type": "table_cell",
+                                    "attrs": {
+                                        "colspan": 1,
+                                        "rowspan": 1,
+                                        "colwidth": None,
+                                    },
+                                    "content": [
+                                        {
+                                            "type": "paragraph",
+                                            "content": [
+                                                {"type": "text", "text": "Cell 2"}
+                                            ],
+                                        }
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                }
+            ],
+        },
+        expected_html=(
+            "<table><tbody><tr><th><p>Header 1</p></th><th><p>Header 2</p></th></tr>"
+            "<tr><td><p>Cell 1</p></td><td><p>Cell 2</p></td></tr></tbody></table>"
+        ),
+    ),
+    SerdeTestCase(
+        name="table_with_colspan",
+        description="Table with colspan attribute",
+        config_node_types=[
+            NodeType.PARAGRAPH,
+            NodeType.TABLE,
+            NodeType.TABLE_ROW,
+            NodeType.TABLE_CELL,
+            NodeType.TABLE_HEADER,
+        ],
+        config_mark_types=[],
+        document={
+            "type": "doc",
+            "content": [
+                {
+                    "type": "table",
+                    "content": [
+                        {
+                            "type": "table_row",
+                            "content": [
+                                {
+                                    "type": "table_cell",
+                                    "attrs": {
+                                        "colspan": 2,
+                                        "rowspan": 1,
+                                        "colwidth": None,
+                                    },
+                                    "content": [
+                                        {
+                                            "type": "paragraph",
+                                            "content": [
+                                                {"type": "text", "text": "Wide cell"}
+                                            ],
+                                        }
+                                    ],
+                                },
+                            ],
+                        },
+                        {
+                            "type": "table_row",
+                            "content": [
+                                {
+                                    "type": "table_cell",
+                                    "attrs": {
+                                        "colspan": 1,
+                                        "rowspan": 1,
+                                        "colwidth": None,
+                                    },
+                                    "content": [
+                                        {
+                                            "type": "paragraph",
+                                            "content": [
+                                                {"type": "text", "text": "Cell 1"}
+                                            ],
+                                        }
+                                    ],
+                                },
+                                {
+                                    "type": "table_cell",
+                                    "attrs": {
+                                        "colspan": 1,
+                                        "rowspan": 1,
+                                        "colwidth": None,
+                                    },
+                                    "content": [
+                                        {
+                                            "type": "paragraph",
+                                            "content": [
+                                                {"type": "text", "text": "Cell 2"}
+                                            ],
+                                        }
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                }
+            ],
+        },
+        expected_html=(
+            '<table><tbody><tr><td colspan="2"><p>Wide cell</p></td></tr>'
+            "<tr><td><p>Cell 1</p></td><td><p>Cell 2</p></td></tr></tbody></table>"
+        ),
+    ),
+    SerdeTestCase(
+        name="table_with_rowspan",
+        description="Table with rowspan attribute",
+        config_node_types=[
+            NodeType.PARAGRAPH,
+            NodeType.TABLE,
+            NodeType.TABLE_ROW,
+            NodeType.TABLE_CELL,
+            NodeType.TABLE_HEADER,
+        ],
+        config_mark_types=[],
+        document={
+            "type": "doc",
+            "content": [
+                {
+                    "type": "table",
+                    "content": [
+                        {
+                            "type": "table_row",
+                            "content": [
+                                {
+                                    "type": "table_cell",
+                                    "attrs": {
+                                        "colspan": 1,
+                                        "rowspan": 2,
+                                        "colwidth": None,
+                                    },
+                                    "content": [
+                                        {
+                                            "type": "paragraph",
+                                            "content": [
+                                                {"type": "text", "text": "Tall cell"}
+                                            ],
+                                        }
+                                    ],
+                                },
+                                {
+                                    "type": "table_cell",
+                                    "attrs": {
+                                        "colspan": 1,
+                                        "rowspan": 1,
+                                        "colwidth": None,
+                                    },
+                                    "content": [
+                                        {
+                                            "type": "paragraph",
+                                            "content": [
+                                                {"type": "text", "text": "Cell 1"}
+                                            ],
+                                        }
+                                    ],
+                                },
+                            ],
+                        },
+                        {
+                            "type": "table_row",
+                            "content": [
+                                {
+                                    "type": "table_cell",
+                                    "attrs": {
+                                        "colspan": 1,
+                                        "rowspan": 1,
+                                        "colwidth": None,
+                                    },
+                                    "content": [
+                                        {
+                                            "type": "paragraph",
+                                            "content": [
+                                                {"type": "text", "text": "Cell 2"}
+                                            ],
+                                        }
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                }
+            ],
+        },
+        expected_html=(
+            '<table><tbody><tr><td rowspan="2"><p>Tall cell</p></td>'
+            "<td><p>Cell 1</p></td></tr><tr><td><p>Cell 2</p></td></tr></tbody></table>"
+        ),
+    ),
+    SerdeTestCase(
+        name="table_with_colwidth",
+        description="Table with colwidth data attribute",
+        config_node_types=[
+            NodeType.PARAGRAPH,
+            NodeType.TABLE,
+            NodeType.TABLE_ROW,
+            NodeType.TABLE_CELL,
+            NodeType.TABLE_HEADER,
+        ],
+        config_mark_types=[],
+        document={
+            "type": "doc",
+            "content": [
+                {
+                    "type": "table",
+                    "content": [
+                        {
+                            "type": "table_row",
+                            "content": [
+                                {
+                                    "type": "table_cell",
+                                    "attrs": {
+                                        "colspan": 2,
+                                        "rowspan": 1,
+                                        "colwidth": [100, 200],
+                                    },
+                                    "content": [
+                                        {
+                                            "type": "paragraph",
+                                            "content": [
+                                                {"type": "text", "text": "Sized cell"}
+                                            ],
+                                        }
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                }
+            ],
+        },
+        expected_html=(
+            '<table><tbody><tr><td colspan="2" data-colwidth="100,200">'
+            "<p>Sized cell</p></td></tr></tbody></table>"
+        ),
+    ),
+    SerdeTestCase(
+        name="table_mixed_cells",
+        description="Table with mixed header and data cells",
+        config_node_types=[
+            NodeType.PARAGRAPH,
+            NodeType.TABLE,
+            NodeType.TABLE_ROW,
+            NodeType.TABLE_CELL,
+            NodeType.TABLE_HEADER,
+        ],
+        config_mark_types=[],
+        document={
+            "type": "doc",
+            "content": [
+                {
+                    "type": "table",
+                    "content": [
+                        {
+                            "type": "table_row",
+                            "content": [
+                                {
+                                    "type": "table_header",
+                                    "attrs": {
+                                        "colspan": 1,
+                                        "rowspan": 1,
+                                        "colwidth": None,
+                                    },
+                                    "content": [
+                                        {
+                                            "type": "paragraph",
+                                            "content": [
+                                                {"type": "text", "text": "Name"}
+                                            ],
+                                        }
+                                    ],
+                                },
+                                {
+                                    "type": "table_cell",
+                                    "attrs": {
+                                        "colspan": 1,
+                                        "rowspan": 1,
+                                        "colwidth": None,
+                                    },
+                                    "content": [
+                                        {
+                                            "type": "paragraph",
+                                            "content": [
+                                                {"type": "text", "text": "John"}
+                                            ],
+                                        }
+                                    ],
+                                },
+                            ],
+                        },
+                        {
+                            "type": "table_row",
+                            "content": [
+                                {
+                                    "type": "table_header",
+                                    "attrs": {
+                                        "colspan": 1,
+                                        "rowspan": 1,
+                                        "colwidth": None,
+                                    },
+                                    "content": [
+                                        {
+                                            "type": "paragraph",
+                                            "content": [
+                                                {"type": "text", "text": "Age"}
+                                            ],
+                                        }
+                                    ],
+                                },
+                                {
+                                    "type": "table_cell",
+                                    "attrs": {
+                                        "colspan": 1,
+                                        "rowspan": 1,
+                                        "colwidth": None,
+                                    },
+                                    "content": [
+                                        {
+                                            "type": "paragraph",
+                                            "content": [{"type": "text", "text": "25"}],
+                                        }
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                }
+            ],
+        },
+        expected_html=(
+            "<table><tbody><tr><th><p>Name</p></th><td><p>John</p></td></tr>"
+            "<tr><th><p>Age</p></th><td><p>25</p></td></tr></tbody></table>"
+        ),
+    ),
+    SerdeTestCase(
+        name="single_cell_table",
+        description="Table with single cell",
+        config_node_types=[
+            NodeType.PARAGRAPH,
+            NodeType.TABLE,
+            NodeType.TABLE_ROW,
+            NodeType.TABLE_CELL,
+            NodeType.TABLE_HEADER,
+        ],
+        config_mark_types=[],
+        document={
+            "type": "doc",
+            "content": [
+                {
+                    "type": "table",
+                    "content": [
+                        {
+                            "type": "table_row",
+                            "content": [
+                                {
+                                    "type": "table_cell",
+                                    "attrs": {
+                                        "colspan": 1,
+                                        "rowspan": 1,
+                                        "colwidth": None,
+                                    },
+                                    "content": [
+                                        {
+                                            "type": "paragraph",
+                                            "content": [
+                                                {"type": "text", "text": "Cell"}
+                                            ],
+                                        }
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                }
+            ],
+        },
+        expected_html="<table><tbody><tr><td><p>Cell</p></td></tr></tbody></table>",
+    ),
+]
+
 # Combined test cases
 ALL_SERDE_TEST_CASES = (
     BASIC_DOCUMENT_CASES
@@ -563,6 +1024,7 @@ ALL_SERDE_TEST_CASES = (
     + LIST_CASES
     + INLINE_ELEMENT_CASES
     + EDGE_CASES
+    + TABLE_CASES
 )
 
 # Test cases specifically for HTML-to-document conversion edge cases
