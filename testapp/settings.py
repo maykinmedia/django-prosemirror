@@ -1,7 +1,5 @@
 from pathlib import Path
 
-from django_prosemirror.constants import ProseMirrorConfig
-
 BASE_DIR = Path(__file__).resolve(strict=True).parent
 
 SECRET_KEY = "so-secret-i-cant-believe-you-are-looking-at-this"
@@ -59,7 +57,7 @@ STATIC_ROOT = BASE_DIR / "static"
 
 ROOT_URLCONF = "testapp.urls"
 
-DJANGO_PROSEMIRROR: ProseMirrorConfig = {
+PROSEMIRROR_CONFIG = {
     "tag_to_classes": {
         "paragraph": "from_settings",
         "heading": "from_settings",
@@ -72,30 +70,5 @@ DJANGO_PROSEMIRROR: ProseMirrorConfig = {
         "bullet_list": "from_settings",
         "list_item": "from_settings",
         "horizontal_rule": "from_settings",
-    },
-    "allowed_node_types": [
-        "paragraph",
-        "blockquote",
-        "horizontal_rule",
-        "heading",
-        "image",
-        "hard_break",
-        "code_block",
-        "bullet_list",
-        "ordered_list",
-        "list_item",
-        "table",
-        "table_row",
-        "table_cell",
-        "table_header",
-    ],
-    "allowed_mark_types": [
-        "strong",
-        "em",
-        "link",
-        "code",
-        "underline",
-        "strikethrough",
-    ],
-    "history": True,
+    }
 }
