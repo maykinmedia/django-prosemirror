@@ -2,7 +2,6 @@ import { describe, it, expect } from "vitest";
 import { Mark, Node, Schema, StyleParseRule } from "prosemirror-model";
 import DjangoProsemirrorSchema from "../schema/prosemirror-schema";
 import { IDPMSettings, LanguageCodeEnum } from "../types/types";
-import { SchemaNodesEnum } from "../schema/choices";
 import { MarkType, NodeType } from "../schema/types";
 import { ParagraphNode } from "../schema/nodes/paragraph";
 
@@ -67,9 +66,9 @@ describe("DjangoProsemirrorSchema", () => {
         it("should return all required nodes", () => {
             const requiredNodes = DjangoProsemirrorSchemaCls.schema.nodes;
             expect(Object.keys(requiredNodes)).toEqual([
-                SchemaNodesEnum.DOC,
-                SchemaNodesEnum.PARAGRAPH,
-                SchemaNodesEnum.TEXT,
+                NodeType.DOC,
+                NodeType.PARAGRAPH,
+                NodeType.TEXT,
             ]);
             expect(requiredNodes.doc.spec.content).toBe("block+");
             expect(requiredNodes.text.spec).toEqual({ group: "inline" });
@@ -473,35 +472,35 @@ describe("DjangoProsemirrorSchema", () => {
             DjangoProsemirrorSchemaCls = new DjangoProsemirrorSchema({
                 ...basicsettings,
                 allowedNodes: [
-                    SchemaNodesEnum.DOC,
-                    SchemaNodesEnum.TEXT,
-                    SchemaNodesEnum.PARAGRAPH,
-                    SchemaNodesEnum.HEADING,
-                    SchemaNodesEnum.BLOCKQUOTE,
-                    SchemaNodesEnum.IMAGE,
-                    SchemaNodesEnum.ORDERED_LIST,
-                    SchemaNodesEnum.BULLET_LIST,
-                    SchemaNodesEnum.LIST_ITEM,
-                    SchemaNodesEnum.HORIZONTAL_RULE,
-                    SchemaNodesEnum.CODE_BLOCK,
-                    SchemaNodesEnum.HARD_BREAK,
+                    NodeType.DOC,
+                    NodeType.TEXT,
+                    NodeType.PARAGRAPH,
+                    NodeType.HEADING,
+                    NodeType.BLOCKQUOTE,
+                    NodeType.IMAGE,
+                    NodeType.ORDERED_LIST,
+                    NodeType.BULLET_LIST,
+                    NodeType.LIST_ITEM,
+                    NodeType.HORIZONTAL_RULE,
+                    NodeType.CODE_BLOCK,
+                    NodeType.HARD_BREAK,
                 ],
             });
 
             const nodeSpecs = DjangoProsemirrorSchemaCls.schema.nodes;
             const expectedKeys = [
-                SchemaNodesEnum.DOC,
-                SchemaNodesEnum.TEXT,
-                SchemaNodesEnum.PARAGRAPH,
-                SchemaNodesEnum.HEADING,
-                SchemaNodesEnum.BLOCKQUOTE,
-                SchemaNodesEnum.IMAGE,
-                SchemaNodesEnum.ORDERED_LIST,
-                SchemaNodesEnum.BULLET_LIST,
-                SchemaNodesEnum.LIST_ITEM,
-                SchemaNodesEnum.HORIZONTAL_RULE,
-                SchemaNodesEnum.CODE_BLOCK,
-                SchemaNodesEnum.HARD_BREAK,
+                NodeType.DOC,
+                NodeType.TEXT,
+                NodeType.PARAGRAPH,
+                NodeType.HEADING,
+                NodeType.BLOCKQUOTE,
+                NodeType.IMAGE,
+                NodeType.ORDERED_LIST,
+                NodeType.BULLET_LIST,
+                NodeType.LIST_ITEM,
+                NodeType.HORIZONTAL_RULE,
+                NodeType.CODE_BLOCK,
+                NodeType.HARD_BREAK,
             ];
             expect(Object.keys(nodeSpecs).sort()).toEqual(expectedKeys.sort());
         });
@@ -510,22 +509,22 @@ describe("DjangoProsemirrorSchema", () => {
             DjangoProsemirrorSchemaCls = new DjangoProsemirrorSchema({
                 ...basicsettings,
                 allowedMarks: [
-                    SchemaNodesEnum.LINK,
-                    SchemaNodesEnum.ITALIC,
-                    SchemaNodesEnum.STRONG,
-                    SchemaNodesEnum.CODE,
-                    SchemaNodesEnum.STRIKETHROUGH,
-                    SchemaNodesEnum.UNDERLINE,
+                    MarkType.LINK,
+                    MarkType.ITALIC,
+                    MarkType.STRONG,
+                    MarkType.CODE,
+                    MarkType.STRIKETHROUGH,
+                    MarkType.UNDERLINE,
                 ],
             });
             const markSpecs = DjangoProsemirrorSchemaCls.schema.marks;
             const expectedKeys = [
-                SchemaNodesEnum.LINK,
-                SchemaNodesEnum.ITALIC,
-                SchemaNodesEnum.STRONG,
-                SchemaNodesEnum.CODE,
-                SchemaNodesEnum.STRIKETHROUGH,
-                SchemaNodesEnum.UNDERLINE,
+                MarkType.LINK,
+                MarkType.ITALIC,
+                MarkType.STRONG,
+                MarkType.CODE,
+                MarkType.STRIKETHROUGH,
+                MarkType.UNDERLINE,
             ];
             expect(Object.keys(markSpecs)).toEqual(expectedKeys);
         });
@@ -533,10 +532,7 @@ describe("DjangoProsemirrorSchema", () => {
         it("should filter node specs correctly", () => {
             const testSettings: IDPMSettings = {
                 ...basicsettings,
-                allowedNodes: [
-                    SchemaNodesEnum.PARAGRAPH,
-                    SchemaNodesEnum.BLOCKQUOTE,
-                ],
+                allowedNodes: [NodeType.PARAGRAPH, NodeType.BLOCKQUOTE],
             };
 
             DjangoProsemirrorSchemaCls = new DjangoProsemirrorSchema(
@@ -546,10 +542,10 @@ describe("DjangoProsemirrorSchema", () => {
 
             // Should include required nodes plus allowed ones
             const expectedKeys = [
-                SchemaNodesEnum.DOC,
-                SchemaNodesEnum.TEXT,
-                SchemaNodesEnum.BLOCKQUOTE,
-                SchemaNodesEnum.PARAGRAPH,
+                NodeType.DOC,
+                NodeType.TEXT,
+                NodeType.BLOCKQUOTE,
+                NodeType.PARAGRAPH,
             ];
             expect(Object.keys(filteredSpecs).sort()).toEqual(
                 expectedKeys.sort(),
@@ -559,55 +555,37 @@ describe("DjangoProsemirrorSchema", () => {
         it("should include list_item when list nodes are allowed", () => {
             const testSettings: IDPMSettings = {
                 ...basicsettings,
-                allowedNodes: [
-                    SchemaNodesEnum.PARAGRAPH,
-                    SchemaNodesEnum.BULLET_LIST,
-                ],
+                allowedNodes: [NodeType.PARAGRAPH, NodeType.BULLET_LIST],
             };
             const testSchema = new DjangoProsemirrorSchema(testSettings);
             const filteredSpecs = testSchema.schema.nodes;
 
-            expect(Object.keys(filteredSpecs)).toContain(
-                SchemaNodesEnum.BULLET_LIST,
-            );
-            expect(Object.keys(filteredSpecs)).toContain(
-                SchemaNodesEnum.LIST_ITEM,
-            );
+            expect(Object.keys(filteredSpecs)).toContain(NodeType.BULLET_LIST);
+            expect(Object.keys(filteredSpecs)).toContain(NodeType.LIST_ITEM);
         });
 
         it("should include list_item when ordered_list is allowed", () => {
             const testSettings: IDPMSettings = {
                 ...basicsettings,
-                allowedNodes: [
-                    SchemaNodesEnum.PARAGRAPH,
-                    SchemaNodesEnum.ORDERED_LIST,
-                ],
+                allowedNodes: [NodeType.PARAGRAPH, NodeType.ORDERED_LIST],
             };
             const testSchema = new DjangoProsemirrorSchema(testSettings);
             const filteredSpecs = testSchema.schema.nodes;
 
-            expect(Object.keys(filteredSpecs)).toContain(
-                SchemaNodesEnum.ORDERED_LIST,
-            );
-            expect(Object.keys(filteredSpecs)).toContain(
-                SchemaNodesEnum.LIST_ITEM,
-            );
+            expect(Object.keys(filteredSpecs)).toContain(NodeType.ORDERED_LIST);
+            expect(Object.keys(filteredSpecs)).toContain(NodeType.LIST_ITEM);
         });
 
         it("should create a valid ProseMirror schema", () => {
             const testSettings: IDPMSettings = {
                 ...basicsettings,
                 allowedNodes: [
-                    SchemaNodesEnum.PARAGRAPH,
-                    SchemaNodesEnum.HEADING,
-                    SchemaNodesEnum.BLOCKQUOTE,
-                    SchemaNodesEnum.BULLET_LIST,
+                    NodeType.PARAGRAPH,
+                    NodeType.HEADING,
+                    NodeType.BLOCKQUOTE,
+                    NodeType.BULLET_LIST,
                 ],
-                allowedMarks: [
-                    SchemaNodesEnum.ITALIC,
-                    SchemaNodesEnum.STRONG,
-                    SchemaNodesEnum.LINK,
-                ],
+                allowedMarks: [MarkType.ITALIC, MarkType.STRONG, MarkType.LINK],
             };
             const testSchema = new DjangoProsemirrorSchema(testSettings);
             const schema = testSchema.schema;

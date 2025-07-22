@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { getDPMPlugins } from "../plugins/index";
 import { IDPMSettings, LanguageCodeEnum } from "../types/types";
 import { Schema } from "prosemirror-model";
-import { SchemaNodesEnum } from "../schema/choices";
+import { NodeType } from "../schema/types";
 
 // Mock the ProseMirror plugins
 vi.mock("prosemirror-keymap", () => ({
@@ -122,10 +122,7 @@ describe("plugins/index", () => {
 
         it("should pass settings to buildMenuItems", () => {
             const settings: IDPMSettings = {
-                allowedNodes: [
-                    SchemaNodesEnum.HEADING,
-                    SchemaNodesEnum.PARAGRAPH,
-                ],
+                allowedNodes: [NodeType.HEADING, NodeType.PARAGRAPH],
                 allowedMarks: [],
                 history: false,
                 language: LanguageCodeEnum.EN,
@@ -215,12 +212,12 @@ describe("plugins/index", () => {
     describe("Plugin configuration", () => {
         it("should configure plugins with different settings", () => {
             const settings1: IDPMSettings = {
-                allowedNodes: [SchemaNodesEnum.HEADING],
+                allowedNodes: [NodeType.HEADING],
                 allowedMarks: [],
                 history: true,
             };
             const settings2: IDPMSettings = {
-                allowedNodes: [SchemaNodesEnum.PARAGRAPH],
+                allowedNodes: [NodeType.PARAGRAPH],
                 allowedMarks: [],
                 history: false,
             };
@@ -235,10 +232,10 @@ describe("plugins/index", () => {
         it("should handle complex settings object", () => {
             const complexSettings: IDPMSettings = {
                 allowedNodes: [
-                    SchemaNodesEnum.HEADING,
-                    SchemaNodesEnum.PARAGRAPH,
-                    SchemaNodesEnum.BLOCKQUOTE,
-                    SchemaNodesEnum.BULLET_LIST,
+                    NodeType.HEADING,
+                    NodeType.PARAGRAPH,
+                    NodeType.BLOCKQUOTE,
+                    NodeType.BULLET_LIST,
                 ],
                 allowedMarks: [],
                 menubar: true,
