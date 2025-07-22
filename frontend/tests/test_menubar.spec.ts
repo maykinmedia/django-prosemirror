@@ -110,7 +110,7 @@ describe("plugins/menubar/index", () => {
                 blockquote: { ...mockNodeType, name: "blockquote" },
                 image: { ...mockNodeType, name: "image" },
                 ordered_list: { ...mockNodeType, name: "ordered_list" },
-                unordered_list: { ...mockNodeType, name: "unordered_list" },
+                bullet_list: { ...mockNodeType, name: "bullet_list" },
                 list_item: { ...mockNodeType, name: "list_item" },
                 horizontal_rule: { ...mockNodeType, name: "horizontal_rule" },
                 code_block: { ...mockNodeType, name: "code_block" },
@@ -315,13 +315,13 @@ describe("plugins/menubar/index", () => {
     });
 
     describe("ListItem and JoinItem menu items", () => {
-        it("should not include liftItem nor joinIten if unordered_list, ordered_list or blockquote are not present", () => {
+        it("should not include liftItem nor joinIten if bullet_list, ordered_list or blockquote are not present", () => {
             const a = {
                 ...mockSchema,
                 nodes: {
                     ...mockSchema.nodes,
                     ordered_list: undefined,
-                    unordered_list: undefined,
+                    bullet_list: undefined,
                     blockquote: undefined,
                 },
             } as unknown as Schema;
@@ -337,7 +337,7 @@ describe("plugins/menubar/index", () => {
                 nodes: {
                     ...mockSchema.nodes,
                     ordered_list: {},
-                    unordered_list: undefined,
+                    bullet_list: undefined,
                     blockquote: undefined,
                 },
             } as unknown as Schema;
@@ -346,13 +346,13 @@ describe("plugins/menubar/index", () => {
             expect(resultOl.joinUpItem).toBeDefined();
         });
 
-        it("should include liftItem and joinItem if unordered_list is present", () => {
+        it("should include liftItem and joinItem if bullet_list is present", () => {
             const schemaUl = {
                 ...mockSchema,
                 nodes: {
                     ...mockSchema.nodes,
                     ordered_list: undefined,
-                    unordered_list: {},
+                    bullet_list: {},
                     blockquote: undefined,
                 },
             } as unknown as Schema;
@@ -367,7 +367,7 @@ describe("plugins/menubar/index", () => {
                 nodes: {
                     ...mockSchema.nodes,
                     ordered_list: undefined,
-                    unordered_list: undefined,
+                    bullet_list: undefined,
                     blockquote: {},
                 },
             } as unknown as Schema;

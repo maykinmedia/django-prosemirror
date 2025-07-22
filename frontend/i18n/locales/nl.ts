@@ -1,6 +1,6 @@
-import { DjangoProsemirrorTranslations } from "@/types/types";
+import { IDPMTranslations } from "@/types/types";
 
-export const nl: DjangoProsemirrorTranslations = {
+export const nl: IDPMTranslations = {
     "Join with above block": "Samenvoegen met vorige blok",
     "Lift out of enclosing block": "Uit huidig blok halen",
     "Select parent node": "Bovenliggend element selecteren",
@@ -43,4 +43,19 @@ export const nl: DjangoProsemirrorTranslations = {
     "Type...": "Tekstopmaak",
     OK: "OK",
     Cancel: "Annuleer",
+    "Delete table": "Tabel verwijderen",
+    "Add column after": "Voeg colom toe na deze",
+    "Add column before": "Voeg colom toe voor deze",
+    "Delete column": "Verwijder colom",
+    "Toggle header column": "Maak titel colom",
+    "Insert table": "Tabel invoegen",
+    "Merge cells": "Cellen samenvoegen",
+    "Split cell": "Cel splitsen",
+    "Add row before": "Rij toevoegen voor",
+    "Add row after": "Rij toevoegen na",
+    "Delete row": "Rij verwijderen",
+    "Toggle header row": "Titel rij aan/uit",
+    "Row operations": "Rij bewerkingen",
+    "Column operations": "Kolom bewerkingen",
+    "Cell operations": "Cel bewerkingen",
 };

@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { getTranslations, translate } from "@/i18n/translations";
+import { describe, it, expect, beforeAll, beforeEach } from "vitest";
+import { getTranslations, translate } from "../i18n/translations";
 
 import {
     DjangoProsemirrorTranslations,
@@ -9,6 +9,10 @@ import { en } from "../i18n/locales/en";
 import { nl } from "../i18n/locales/nl";
 
 describe("i18n/translations", () => {
+    beforeAll(() => {
+        document.documentElement.lang = "nl";
+    });
+
     describe("getTranslations", () => {
         it("should return English translations when language is EN", () => {
             const translations = getTranslations(LanguageCodeEnum.EN);
@@ -44,6 +48,23 @@ describe("i18n/translations", () => {
             expect(translations["Cancel"]).toBe("Annuleer");
         });
 
+        it("should return English translations for unknown language", () => {
+            const translations = getTranslations("unknown-language");
+            expect(translations).toBe(en);
+        });
+
+        it("should return English translations for empty string language", () => {
+            const translations = getTranslations("");
+            expect(translations).toBe(en);
+        });
+
+        it("should handle undefined language parameter gracefully", () => {
+            const translations = getTranslations(
+                undefined as unknown as LanguageCodeEnum,
+            );
+            expect(translations).toBe(en);
+        });
+
         it("should have same keys in both English and Dutch translations", () => {
             const enKeys = Object.keys(en).sort();
             const nlKeys = Object.keys(nl).sort();
@@ -70,6 +91,11 @@ describe("i18n/translations", () => {
     });
 
     describe("translate", () => {
+        beforeEach(() => {
+            // Reset document language before each test
+            document.documentElement.lang = "nl";
+        });
+
         it("should return Dutch translation for existing key", () => {
             const result = translate("Insert image");
             expect(result).toBe("Afbeelding invoegen");
@@ -141,6 +167,44 @@ describe("i18n/translations", () => {
             expect(translate("Change to heading 6")).toBe(
                 "Wijzigen naar kop 6",
             );
+        });
+
+        it("should use English as fallback when document language is English", () => {
+            document.documentElement.lang = "en";
+            const result = translate("Insert image");
+            expect(result).toBe("Insert image");
+        });
+
+        it("should use Dutch as fallback when document is null", () => {
+            const originalDocument = global.document;
+            global.document = null as unknown as Document;
+
+            const result = translate("Insert image");
+            expect(result).toBe("Afbeelding invoegen"); // Should use NL as fallback
+
+            global.document = originalDocument;
+        });
+
+        it("should use Dutch as fallback when document.documentElement is null", () => {
+            const originalDocumentElement = document.documentElement;
+            Object.defineProperty(document, "documentElement", {
+                value: null,
+                configurable: true,
+            });
+
+            const result = translate("Insert image");
+            expect(result).toBe("Afbeelding invoegen"); // Should use NL as fallback
+
+            Object.defineProperty(document, "documentElement", {
+                value: originalDocumentElement,
+                configurable: true,
+            });
+        });
+
+        it("should handle unknown document language gracefully", () => {
+            document.documentElement.lang = "fr"; // French not supported
+            const result = translate("Insert image");
+            expect(result).toBe("Insert image"); // Should fallback to English
         });
 
         it("should translate list operations", () => {

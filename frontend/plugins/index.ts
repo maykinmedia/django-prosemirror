@@ -6,9 +6,10 @@ import { gapCursor } from "prosemirror-gapcursor";
 import { menuBar } from "prosemirror-menu";
 import { Schema } from "prosemirror-model";
 import { buildInputRules, buildKeymap } from "prosemirror-example-setup";
-import { DjangoProsemirrorSettings } from "@/types/types";
 import { buildMenuItems } from "./menubar";
 import { Plugin } from "prosemirror-state";
+import { type DPMSettings } from "@/schema/settings";
+import { tablePlugins } from "./table";
 
 export interface DjangoProsemirrorSetup {
     /** The model schema of the editor. */
@@ -26,15 +27,19 @@ export interface DjangoProsemirrorSetup {
  * @param settings
  * @returns The array of
  */
-export function getDjangoProsemirrorPlugins(
+export function getDPMPlugins(
     schema: Schema,
-    settings?: DjangoProsemirrorSettings,
+    settings?: DPMSettings,
 ): (Plugin & {
     type?: string;
     config?: { content: unknown };
     schema?: unknown;
 })[] {
     const plugins = [
+        /**
+         * Table plugin for table cell editing and a floating menubar.
+         */
+        ...(schema.nodes.table ? tablePlugins() : []),
         /**
          * Input rules for smart quotes and creating the block types in the schema
          * using markdown conventions.
