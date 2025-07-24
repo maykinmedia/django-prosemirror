@@ -2,25 +2,6 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { DjangoProsemirror } from "../create";
 import { Node } from "prosemirror-model";
 
-// Mock DOM environment
-Object.defineProperty(globalThis, "document", {
-    value: {
-        querySelector: vi.fn(),
-        getElementById: vi.fn(),
-        createElement: vi.fn(() => ({
-            appendChild: vi.fn(),
-            setAttribute: vi.fn(),
-            getAttribute: vi.fn(),
-            style: {},
-            classList: {
-                add: vi.fn(),
-                remove: vi.fn(),
-            },
-        })),
-    },
-    writable: true,
-});
-
 Object.defineProperty(globalThis, "window", {
     value: {},
     writable: true,
@@ -248,11 +229,11 @@ describe("DjangoProsemirror", () => {
 
     describe("create", () => {
         it("should throw error when input element is not found", () => {
-            document.getElementById = vi.fn().mockReturnValue(null);
+            document.querySelector = vi.fn().mockReturnValue(null);
 
             expect(() => {
                 new DjangoProsemirror(mockEditorElement);
-            }).not.toThrow(
+            }).toThrow(
                 "You must specify an input element to hold the editor state",
             );
         });

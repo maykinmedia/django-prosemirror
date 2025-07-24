@@ -9,7 +9,7 @@
         "test:ci": "vitest --no-color --reporter=verbose --run",
         "type-check": "tsc --noEmit",
         "type-check:watch": "tsc --noEmit --watch",
-        "lint": "eslint .",
+        "lint": "eslint frontend/",
         "format": "prettier --write frontend/",
         "format:check": "prettier --check frontend/"
     },

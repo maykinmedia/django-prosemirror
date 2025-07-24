@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { JSDOM } from "jsdom";
 import { EditorView } from "prosemirror-view";
 import {
     closeDropdowns,
@@ -7,34 +6,35 @@ import {
 } from "../components/floating-table-toolbar/utils/dom-helpers";
 
 describe("DOM Helpers", () => {
-    let dom: JSDOM;
-    let document: Document;
     let container: HTMLElement;
 
+    function dispatchClickEventHelper(target: Node) {
+        const clickEvent = new MouseEvent("click", {
+            bubbles: true,
+        });
+        Object.defineProperty(clickEvent, "target", {
+            value: target,
+            configurable: true,
+        });
+        target.dispatchEvent(clickEvent);
+    }
+
     beforeEach(() => {
-        dom = new JSDOM(`
-            <!DOCTYPE html>
-            <html>
-            <body>
-                <div id="container" class="table-toolbar">
-                    <div class="table-toolbar__dropdown table-toolbar__dropdown--open" id="dropdown1">
-                        Dropdown 1
-                    </div>
-                    <div class="table-toolbar__dropdown table-toolbar__dropdown--open" id="dropdown2">
-                        Dropdown 2
-                    </div>
-                    <div class="table-toolbar__dropdown" id="dropdown3">
-                        Dropdown 3
-                    </div>
+        document.body.innerHTML = `
+            <div id="container" class="table-toolbar">
+                <div class="table-toolbar__dropdown table-toolbar__dropdown--open" id="dropdown1">
+                    Dropdown 1
                 </div>
-                <div id="editor-view">Editor View</div>
-                <div id="outside">Outside Element</div>
-            </body>
-            </html>
-        `);
-        document = dom.window.document;
-        global.document = document;
-        global.window = dom.window as unknown as Window & typeof globalThis;
+                <div class="table-toolbar__dropdown table-toolbar__dropdown--open" id="dropdown2">
+                    Dropdown 2
+                </div>
+                <div class="table-toolbar__dropdown" id="dropdown3">
+                    Dropdown 3
+                </div>
+            </div>
+            <div id="editor-view">Editor View</div>
+            <div id="outside">Outside Element</div>
+        `;
 
         container = document.getElementById("container")!;
 
@@ -166,17 +166,7 @@ describe("DOM Helpers", () => {
             expect(
                 dropdown2.classList.contains("table-toolbar__dropdown--open"),
             ).toBe(true);
-
-            const clickEvent = new dom.window.MouseEvent("click", {
-                bubbles: true,
-            });
-            Object.defineProperty(clickEvent, "target", {
-                value: outsideElement,
-                configurable: true,
-            });
-
-            outsideElement.dispatchEvent(clickEvent);
-
+            dispatchClickEventHelper(outsideElement);
             expect(
                 dropdown1.classList.contains("table-toolbar__dropdown--open"),
             ).toBe(false);
@@ -198,16 +188,7 @@ describe("DOM Helpers", () => {
             );
 
             const outsideElement = document.getElementById("outside")!;
-            const clickEvent = new dom.window.MouseEvent("click", {
-                bubbles: true,
-            });
-            Object.defineProperty(clickEvent, "target", {
-                value: outsideElement,
-                configurable: true,
-            });
-
-            outsideElement.dispatchEvent(clickEvent);
-
+            dispatchClickEventHelper(outsideElement);
             expect(onHideMock).toHaveBeenCalledTimes(1);
             expect(onShowMock).not.toHaveBeenCalled();
             expect(onPositionMock).not.toHaveBeenCalled();
@@ -226,15 +207,7 @@ describe("DOM Helpers", () => {
             );
 
             const editorElement = document.getElementById("editor-view")!;
-            const clickEvent = new dom.window.MouseEvent("click", {
-                bubbles: true,
-            });
-            Object.defineProperty(clickEvent, "target", {
-                value: editorElement,
-                configurable: true,
-            });
-
-            editorElement.dispatchEvent(clickEvent);
+            dispatchClickEventHelper(editorElement);
 
             expect(onHideMock).not.toHaveBeenCalled();
             expect(onShowMock).toHaveBeenCalledTimes(1);
@@ -254,15 +227,7 @@ describe("DOM Helpers", () => {
             );
 
             const editorElement = document.getElementById("editor-view")!;
-            const clickEvent = new dom.window.MouseEvent("click", {
-                bubbles: true,
-            });
-            Object.defineProperty(clickEvent, "target", {
-                value: editorElement,
-                configurable: true,
-            });
-
-            editorElement.dispatchEvent(clickEvent);
+            dispatchClickEventHelper(editorElement);
 
             expect(onHideMock).not.toHaveBeenCalled();
             expect(onShowMock).not.toHaveBeenCalled();
@@ -282,15 +247,7 @@ describe("DOM Helpers", () => {
             );
 
             const insideElement = document.getElementById("dropdown1")!;
-            const clickEvent = new dom.window.MouseEvent("click", {
-                bubbles: true,
-            });
-            Object.defineProperty(clickEvent, "target", {
-                value: insideElement,
-                configurable: true,
-            });
-
-            insideElement.dispatchEvent(clickEvent);
+            dispatchClickEventHelper(insideElement);
 
             expect(onHideMock).not.toHaveBeenCalled();
         });
@@ -316,15 +273,7 @@ describe("DOM Helpers", () => {
                 dropdown2.classList.contains("table-toolbar__dropdown--open"),
             ).toBe(true);
 
-            const clickEvent = new dom.window.MouseEvent("click", {
-                bubbles: true,
-            });
-            Object.defineProperty(clickEvent, "target", {
-                value: insideElement,
-                configurable: true,
-            });
-
-            insideElement.dispatchEvent(clickEvent);
+            dispatchClickEventHelper(insideElement);
 
             // Dropdowns should remain open
             expect(
@@ -351,27 +300,13 @@ describe("DOM Helpers", () => {
             const outsideElement = document.getElementById("outside")!;
 
             // Click inside editor (inside table)
-            let clickEvent = new dom.window.MouseEvent("click", {
-                bubbles: true,
-            });
-            Object.defineProperty(clickEvent, "target", {
-                value: editorElement,
-                configurable: true,
-            });
-            editorElement.dispatchEvent(clickEvent);
-
+            dispatchClickEventHelper(editorElement);
             expect(onShowMock).toHaveBeenCalledTimes(1);
             expect(onPositionMock).toHaveBeenCalledTimes(1);
 
             // Click outside
             isInsideTableMock.mockReturnValue(false);
-            clickEvent = new dom.window.MouseEvent("click", { bubbles: true });
-            Object.defineProperty(clickEvent, "target", {
-                value: outsideElement,
-                configurable: true,
-            });
-            outsideElement.dispatchEvent(clickEvent);
-
+            dispatchClickEventHelper(outsideElement);
             expect(onHideMock).toHaveBeenCalledTimes(1);
 
             // Final counts

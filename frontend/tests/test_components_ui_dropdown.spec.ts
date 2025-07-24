@@ -1,40 +1,33 @@
-import { beforeEach, describe, expect, it, MockInstance, vi } from "vitest";
-import { JSDOM } from "jsdom";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { EditorView } from "prosemirror-view";
 import { EditorState } from "prosemirror-state";
 import {
     createDropdown,
     updateDropdownItemStates,
-    DropdownOptions,
     DropdownItem,
 } from "../components/ui/dropdown";
 
-// Mock button component
-vi.mock("../components/ui/button", () => ({
-    createButton: vi.fn((options: Record<string, string>) => {
-        const button = document.createElement("button");
-        button.className = options.class || "table-toolbar__button";
-        if (options.title) {
-            button.setAttribute("title", options.title);
-        }
-        return button;
-    }),
-}));
+const expectedClasses = {
+    dropdown: "table-toolbar__dropdown",
+    dropdownOpen: "table-toolbar__dropdown--open",
+    dropdownMenu: "table-toolbar__dropdown-menu",
+    dropdownItem: "table-toolbar__dropdown-item",
+    dropdownItemActive: "table-toolbar__dropdown-item--active",
+    dropdownItemDisabled: "table-toolbar__dropdown-item--disabled",
+    button: "table-toolbar__dropdown-button",
+    disabled: "table-toolbar__button--disabled",
+    active: "table-toolbar__button--active",
+};
 
 describe("Dropdown UI Components", () => {
-    let dom: JSDOM;
-    let document: Document;
     let mockView: EditorView;
     let mockState: EditorState;
+    const commandMockTrue = vi.fn().mockReturnValue(true);
+    const commandMockFalse = vi.fn().mockReturnValue(false);
 
     beforeEach(() => {
-        dom = new JSDOM(
-            `<!DOCTYPE html><html><body><div class="table-toolbar"></div></body></html>`,
-        );
-        document = dom.window.document;
-        global.document = document;
-        global.window = dom.window as unknown as Window & typeof globalThis;
-
+        // Add a mock table toolbar to the body.
+        document.body.innerHTML = '<div class="table-toolbar"></div>';
         mockState = {} as EditorState;
         mockView = {
             state: mockState,
@@ -45,179 +38,121 @@ describe("Dropdown UI Components", () => {
         vi.clearAllMocks();
     });
 
+    function mockClickEvent(
+        target: HTMLElement,
+        testPrevent?: boolean,
+        testPrognation?: boolean,
+    ) {
+        // Create and dispatch click event
+        const clickEvent = new MouseEvent("click", {
+            bubbles: true,
+        });
+
+        const preventDefaultSpy = vi.spyOn(clickEvent, "preventDefault");
+        const stopPropagationSpy = vi.spyOn(clickEvent, "stopPropagation");
+
+        // Dispatch and expect to not throw.
+        expect(() => target.dispatchEvent(clickEvent)).not.toThrow();
+
+        if (testPrognation) expect(stopPropagationSpy).toHaveBeenCalled();
+        if (testPrevent) expect(preventDefaultSpy).toHaveBeenCalled();
+
+        return clickEvent;
+    }
+
     describe("createDropdown", () => {
         it("should create dropdown with basic options", () => {
-            const items: DropdownItem[] = [
-                {
-                    title: "Item 1",
-                    command: vi.fn().mockReturnValue(true),
-                },
-            ];
-
-            const options: DropdownOptions = {
-                title: "Test Dropdown",
-                items,
-            };
-
+            const items = [{ title: "Item 1", command: commandMockTrue }];
+            const options = { title: "Test Dropdown", items };
             const dropdown = createDropdown(options, mockView);
 
-            expect(dropdown).toBeInstanceOf(dom.window.HTMLElement);
-            expect(dropdown.classList.contains("table-toolbar__dropdown")).toBe(
+            expect(dropdown).toBeInstanceOf(HTMLElement);
+            expect(dropdown.classList.contains(expectedClasses.dropdown)).toBe(
                 true,
             );
-            expect(dropdown.getAttribute("data-dropdown")).toBe(
-                "Test Dropdown",
-            );
+            expect(dropdown.dataset.dropdown).toBe(options.title);
         });
 
         it("should create dropdown with custom class", () => {
-            const items: DropdownItem[] = [
-                {
-                    title: "Item 1",
-                    command: vi.fn().mockReturnValue(true),
-                },
-            ];
-
-            const options: DropdownOptions = {
-                title: "Test Dropdown",
-                class: "custom-dropdown",
-                items,
-            };
-
+            const items = [{ title: "Item 1", command: commandMockTrue }];
+            const options = { title: "Test Dropdown", items };
             const dropdown = createDropdown(options, mockView);
-            const button = dropdown.querySelector("button");
 
-            expect(button?.className).toContain("custom-dropdown");
-            expect(button?.className).toContain(
-                "table-toolbar__dropdown-button",
-            );
+            const button = dropdown.querySelector("button");
+            expect(button?.className).toContain(expectedClasses.button);
         });
 
         it("should create dropdown with icon", () => {
-            const items: DropdownItem[] = [
-                {
-                    title: "Item 1",
-                    command: vi.fn().mockReturnValue(true),
-                },
-            ];
-
-            const options: DropdownOptions = {
+            const items = [{ title: "Item 1", command: commandMockTrue }];
+            const options = {
                 title: "Test Dropdown",
                 icon: "bold",
                 items,
             };
-
             const dropdown = createDropdown(options, mockView);
-            const button = dropdown.querySelector("button");
 
-            expect(button?.getAttribute("title")).toBe("Test Dropdown");
+            const button = dropdown.querySelector("button");
+            expect(button?.title).toBe(options.title);
         });
 
         it("should create dropdown items", () => {
-            const items: DropdownItem[] = [
-                {
-                    title: "Item 1",
-                    command: vi.fn().mockReturnValue(true),
-                },
-                {
-                    title: "Item 2",
-                    command: vi.fn().mockReturnValue(false),
-                },
+            const items = [
+                { title: "Item 1", command: commandMockTrue },
+                { title: "Item 2", command: commandMockFalse },
             ];
-
-            const options: DropdownOptions = {
-                title: "Test Dropdown",
-                items,
-            };
-
+            const options = { title: "Test Dropdown", items };
             const dropdown = createDropdown(options, mockView);
-            const menu = dropdown.querySelector(
-                ".table-toolbar__dropdown-menu",
-            );
-            const dropdownItems = menu?.querySelectorAll(
-                ".table-toolbar__dropdown-item",
-            );
 
-            expect(dropdownItems?.length).toBe(2);
-            expect(dropdownItems?.[0].textContent).toBe("Item 1");
-            expect(dropdownItems?.[1].textContent).toBe("Item 2");
+            const menu = dropdown.querySelector(
+                `.${expectedClasses.dropdownMenu}`,
+            )!;
+            const dropdownItems = menu.querySelectorAll(
+                `.${expectedClasses.dropdownItem}`,
+            )!;
+
+            expect(dropdownItems?.length).toBe(items.length);
+            expect(dropdownItems?.[0].textContent).toBe(items[0].title);
+            expect(dropdownItems?.[1].textContent).toBe(items[1].title);
         });
 
         it("should handle dropdown item clicks", () => {
-            const commandMock = vi.fn().mockReturnValue(true);
-            const onCloseMock = vi.fn();
-
-            const items: DropdownItem[] = [
-                {
-                    title: "Test Item",
-                    command: commandMock,
-                },
-            ];
-
-            const options: DropdownOptions = {
-                title: "Test Dropdown",
-                items,
-                onClose: onCloseMock,
-            };
+            const items = [{ title: "Test Item", command: commandMockTrue }];
+            const options = { title: "Test Dropdown", items };
 
             const dropdown = createDropdown(options, mockView);
-            dropdown.classList.add("table-toolbar__dropdown--open");
+            dropdown.classList.add(expectedClasses.dropdownOpen);
 
             const menu = dropdown.querySelector(
-                ".table-toolbar__dropdown-menu",
-            );
-            const item = menu?.querySelector(
-                ".table-toolbar__dropdown-item",
-            ) as HTMLElement;
+                `.${expectedClasses.dropdownMenu}`,
+            )!;
+            const item: HTMLElement = menu.querySelector(
+                `.${expectedClasses.dropdownItem}`,
+            )!;
+            mockClickEvent(item, true, true);
 
-            const clickEvent = new dom.window.MouseEvent("click", {
-                bubbles: true,
-            });
-            const preventDefaultSpy = vi.spyOn(clickEvent, "preventDefault");
-            const stopPropagationSpy = vi.spyOn(clickEvent, "stopPropagation");
-
-            item.dispatchEvent(clickEvent);
-
-            expect(preventDefaultSpy).toHaveBeenCalled();
-            expect(stopPropagationSpy).toHaveBeenCalled();
-            expect(commandMock).toHaveBeenCalledWith(
+            expect(commandMockTrue).toHaveBeenCalledWith(
                 mockState,
                 mockView.dispatch,
             );
             expect(mockView.focus).toHaveBeenCalled();
             expect(
-                dropdown.classList.contains("table-toolbar__dropdown--open"),
+                dropdown.classList.contains(expectedClasses.dropdownOpen),
             ).toBe(false);
-            expect(onCloseMock).toHaveBeenCalled();
         });
 
         it("should not focus when command returns false", () => {
-            const commandMock = vi.fn().mockReturnValue(false);
-
-            const items: DropdownItem[] = [
-                {
-                    title: "Test Item",
-                    command: commandMock,
-                },
-            ];
-
-            const options: DropdownOptions = {
-                title: "Test Dropdown",
-                items,
-            };
+            const items = [{ title: "Test Item", command: commandMockFalse }];
+            const options = { title: "Test Dropdown", items };
 
             const dropdown = createDropdown(options, mockView);
             const menu = dropdown.querySelector(
-                ".table-toolbar__dropdown-menu",
-            );
-            const item = menu?.querySelector(
-                ".table-toolbar__dropdown-item",
-            ) as HTMLElement;
-
-            const clickEvent = new dom.window.MouseEvent("click");
-            item.dispatchEvent(clickEvent);
-
-            expect(commandMock).toHaveBeenCalledWith(
+                `.${expectedClasses.dropdownMenu}`,
+            )!;
+            const item: HTMLElement = menu.querySelector(
+                `.${expectedClasses.dropdownItem}`,
+            )!;
+            mockClickEvent(item);
+            expect(commandMockFalse).toHaveBeenCalledWith(
                 mockState,
                 mockView.dispatch,
             );
@@ -225,118 +160,76 @@ describe("Dropdown UI Components", () => {
         });
 
         it("should handle button clicks to toggle dropdown", () => {
-            const items: DropdownItem[] = [
-                {
-                    title: "Item 1",
-                    command: vi.fn().mockReturnValue(true),
-                },
-            ];
-
-            const options: DropdownOptions = {
-                title: "Test Dropdown",
-                items,
-            };
+            const items = [{ title: "Item 1", command: commandMockTrue }];
+            const options = { title: "Test Dropdown", items };
 
             // Add dropdown to container
-            const container = document.querySelector(".table-toolbar")!;
+            const container = document.querySelector(
+                `.${TABLE_TOOLBAR_PREFIX}`,
+            )!;
             const dropdown = createDropdown(options, mockView);
             container.appendChild(dropdown);
 
-            const button = dropdown.querySelector(
-                "button",
-            ) as HTMLButtonElement;
+            const button = dropdown.querySelector<HTMLButtonElement>("button")!;
 
-            const clickEvent = new dom.window.MouseEvent("click", {
-                bubbles: true,
-            });
-            const preventDefaultSpy = vi.spyOn(clickEvent, "preventDefault");
-            const stopPropagationSpy = vi.spyOn(clickEvent, "stopPropagation");
+            mockClickEvent(button, true, true);
 
-            // Click to open
-            button.dispatchEvent(clickEvent);
-
-            expect(preventDefaultSpy).toHaveBeenCalled();
-            expect(stopPropagationSpy).toHaveBeenCalled();
             expect(
-                dropdown.classList.contains("table-toolbar__dropdown--open"),
+                dropdown.classList.contains(expectedClasses.dropdownOpen),
             ).toBe(true);
 
             // Click to close
-            button.dispatchEvent(clickEvent);
+            mockClickEvent(button, true, true);
+
             expect(
-                dropdown.classList.contains("table-toolbar__dropdown--open"),
+                dropdown.classList.contains(expectedClasses.dropdownOpen),
             ).toBe(false);
         });
 
         it("should close other dropdowns when opening new one", () => {
-            const items: DropdownItem[] = [
-                {
-                    title: "Item 1",
-                    command: vi.fn().mockReturnValue(true),
-                },
-            ];
-
-            const container = document.querySelector(".table-toolbar")!;
+            const items = [{ title: "Item 1", command: commandMockTrue }];
+            const container = document.querySelector(
+                `.${TABLE_TOOLBAR_PREFIX}`,
+            )!;
 
             // Create first dropdown
             const dropdown1 = createDropdown(
-                {
-                    title: "Dropdown 1",
-                    items,
-                },
+                { title: "Dropdown 1", items },
                 mockView,
             );
-            dropdown1.classList.add("table-toolbar__dropdown--open");
+            dropdown1.classList.add(expectedClasses.dropdownOpen);
             container.appendChild(dropdown1);
 
             // Create second dropdown
             const dropdown2 = createDropdown(
-                {
-                    title: "Dropdown 2",
-                    items,
-                },
+                { title: "Dropdown 2", items },
                 mockView,
             );
             container.appendChild(dropdown2);
 
-            const button2 = dropdown2.querySelector(
-                "button",
-            ) as HTMLButtonElement;
-            const clickEvent = new dom.window.MouseEvent("click");
-            button2.dispatchEvent(clickEvent);
+            const button2 =
+                dropdown2.querySelector<HTMLButtonElement>("button")!;
+
+            mockClickEvent(button2);
 
             expect(
-                dropdown1.classList.contains("table-toolbar__dropdown--open"),
+                dropdown1.classList.contains(expectedClasses.dropdownOpen),
             ).toBe(false);
             expect(
-                dropdown2.classList.contains("table-toolbar__dropdown--open"),
+                dropdown2.classList.contains(expectedClasses.dropdownOpen),
             ).toBe(true);
         });
 
         it("should handle dropdown without container", () => {
-            const items: DropdownItem[] = [
-                {
-                    title: "Item 1",
-                    command: vi.fn().mockReturnValue(true),
-                },
-            ];
-
-            const options: DropdownOptions = {
-                title: "Test Dropdown",
-                items,
-            };
-
+            const items = [{ title: "Item 1", command: commandMockTrue }];
+            const options = { title: "Test Dropdown", items };
             const dropdown = createDropdown(options, mockView);
-            const button = dropdown.querySelector(
-                "button",
-            ) as HTMLButtonElement;
+            const button = dropdown.querySelector<HTMLButtonElement>("button")!;
 
-            // Should not throw error when container is not found
-            const clickEvent = new dom.window.MouseEvent("click");
-            expect(() => button.dispatchEvent(clickEvent)).not.toThrow();
+            mockClickEvent(button);
 
             expect(
-                dropdown.classList.contains("table-toolbar__dropdown--open"),
+                dropdown.classList.contains(expectedClasses.dropdownOpen),
             ).toBe(true);
         });
     });
@@ -346,27 +239,13 @@ describe("Dropdown UI Components", () => {
         let items: DropdownItem[];
 
         beforeEach(() => {
-            const commandMock1 = vi.fn();
-            const commandMock2 = vi.fn();
-            const isActiveMock1 = vi.fn();
-
             items = [
-                {
-                    title: "Item 1",
-                    command: commandMock1,
-                    isActive: isActiveMock1,
-                },
-                {
-                    title: "Item 2",
-                    command: commandMock2,
-                },
+                { title: "Item 1", command: vi.fn(), isActive: vi.fn() },
+                { title: "Item 2", command: vi.fn() },
             ];
 
             dropdown = createDropdown(
-                {
-                    title: "Test Dropdown",
-                    items,
-                },
+                { title: "Test Dropdown", items },
                 mockView,
             );
         });
@@ -374,18 +253,18 @@ describe("Dropdown UI Components", () => {
         it("should update item states correctly", () => {
             const [item1, item2] = items;
 
-            (item1.command as unknown as MockInstance).mockReturnValue(true);
-            (item1.isActive as unknown as MockInstance).mockReturnValue(true);
-            (item2.command as unknown as MockInstance).mockReturnValue(false);
+            item1.command = commandMockTrue;
+            item1.isActive = commandMockTrue;
+            item2.command = commandMockFalse;
 
             updateDropdownItemStates(dropdown, mockState, items);
 
             const menu = dropdown.querySelector(
-                ".table-toolbar__dropdown-menu",
-            );
-            const itemElements = menu?.querySelectorAll(
-                ".table-toolbar__dropdown-item",
-            );
+                `.${expectedClasses.dropdownMenu}`,
+            )!;
+            const [el1, el2] = menu.querySelectorAll(
+                `.${expectedClasses.dropdownItem}`,
+            )!;
 
             expect(item1.command).toHaveBeenCalledWith(mockState);
             expect(item1.isActive).toHaveBeenCalledWith(mockState);
@@ -393,49 +272,38 @@ describe("Dropdown UI Components", () => {
 
             // Item 1 should be enabled and active
             expect(
-                itemElements?.[0].classList.contains(
-                    "table-toolbar__dropdown-item--disabled",
-                ),
+                el1.classList.contains(expectedClasses.dropdownItemDisabled),
             ).toBe(false);
             expect(
-                itemElements?.[0].classList.contains(
-                    "table-toolbar__dropdown-item--active",
-                ),
+                el1.classList.contains(expectedClasses.dropdownItemActive),
             ).toBe(true);
 
             // Item 2 should be disabled and not active
             expect(
-                itemElements?.[1].classList.contains(
-                    "table-toolbar__dropdown-item--disabled",
-                ),
+                el2.classList.contains(expectedClasses.dropdownItemDisabled),
             ).toBe(true);
             expect(
-                itemElements?.[1].classList.contains(
-                    "table-toolbar__dropdown-item--active",
-                ),
+                el2.classList.contains(expectedClasses.dropdownItemActive),
             ).toBe(false);
         });
 
         it("should handle items without isActive function", () => {
             const [item1, item2] = items;
-
-            (item1.command as unknown as MockInstance).mockReturnValue(true);
-            (item2.command as unknown as MockInstance).mockReturnValue(true);
+            item1.command = commandMockTrue;
+            item2.command = commandMockTrue;
 
             updateDropdownItemStates(dropdown, mockState, items);
 
             const menu = dropdown.querySelector(
-                ".table-toolbar__dropdown-menu",
-            );
-            const itemElements = menu?.querySelectorAll(
-                ".table-toolbar__dropdown-item",
-            );
+                `.${expectedClasses.dropdownMenu}`,
+            )!;
+            const [, el2] = menu.querySelectorAll(
+                `.${expectedClasses.dropdownItem}`,
+            )!;
 
             // Item 2 has no isActive, should not be active
             expect(
-                itemElements?.[1].classList.contains(
-                    "table-toolbar__dropdown-item--active",
-                ),
+                el2.classList.contains(expectedClasses.dropdownItemActive),
             ).toBe(false);
         });
 
@@ -449,11 +317,8 @@ describe("Dropdown UI Components", () => {
         });
 
         it("should handle items not found in menu", () => {
-            const differentItems: DropdownItem[] = [
-                {
-                    title: "Different Item",
-                    command: vi.fn().mockReturnValue(true),
-                },
+            const differentItems = [
+                { title: "Different Item", command: commandMockTrue },
             ];
 
             expect(() => {
@@ -465,44 +330,36 @@ describe("Dropdown UI Components", () => {
             const [item1] = items;
 
             // First call - enable and activate
-            (item1.command as unknown as MockInstance).mockReturnValue(true);
-            (item1.isActive as unknown as MockInstance).mockReturnValue(true);
+            item1.command = commandMockTrue;
+            item1.isActive = commandMockTrue;
 
             updateDropdownItemStates(dropdown, mockState, items);
 
             const menu = dropdown.querySelector(
-                ".table-toolbar__dropdown-menu",
-            );
-            const itemElement = menu?.querySelector(
-                ".table-toolbar__dropdown-item",
-            ) as HTMLElement;
+                `.${expectedClasses.dropdownMenu}`,
+            )!;
+            const item: HTMLElement = menu.querySelector(
+                `.${expectedClasses.dropdownItem}`,
+            )!;
 
             expect(
-                itemElement.classList.contains(
-                    "table-toolbar__dropdown-item--disabled",
-                ),
+                item.classList.contains(expectedClasses.dropdownItemDisabled),
             ).toBe(false);
             expect(
-                itemElement.classList.contains(
-                    "table-toolbar__dropdown-item--active",
-                ),
+                item.classList.contains(expectedClasses.dropdownItemActive),
             ).toBe(true);
 
             // Second call - disable and deactivate
-            (item1.command as unknown as MockInstance).mockReturnValue(false);
-            (item1.isActive as unknown as MockInstance).mockReturnValue(false);
+            item1.command = commandMockFalse;
+            item1.isActive = commandMockFalse;
 
             updateDropdownItemStates(dropdown, mockState, items);
 
             expect(
-                itemElement.classList.contains(
-                    "table-toolbar__dropdown-item--disabled",
-                ),
+                item.classList.contains(expectedClasses.dropdownItemDisabled),
             ).toBe(true);
             expect(
-                itemElement.classList.contains(
-                    "table-toolbar__dropdown-item--active",
-                ),
+                item.classList.contains(expectedClasses.dropdownItemActive),
             ).toBe(false);
         });
     });

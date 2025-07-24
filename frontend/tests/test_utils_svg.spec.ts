@@ -1,18 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { JSDOM } from "jsdom";
 import { createSVG } from "../utils/svg";
 import { IconData } from "../plugins/icons";
 
 describe("SVG Utils", () => {
-    let dom: JSDOM;
-    let document: Document;
-
     beforeEach(() => {
-        dom = new JSDOM(`<!DOCTYPE html><html><body></body></html>`);
-        document = dom.window.document;
-        global.document = document;
-        global.window = dom.window as unknown as Window & typeof globalThis;
-
         vi.clearAllMocks();
     });
 
@@ -41,7 +32,7 @@ describe("SVG Utils", () => {
 
             const svg = createSVG(iconData);
 
-            expect(svg).toBeInstanceOf(dom.window.SVGElement);
+            expect(svg).toBeInstanceOf(SVGElement);
             expect(svg?.tagName).toBe("svg");
             expect(svg?.getAttribute("width")).toBe("24");
             expect(svg?.getAttribute("height")).toBe("24");

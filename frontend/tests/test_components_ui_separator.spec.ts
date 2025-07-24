@@ -1,17 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { JSDOM } from "jsdom";
 import { separator, dynamic_seperator } from "../components/ui/separator";
 
+const expectedClasses = {
+    seperator: "table-toolbar__separator",
+};
+
 describe("Separator UI Component", () => {
-    let dom: JSDOM;
-    let document: Document;
-
     beforeEach(() => {
-        dom = new JSDOM(`<!DOCTYPE html><html><body></body></html>`);
-        document = dom.window.document;
-        global.document = document;
-        global.window = dom.window as unknown as Window & typeof globalThis;
-
         vi.clearAllMocks();
     });
 
@@ -20,7 +15,7 @@ describe("Separator UI Component", () => {
             // The separator is created with the mock, so we just verify properties
             expect(separator).toBeDefined();
             expect(separator.tagName).toBe("DIV");
-            expect(separator.className).toBe("table-toolbar__separator");
+            expect(separator.className).toBe(expectedClasses.seperator);
         });
 
         it("should be a single instance", () => {
@@ -37,12 +32,12 @@ describe("Separator UI Component", () => {
             const sep1 = dynamic_seperator();
             const sep2 = dynamic_seperator();
 
-            expect(sep1).toBeInstanceOf(dom.window.HTMLElement);
-            expect(sep2).toBeInstanceOf(dom.window.HTMLElement);
+            expect(sep1).toBeInstanceOf(HTMLElement);
+            expect(sep2).toBeInstanceOf(HTMLElement);
             expect(sep1.tagName).toBe("DIV");
             expect(sep2.tagName).toBe("DIV");
-            expect(sep1.className).toBe("table-toolbar__separator");
-            expect(sep2.className).toBe("table-toolbar__separator");
+            expect(sep1.className).toBe(expectedClasses.seperator);
+            expect(sep2.className).toBe(expectedClasses.seperator);
         });
 
         it("should return different instances each time", () => {

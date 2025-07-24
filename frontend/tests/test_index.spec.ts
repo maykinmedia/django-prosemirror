@@ -1,29 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { JSDOM } from "jsdom";
 
 describe("Index module", () => {
-    let dom: JSDOM;
-    let document: Document;
-
     beforeEach(() => {
-        dom = new JSDOM(`
-            <!DOCTYPE html>
-            <html>
-            <body>
-                <div data-prosemirror-id="editor1" data-prosemirror-input-id="input1">
-                    <p>Editor 1 content</p>
-                </div>
-                <div data-prosemirror-id="editor2" data-prosemirror-input-id="input2">
-                    <p>Editor 2 content</p>
-                </div>
-                <input type="hidden" id="input1" value='{"type":"doc","content":[]}' />
-                <input type="hidden" id="input2" value='{"type":"doc","content":[]}' />
-            </body>
-            </html>
-        `);
-        document = dom.window.document;
-        global.document = document;
-        global.window = dom.window as unknown as Window & typeof globalThis;
+        document.body.innerHTML = `
+            <div data-prosemirror-id="editor1" data-prosemirror-input-id="input1">
+                <p>Editor 1 content</p>
+            </div>
+            <div data-prosemirror-id="editor2" data-prosemirror-input-id="input2">
+                <p>Editor 2 content</p>
+            </div>
+            <input type="hidden" id="input1" value='{"type":"doc","content":[]}' />
+            <input type="hidden" id="input2" value='{"type":"doc","content":[]}' />
+        `;
 
         vi.clearAllMocks();
     });
@@ -140,8 +128,7 @@ describe("Index module", () => {
 
             readyFunction(mockFn);
 
-            document.dispatchEvent(new dom.window.Event("DOMContentLoaded"));
-
+            document.dispatchEvent(new Event("DOMContentLoaded"));
             expect(mockFn).toHaveBeenCalledTimes(1);
         });
     });
