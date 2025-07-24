@@ -1,6 +1,7 @@
 import { columnResizing, goToNextCell, tableEditing } from "prosemirror-tables";
 import { keymap } from "prosemirror-keymap";
-import { floatingTableToolbarPlugin } from "./floating-toolbar";
+import { tableToolbarPlugin } from "./floating-toolbar";
+import { Schema } from "prosemirror-model";
 
 /**
  * ## Create table plugins
@@ -20,7 +21,9 @@ import { floatingTableToolbarPlugin } from "./floating-toolbar";
  * 4. floating menu:
  *      - create a floating toolbar to handle table actions.
  */
-export const tablePlugins = () => {
+export const tablePlugins = (schema: Schema) => {
+    if (!schema.nodes.table) return [];
+
     return [
         columnResizing(),
         tableEditing(),
@@ -28,6 +31,6 @@ export const tablePlugins = () => {
             Tab: goToNextCell(1),
             "Shift-Tab": goToNextCell(-1),
         }),
-        floatingTableToolbarPlugin(),
+        tableToolbarPlugin(),
     ];
 };

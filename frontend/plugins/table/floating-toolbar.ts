@@ -1,17 +1,17 @@
+import { TableToolbar } from "@/components/table-toolbar";
 import { Plugin, PluginKey } from "prosemirror-state";
-import { FloatingTableToolbar } from "@/components/floating-table-toolbar";
 
 // Plugin key for the floating table toolbar
-export const floatingTableToolbarKey = new PluginKey("floatingTableToolbar");
+export const tableToolbarKey = new PluginKey("tableToolbar");
 
 /**
  * Plugin to manage the floating table toolbar
  */
-export const floatingTableToolbarPlugin = () =>
+export const tableToolbarPlugin = () =>
     new Plugin({
-        key: floatingTableToolbarKey,
+        key: tableToolbarKey,
         view(editorView) {
-            const toolbar = new FloatingTableToolbar(editorView);
+            const toolbar = new TableToolbar(editorView);
             // Initial update
             toolbar.update(editorView);
 

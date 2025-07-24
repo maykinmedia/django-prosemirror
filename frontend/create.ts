@@ -1,16 +1,14 @@
-import { EditorView } from "prosemirror-view";
-import { getDPMPlugins } from "./plugins/index.ts";
-import DMPSchema from "./schema/prosemirror-schema.ts";
-import { EditorState } from "prosemirror-state";
+import { DPMSchema, DPMSettings, translate } from "@/conf";
+import { getDPMPlugins } from "@/plugins/index.ts";
 import { DOMParser, Node, Schema } from "prosemirror-model";
-import { translate } from "./i18n/translations.ts";
-import { DPMSettings } from "./schema/settings.ts";
+import { EditorState } from "prosemirror-state";
 import { fixTables } from "prosemirror-tables";
+import { EditorView } from "prosemirror-view";
 
-export class DjangoProsemirror {
-    schema: Schema;
-    settings: DPMSettings;
+export class DPMEditor {
     editorElement: HTMLDivElement;
+    schema?: Schema;
+    settings?: DPMSettings;
     editor?: EditorView;
 
     /**
@@ -21,9 +19,6 @@ export class DjangoProsemirror {
         this.debugLog("%cINIT DPM INSTANCE", "color: blue");
 
         this.editorElement = node;
-        this.settings = new DPMSettings(node);
-        this.schema = new DMPSchema(this.settings).schema;
-
         this.create();
     }
 
@@ -34,6 +29,7 @@ export class DjangoProsemirror {
     }
 
     get initialDoc() {
+        if (!this.schema) return;
         try {
             const inputValue = this.inputElement?.value.trim();
             if (inputValue) {
@@ -72,6 +68,9 @@ export class DjangoProsemirror {
             throw new Error(
                 "You must specify an input element to hold the editor state",
             );
+
+        this.settings = new DPMSettings(this.editorElement);
+        this.schema = new DPMSchema(this.settings).schema;
 
         this.debugLog(
             "Editor element:",

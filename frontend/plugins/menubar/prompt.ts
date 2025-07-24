@@ -1,6 +1,6 @@
-import { Attrs } from "prosemirror-model";
-import { translate } from "@/i18n/translations";
+import { translate } from "@/conf";
 import crelt from "crelt";
+import { Attrs } from "prosemirror-model";
 
 const prefix = "prompt";
 

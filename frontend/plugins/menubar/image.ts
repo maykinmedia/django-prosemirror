@@ -3,7 +3,7 @@ import { Attrs, NodeType } from "prosemirror-model";
 import { icons } from "../icons";
 import { canInsert } from "./utils";
 import { openPrompt, TextField } from "./prompt";
-import { translate } from "@/i18n/translations";
+import { translate } from "@/conf";
 import { NodeSelection } from "prosemirror-state";
 
 /**

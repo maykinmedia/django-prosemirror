@@ -4,7 +4,7 @@ import { icons } from "../icons";
 import { toggleMark } from "prosemirror-commands";
 import { isMarkActive } from "./utils";
 import { openPrompt, TextField } from "./prompt";
-import { translate } from "@/i18n/translations";
+import { translate } from "@/conf";
 
 /**
  * Create a link menu item that can add or remove links from selected text.

@@ -3,7 +3,7 @@ import { MenuItem } from "prosemirror-menu";
 import { icons } from "../icons";
 import { Fragment } from "prosemirror-model";
 import { TableField, openPrompt } from "./prompt";
-import { translate } from "@/i18n/translations";
+import { translate } from "@/conf";
 import { canInsert } from "./utils";
 
 export interface TableMenuOptions {

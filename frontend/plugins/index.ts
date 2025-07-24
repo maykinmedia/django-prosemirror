@@ -1,14 +1,14 @@
-import { keymap } from "prosemirror-keymap";
-import { history } from "prosemirror-history";
+import { IDPMSettings } from "@/conf/types";
 import { baseKeymap } from "prosemirror-commands";
 import { dropCursor } from "prosemirror-dropcursor";
+import { buildInputRules, buildKeymap } from "prosemirror-example-setup";
 import { gapCursor } from "prosemirror-gapcursor";
+import { history } from "prosemirror-history";
+import { keymap } from "prosemirror-keymap";
 import { menuBar } from "prosemirror-menu";
 import { Schema } from "prosemirror-model";
-import { buildInputRules, buildKeymap } from "prosemirror-example-setup";
-import { buildMenuItems } from "./menubar";
 import { Plugin } from "prosemirror-state";
-import { type DPMSettings } from "@/schema/settings";
+import { buildMenuItems } from "./menubar";
 import { tablePlugins } from "./table";
 
 export interface DjangoProsemirrorSetup {
@@ -29,7 +29,7 @@ export interface DjangoProsemirrorSetup {
  */
 export function getDPMPlugins(
     schema: Schema,
-    settings?: DPMSettings,
+    settings?: IDPMSettings,
 ): (Plugin & {
     type?: string;
     config?: { content: unknown };
@@ -39,7 +39,7 @@ export function getDPMPlugins(
         /**
          * Table plugin for table cell editing and a floating menubar.
          */
-        ...(schema.nodes.table ? tablePlugins() : []),
+        ...tablePlugins(schema),
         /**
          * Input rules for smart quotes and creating the block types in the schema
          * using markdown conventions.
