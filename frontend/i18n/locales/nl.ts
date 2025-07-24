@@ -48,7 +48,6 @@ export const nl: IDPMTranslations = {
     "Add column before": "Voeg colom toe voor deze",
     "Delete column": "Verwijder colom",
     "Toggle header column": "Maak titel colom",
-    "Insert table": "Tabel invoegen",
     "Merge cells": "Cellen samenvoegen",
     "Split cell": "Cel splitsen",
     "Add row before": "Rij toevoegen voor",
@@ -58,4 +57,5 @@ export const nl: IDPMTranslations = {
     "Row operations": "Rij bewerkingen",
     "Column operations": "Kolom bewerkingen",
     "Cell operations": "Cel bewerkingen",
+    "Insert table": "Tabel invoegen",
 };

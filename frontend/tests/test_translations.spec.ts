@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { getTranslations, translate } from "../i18n/translations";
 
-import { LanguageCodeEnum } from "../types/types";
+import { IDPMTranslations, LanguageCodeEnum } from "../types/types";
 import { en } from "../i18n/locales/en";
 import { nl } from "../i18n/locales/nl";
 

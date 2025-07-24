@@ -30,7 +30,7 @@ export class OrderedListNode extends NodeDefinition {
     ];
     override toDOM(node: Node): DOMOutputSpec {
         const attrs = this.classMapping.apply_to_attrs(
-            { start: node?.attrs.order },
+            { start: node?.attrs?.order ?? 1 },
             this.name,
         );
         return ["ol", attrs, 0];

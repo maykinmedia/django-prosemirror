@@ -164,9 +164,7 @@ describe("Dropdown UI Components", () => {
             const options = { title: "Test Dropdown", items };
 
             // Add dropdown to container
-            const container = document.querySelector(
-                `.${TABLE_TOOLBAR_PREFIX}`,
-            )!;
+            const container = document.querySelector(".table-toolbar")!;
             const dropdown = createDropdown(options, mockView);
             container.appendChild(dropdown);
 
@@ -188,9 +186,7 @@ describe("Dropdown UI Components", () => {
 
         it("should close other dropdowns when opening new one", () => {
             const items = [{ title: "Item 1", command: commandMockTrue }];
-            const container = document.querySelector(
-                `.${TABLE_TOOLBAR_PREFIX}`,
-            )!;
+            const container = document.querySelector(".table-toolbar")!;
 
             // Create first dropdown
             const dropdown1 = createDropdown(

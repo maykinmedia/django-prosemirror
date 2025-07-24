@@ -86,8 +86,8 @@ class DMPSchema {
 
             // Execute some commands to make sure the table is set correct.
             if (cur === NodeType.TABLE) {
-                document.execCommand("enableObjectResizing", false, "false");
-                document.execCommand(
+                document.execCommand?.("enableObjectResizing", false, "false");
+                document.execCommand?.(
                     "enableInlineTableEditing",
                     false,
                     "false",
