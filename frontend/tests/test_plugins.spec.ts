@@ -3,6 +3,7 @@ import { getDPMPlugins } from "../plugins/index";
 import { IDPMSettings, LanguageCodeEnum } from "../types/types";
 import { Schema } from "prosemirror-model";
 import { NodeType } from "../schema/types";
+import { DPMSettings } from "@/schema/settings";
 
 // Mock the ProseMirror plugins
 vi.mock("prosemirror-keymap", () => ({
@@ -128,7 +129,7 @@ describe("plugins/index", () => {
                 language: LanguageCodeEnum.EN,
             };
 
-            const result = getDPMPlugins(mockSchema, settings);
+            const result = getDPMPlugins(mockSchema, settings as DPMSettings);
 
             // Just verify that plugins are created without errors
             expect(result).toMatchSnapshot();
@@ -168,7 +169,7 @@ describe("plugins/index", () => {
             };
 
             expect(() => {
-                getDPMPlugins(mockSchema, settings);
+                getDPMPlugins(mockSchema, settings as DPMSettings);
             }).not.toThrow();
         });
 
@@ -222,8 +223,14 @@ describe("plugins/index", () => {
                 history: false,
             };
 
-            const plugins1 = getDPMPlugins(mockSchema, settings1);
-            const plugins2 = getDPMPlugins(mockSchema, settings2);
+            const plugins1 = getDPMPlugins(
+                mockSchema,
+                settings1 as DPMSettings,
+            );
+            const plugins2 = getDPMPlugins(
+                mockSchema,
+                settings2 as DPMSettings,
+            );
 
             // Both should return the same structure
             expect(plugins1).toEqual(plugins2);
@@ -250,7 +257,7 @@ describe("plugins/index", () => {
             };
 
             expect(() => {
-                getDPMPlugins(mockSchema, complexSettings);
+                getDPMPlugins(mockSchema, complexSettings as DPMSettings);
             }).not.toThrow();
         });
     });

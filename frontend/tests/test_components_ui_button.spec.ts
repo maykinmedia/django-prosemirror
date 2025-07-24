@@ -101,7 +101,7 @@ describe("Button UI Components", () => {
         });
 
         it("should create button without icon if icon doesn't exist", () => {
-            const options: ButtonOptions = { icon: "undefined" as IconKeys };
+            const options: ButtonOptions = { icon: "undefined" };
             const button = createButton(options);
             expect(button).toBeInstanceOf(HTMLButtonElement);
             // Since we're mocking crelt, we can't easily test for actual SVG
@@ -119,7 +119,7 @@ describe("Button UI Components", () => {
         });
 
         it("should create button without icon when invalid icon provided", () => {
-            const options = { icon: "invalid-icon" as IconKeys };
+            const options = { icon: "invalid-icon" };
             const button = createButton(options);
 
             // Button should not have children when invalid icon
@@ -170,7 +170,7 @@ describe("Button UI Components", () => {
             const options = {
                 class: "custom-class",
                 title: "Custom Title",
-                icon: "bold" as IconKeys,
+                icon: "bold",
                 onClick: vi.fn(),
                 disabled: true,
             };
@@ -244,7 +244,7 @@ describe("Button UI Components", () => {
             const options = {
                 class: "toolbar-custom",
                 title: "Toolbar Button",
-                icon: "italic" as IconKeys,
+                icon: "italic",
                 disabled: true,
             };
             const button = createToolbarButton(options, mockView);
