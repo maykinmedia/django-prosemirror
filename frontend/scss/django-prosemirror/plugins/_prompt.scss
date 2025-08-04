@@ -4,6 +4,8 @@
   border-radius: var(--border-radius);
   border: 1px solid var(--color-gray-lighter);
   position: absolute;
+  top: calc(100% + 12px);
+  left: 12px;
 
   @media (max-width: 480px) {
     padding: var(--spacing-large);
@@ -94,5 +96,6 @@
   &-invalid {
     margin-left: var(--spacing-large);
     font-size: var(--font-size-body-small);
+    color: #d73a49;
   }
 }

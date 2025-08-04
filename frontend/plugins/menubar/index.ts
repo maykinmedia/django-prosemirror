@@ -7,17 +7,14 @@ import {
     undoItem,
     redoItem,
     MenuItem,
-    MenuElement,
-    MenuItemSpec,
 } from "prosemirror-menu";
-import { setBlockType } from "prosemirror-commands";
-import { NodeSelection, EditorState, Command } from "prosemirror-state";
-import { Schema, NodeType, MarkType, Attrs } from "prosemirror-model";
-import { toggleMark } from "prosemirror-commands";
-import { wrapInList } from "prosemirror-schema-list";
-import { TextField, openPrompt } from "./prompt";
-import { icons } from "./icons";
-import { translate } from "@/i18n/translations";
+import { Schema } from "prosemirror-model";
+import { icons } from "../icons";
+import { buildTableMenuItem } from "./table";
+import { canInsert, createBlockTypeMenuItem, cut, markItem } from "./utils";
+import { createLinkMenuItem } from "./link";
+import { createImageMenuItem } from "./image";
+import { createListWrapMenuItem } from "./list";
 /**
  * Interface defining the structure of menu items that can be built for the ProseMirror editor.
  * Each property represents a specific menu action or dropdown that can be added to the editor toolbar.
@@ -37,6 +34,8 @@ export interface MenuItemResult {
     toggleLink?: MenuItem;
     /** Insert image dialog */
     insertImage?: MenuItem;
+    /** Insert table dialog */
+    insertTable: MenuItem;
     /** Wrap selection in bullet list */
     wrapBulletList?: MenuItem;
     /** Wrap selection in ordered/numbered list */
@@ -70,11 +69,11 @@ export interface MenuItemResult {
     /** Dropdown menu for text type changes (paragraph, headings, etc.) */
     typeMenu: Dropdown & { type?: string };
     /** Array of menu items for block-level operations */
-    blockMenu: MenuElement[][];
+    blockMenu: MenuItem[][];
     /** Array of menu items for inline formatting operations */
-    inlineMenu: MenuElement[][];
+    inlineMenu: MenuItem[][];
     /** Complete menu structure with all items organized */
-    fullMenu: MenuElement[][];
+    fullMenu: MenuItem[][];
 }
 
 /**
@@ -94,246 +93,6 @@ class MenuBuilder {
     }
 
     /**
-     * Create an insert image menu item with a dialog for entering image properties.
-     * Opens a prompt allowing users to specify image source, title, and alt text.
-     * @param node - The image node type from the schema
-     * @returns MenuItem for inserting images
-     */
-    private createImageMenuItem(node: NodeType): MenuItem {
-        return new MenuItem({
-            title: "Insert image",
-            label: "Image",
-            icon: icons.image,
-            enable: (state) => this.canInsert(state, node),
-            run: (state, _, view) => {
-                const { from, to } = state.selection;
-                let attrs: Attrs | null = null;
-
-                // If an image is already selected, populate the form with its attributes
-                if (
-                    state.selection instanceof NodeSelection &&
-                    state.selection.node.type === node
-                ) {
-                    attrs = state.selection.node.attrs;
-                }
-
-                // Open dialog for image properties
-                openPrompt({
-                    title: translate("Insert image"),
-                    fields: {
-                        src: new TextField({
-                            label: translate("Location"),
-                            required: true,
-                            value: attrs?.src,
-                        }),
-                        title: new TextField({
-                            label: translate("Title"),
-                            value: attrs?.title,
-                        }),
-                        alt: new TextField({
-                            label: translate("Description"),
-                            value:
-                                attrs?.alt ||
-                                state.doc.textBetween(from, to, " "),
-                        }),
-                    },
-                    dom: view.dom,
-                    callback: (attrs) => {
-                        // Insert the image with specified attributes
-                        view.dispatch(
-                            view.state.tr.replaceSelectionWith(
-                                node.createAndFill(attrs)!,
-                            ),
-                        );
-                        view.focus();
-                    },
-                });
-            },
-        });
-    }
-
-    /**
-     * Check if a specific node type can be inserted at the current selection position.
-     *
-     * This function traverses up the document tree from the current selection position
-     * to determine if the specified node type can be inserted at any valid location.
-     * It's commonly used to enable/disable menu items based on context.
-     *
-     * @param state - The current editor state containing selection and document
-     * @param nodeType - The type of node to test for insertion (e.g., image, table, etc.)
-     * @returns True if the node can be inserted at the current position, false otherwise
-     */
-    private canInsert(state: EditorState, nodeType: NodeType) {
-        // Get the resolved position at the start of the current selection
-        // $from contains contextual information about the selection's position in the document tree
-        const $from = state.selection.$from;
-
-        // Traverse up the document tree from the deepest nesting level to the root
-        // depth represents how deeply nested we are (0 = document root)
-        for (let d = $from.depth; d >= 0; d--) {
-            // Get the index of the current position within the parent node at depth d
-            // This tells us where we are within the parent's child list
-            const index = $from.index(d);
-
-            // Check if the parent node at this depth can replace content at the current index
-            // with the specified node type. We use the same index for start and end (index, index)
-            // because we're testing insertion at a point, not replacement of a range
-            if ($from.node(d).canReplaceWith(index, index, nodeType))
-                return true;
-        }
-
-        // If we've traversed the entire tree and found no valid insertion point,
-        // the node cannot be inserted at the current selection
-        return false;
-    }
-
-    /**
-     * Check if a specific mark type is active in the current selection.
-     * Handles both empty selections (cursor position) and text selections.
-     * @param state - Current editor state
-     * @param type - Mark type to check for
-     * @returns True if the mark is active, false otherwise
-     */
-    private isMarkActive(state: EditorState, mark: MarkType): boolean {
-        const { from, $from, to, empty } = state.selection;
-        if (empty) return !!mark.isInSet(state.storedMarks || $from.marks());
-        else return state.doc.rangeHasMark(from, to, mark);
-    }
-
-    /**
-     * Create a menu item for toggling text marks (bold, italic, etc.).
-     * Handles the active state detection and provides the toggle functionality.
-     * @param markType - The type of mark to toggle
-     * @param options - Additional options for the menu item
-     * @returns MenuItem for toggling the specified mark
-     */
-    private markItem(markType: MarkType, options: Partial<MenuItemSpec>) {
-        const passedOptions: Partial<MenuItemSpec> = {
-            // Check if the mark is currently active in the selection
-            active: (state) => {
-                return this.isMarkActive(state, markType);
-            },
-            ...options,
-        };
-        // Merge all passed options
-        for (const prop in options)
-            (passedOptions as Record<string, unknown>)[prop] = (
-                options as Record<string, unknown>
-            )[prop];
-
-        return this.createCommandMenuItem(toggleMark(markType), passedOptions);
-    }
-
-    /**
-     * Create a generic menu item that executes a ProseMirror command.
-     * Handles enable/select state and provides consistent menu item creation.
-     * @param cmd - The ProseMirror command to execute
-     * @param options - Configuration options for the menu item
-     * @returns Configured MenuItem
-     */
-    private createCommandMenuItem(
-        cmd: Command,
-        options: Partial<MenuItemSpec>,
-    ): MenuItem {
-        const passedOptions: MenuItemSpec = {
-            label: options.title as string | undefined,
-            run: cmd,
-            ...options,
-        };
-
-        // Set up enable/select logic if not provided
-        if (!options.enable && !options.select) {
-            passedOptions[options.enable ? "enable" : "select"] = (state) =>
-                cmd(state);
-        }
-
-        return new MenuItem(passedOptions);
-    }
-
-    /**
-     * Create a menu item that changes the block type (paragraph, heading, etc.).
-     * Sets up the command and enable logic for block type transformations.
-     * @param node - The target node type
-     * @param options - Configuration options including optional attributes
-     * @returns MenuItem for changing block types
-     */
-    private createBlockTypeMenuItem(
-        node: NodeType,
-        options: Partial<MenuItemSpec> & { attrs?: Attrs | null },
-    ): MenuItem {
-        const command = setBlockType(node, options.attrs);
-        const passedOptions: MenuItemSpec = {
-            run: command,
-            enable: (state) => command(state),
-            ...options,
-        };
-
-        return new MenuItem(passedOptions);
-    }
-
-    /**
-     * Create a link menu item that can add or remove links from selected text.
-     * Opens a dialog for link creation or removes existing links.
-     * @param markType - The link mark type from the schema
-     * @returns MenuItem for link management
-     */
-    private createLinkMenuItem(markType: MarkType): MenuItem {
-        return new MenuItem({
-            title: "Add or remove link",
-            icon: icons.link,
-            active: (state) => this.isMarkActive(state, markType),
-            enable: (state) => !state.selection.empty,
-            run: (state, dispatch, view) => {
-                // If link is active, remove it
-                if (this.isMarkActive(state, markType)) {
-                    toggleMark(markType)(state, dispatch);
-                    return true;
-                }
-                // Otherwise, open dialog to create link
-                openPrompt({
-                    title: translate("Create a link"),
-                    fields: {
-                        href: new TextField({
-                            label: translate("Link target"),
-                            required: true,
-                        }),
-                        title: new TextField({ label: translate("Title") }),
-                    },
-                    callback: (attrs) => {
-                        toggleMark(markType, attrs)(view.state, view.dispatch);
-                        view.focus();
-                    },
-                    dom: view.dom,
-                });
-                return true;
-            },
-        });
-    }
-
-    /**
-     * Create a menu item for wrapping selection in a list (bullet or ordered).
-     * Uses the prosemirror-schema-list wrapInList command.
-     * @param node - The list node type (unordered_list or ordered_list)
-     * @param options - Configuration options for the menu item
-     * @returns MenuItem for list wrapping
-     */
-    private createListWrapMenuItem(
-        node: NodeType,
-        options: Partial<MenuItemSpec>,
-    ): MenuItem {
-        return this.createCommandMenuItem(
-            wrapInList(
-                node,
-                (options as Record<string, unknown>).attrs as
-                    | Record<string, unknown>
-                    | null
-                    | undefined,
-            ),
-            options,
-        );
-    }
-
-    /**
      * Build menu items for text marks (bold, italic, underline, etc.).
      * Only creates items for marks that exist in the current schema.
      * @returns Partial MenuItemResult containing mark-related menu items
@@ -343,7 +102,7 @@ class MenuBuilder {
 
         // Bold/strong formatting
         if (this.schema.marks.strong) {
-            result.toggleStrong = this.markItem(this.schema.marks.strong, {
+            result.toggleStrong = markItem(this.schema.marks.strong, {
                 title: "Toggle strong style",
                 icon: icons.strong,
             });
@@ -351,7 +110,7 @@ class MenuBuilder {
 
         // Italic/emphasis formatting
         if (this.schema.marks.em) {
-            result.toggleEm = this.markItem(this.schema.marks.em, {
+            result.toggleEm = markItem(this.schema.marks.em, {
                 title: "Toggle emphasis",
                 icon: icons.em,
             });
@@ -359,7 +118,7 @@ class MenuBuilder {
 
         // Underline formatting
         if (this.schema.marks.underline) {
-            result.toggleU = this.markItem(this.schema.marks.underline, {
+            result.toggleU = markItem(this.schema.marks.underline, {
                 title: "Toggle underline",
                 icon: icons.underline,
             });
@@ -367,7 +126,7 @@ class MenuBuilder {
 
         // Strikethrough formatting
         if (this.schema.marks.strikethrough) {
-            result.toggleStrikethrough = this.markItem(
+            result.toggleStrikethrough = markItem(
                 this.schema.marks.strikethrough,
                 {
                     title: "Toggle strikethrough",
@@ -378,7 +137,7 @@ class MenuBuilder {
 
         // Inline code formatting
         if (this.schema.marks.code) {
-            result.toggleCode = this.markItem(this.schema.marks.code, {
+            result.toggleCode = markItem(this.schema.marks.code, {
                 title: "Toggle code font",
                 icon: icons.code,
             });
@@ -386,7 +145,7 @@ class MenuBuilder {
 
         // Link creation/removal
         if (this.schema.marks.link) {
-            result.toggleLink = this.createLinkMenuItem(this.schema.marks.link);
+            result.toggleLink = createLinkMenuItem(this.schema.marks.link);
         }
 
         return result;
@@ -402,28 +161,26 @@ class MenuBuilder {
 
         // Image insertion
         if (this.schema.nodes.image) {
-            result.insertImage = this.createImageMenuItem(
-                this.schema.nodes.image,
-            );
+            result.insertImage = createImageMenuItem(this.schema.nodes.image);
         }
 
         // Bullet list operations
-        if (this.schema.nodes.unordered_list) {
-            result.wrapBulletList = this.createListWrapMenuItem(
-                this.schema.nodes.unordered_list,
+        if (this.schema.nodes.bullet_list) {
+            result.wrapBulletList = createListWrapMenuItem(
+                this.schema.nodes.bullet_list,
                 {
                     title: "Wrap in bullet list",
                     icon: icons.bulletList,
                 },
             );
-            // Add lift up and join up if unordered_list is added to the schema.
+            // Add lift up and join up if bullet_list is added to the schema.
             result.liftItem = liftItem;
             result.joinUpItem = joinUpItem;
         }
 
         // Ordered list operations
         if (this.schema.nodes.ordered_list) {
-            result.wrapOrderedList = this.createListWrapMenuItem(
+            result.wrapOrderedList = createListWrapMenuItem(
                 this.schema.nodes.ordered_list,
                 {
                     title: "Wrap in ordered list",
@@ -446,7 +203,7 @@ class MenuBuilder {
 
         // Paragraph block type
         if (this.schema.nodes.paragraph) {
-            result.makeParagraph = this.createBlockTypeMenuItem(
+            result.makeParagraph = createBlockTypeMenuItem(
                 this.schema.nodes.paragraph,
                 {
                     title: "Change to paragraph",
@@ -457,7 +214,7 @@ class MenuBuilder {
 
         // Code block type
         if (this.schema.nodes.code_block) {
-            result.makeCodeBlock = this.createBlockTypeMenuItem(
+            result.makeCodeBlock = createBlockTypeMenuItem(
                 this.schema.nodes.code_block,
                 {
                     title: "Change to code block",
@@ -470,7 +227,7 @@ class MenuBuilder {
         if (this.schema.nodes.heading) {
             for (let i = 1; i <= 6; i++) {
                 (result as Record<string, MenuItem>)[`makeHead${i}`] =
-                    this.createBlockTypeMenuItem(this.schema.nodes.heading, {
+                    createBlockTypeMenuItem(this.schema.nodes.heading, {
                         title: `Change to heading ${i}`,
                         label: `Level ${i}`,
                         attrs: { level: i },
@@ -480,17 +237,14 @@ class MenuBuilder {
 
         // Horizontal rule insertion
         if (this.schema.nodes.horizontal_rule) {
-            result.insertHorizontalRule = this.createBlockTypeMenuItem(
+            result.insertHorizontalRule = createBlockTypeMenuItem(
                 this.schema.nodes.horizontal_rule,
                 {
                     title: "Insert horizontal rule",
                     label: "Horizontal rule",
                     icon: icons.hr,
                     enable: (state) =>
-                        this.canInsert(
-                            state,
-                            this.schema.nodes.horizontal_rule,
-                        ),
+                        canInsert(state, this.schema.nodes.horizontal_rule),
                     run: (state, dispatch) => {
                         dispatch(
                             state.tr.replaceSelectionWith(
@@ -502,17 +256,17 @@ class MenuBuilder {
             );
         }
 
-        return result;
-    }
+        // Table menu item - only added if all table nodes are present.
+        if (
+            this.schema.nodes.table &&
+            this.schema.nodes.table_cell &&
+            this.schema.nodes.table_header &&
+            this.schema.nodes.table_row
+        ) {
+            result.insertTable = buildTableMenuItem();
+        }
 
-    /**
-     * Filter out null and undefined values from an array.
-     * Used to clean up menu item arrays before creating dropdowns.
-     * @param arr - Array that may contain null/undefined values
-     * @returns Array with only truthy values
-     */
-    private cut<T>(arr: (T | null | undefined)[]): T[] {
-        return arr.filter((x): x is T => !!x);
+        return result;
     }
 
     /**
@@ -530,7 +284,7 @@ class MenuBuilder {
 
         // Create dropdown for text formatting (paragraph, headings, etc.)
         result.typeMenu = new Dropdown(
-            this.cut([
+            cut([
                 result.makeParagraph,
                 result.makeCodeBlock,
                 result.makeHead1,
@@ -540,27 +294,27 @@ class MenuBuilder {
                 result.makeHead5,
                 result.makeHead6,
             ]),
-            {
-                label: "Type...",
-                // css: "font-weight: bold",
-            },
+            { label: "Type..." },
         );
 
         // Organize inline formatting menu items
         result.inlineMenu = [
-            this.schema.nodes.heading ? this.cut([result.typeMenu]) : [],
-            this.cut([
+            this.schema.nodes.heading || this.schema.nodes.code_block
+                ? (cut([result.typeMenu]) as MenuItem[])
+                : [],
+            cut([
                 result.toggleStrong,
                 result.toggleEm,
                 result.toggleCode,
                 result.toggleU,
                 result.toggleStrikethrough,
             ]),
-            this.cut([
+            cut([
                 result.toggleLink,
                 result.insertImage,
                 result.insertHorizontalRule,
             ]),
+            cut([result.insertTable]),
         ];
 
         // Add undo/redo if history is enabled
@@ -568,7 +322,7 @@ class MenuBuilder {
 
         // Organize block-level menu items
         result.blockMenu = [
-            this.cut([
+            cut([
                 result.wrapBulletList,
                 result.wrapOrderedList,
                 result.wrapBlockQuote,

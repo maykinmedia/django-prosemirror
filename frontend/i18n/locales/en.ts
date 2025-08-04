@@ -1,6 +1,6 @@
-import { DjangoProsemirrorTranslations } from "@/types/types";
+import { IDPMTranslations } from "@/types/types";
 
-export const en: DjangoProsemirrorTranslations = {
+export const en: IDPMTranslations = {
     "Join with above block": "Join with above block",
     "Lift out of enclosing block": "Lift out of enclosing block",
     "Select parent node": "Select parent node",
@@ -43,4 +43,28 @@ export const en: DjangoProsemirrorTranslations = {
     "Type...": "Style",
     OK: "OK",
     Cancel: "Cancel",
+    "Delete table": "Delete table",
+    "Add column after": "Add column after",
+    "Add column before": "Add column before",
+    "Delete column": "Delete column",
+    "Toggle header column": "Toggle header column",
+    "Merge cells": "Merge cells",
+    "Split cell": "Split cell",
+    "Add row before": "Add row before",
+    "Add row after": "Add row after",
+    "Delete row": "Delete row",
+    "Toggle header row": "Toggle header row",
+    "Row operations": "Row operations",
+    "Column operations": "Column operations",
+    "Cell operations": "Cell operations",
+    "Insert table": "Insert table",
+    "Change image": "Change image",
+    Or: "Or",
+    "Open filer": "Open filer",
+    "Upload file": "Upload file",
+    "Current file": "Current file",
+    "Current image": "Current image",
+    Change: "Change",
+    "Change image in filer": "Change image in filer",
+    "Upload image": "Upload image",
 };
