@@ -10,6 +10,7 @@ export default tseslint.config(
             "django_prosemirror/static/js",
             "testapp/static",
             "env",
+            "coverage",
         ],
     },
     {

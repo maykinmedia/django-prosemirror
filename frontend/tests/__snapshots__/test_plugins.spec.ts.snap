@@ -109,6 +109,90 @@ exports[`plugins/index > getDjangoProsemirrorPlugins > should include menu bar p
 }
 `;
 
+exports[`plugins/index > getDjangoProsemirrorPlugins > should include table plugins 1`] = `
+Plugin {
+  "key": "floatingTableToolbar$",
+  "props": {},
+  "spec": {
+    "key": PluginKey {
+      "key": "floatingTableToolbar$",
+    },
+    "view": [Function],
+  },
+}
+`;
+
+exports[`plugins/index > getDjangoProsemirrorPlugins > should include table plugins 2`] = `
+Plugin {
+  "key": "tableColumnResizing$",
+  "props": {
+    "attributes": [Function],
+    "decorations": [Function],
+    "handleDOMEvents": {
+      "mousedown": [Function],
+      "mouseleave": [Function],
+      "mousemove": [Function],
+    },
+    "nodeViews": {},
+  },
+  "spec": {
+    "key": PluginKey {
+      "key": "tableColumnResizing$",
+    },
+    "props": {
+      "attributes": [Function],
+      "decorations": [Function],
+      "handleDOMEvents": {
+        "mousedown": [Function],
+        "mouseleave": [Function],
+        "mousemove": [Function],
+      },
+      "nodeViews": {},
+    },
+    "state": {
+      "apply": [Function],
+      "init": [Function],
+    },
+  },
+}
+`;
+
+exports[`plugins/index > getDjangoProsemirrorPlugins > should include table plugins 3`] = `
+Plugin {
+  "key": "selectingCells$",
+  "props": {
+    "createSelectionBetween": [Function],
+    "decorations": [Function],
+    "handleDOMEvents": {
+      "mousedown": [Function],
+    },
+    "handleKeyDown": [Function],
+    "handlePaste": [Function],
+    "handleTripleClick": [Function],
+  },
+  "spec": {
+    "appendTransaction": [Function],
+    "key": PluginKey {
+      "key": "selectingCells$",
+    },
+    "props": {
+      "createSelectionBetween": [Function],
+      "decorations": [Function],
+      "handleDOMEvents": {
+        "mousedown": [Function],
+      },
+      "handleKeyDown": [Function],
+      "handlePaste": [Function],
+      "handleTripleClick": [Function],
+    },
+    "state": {
+      "apply": [Function],
+      "init": [Function],
+    },
+  },
+}
+`;
+
 exports[`plugins/index > getDjangoProsemirrorPlugins > should pass default history setting when not specified 1`] = `
 [
   {

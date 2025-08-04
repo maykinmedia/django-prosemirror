@@ -1,13 +1,14 @@
-import { keymap } from "prosemirror-keymap";
-import { history } from "prosemirror-history";
+import { buildMenuItems } from "@/plugins/menubar";
+import { tablePlugins } from "@/plugins/table";
+import { type DPMSettings } from "@/schema/settings";
 import { baseKeymap } from "prosemirror-commands";
 import { dropCursor } from "prosemirror-dropcursor";
+import { buildInputRules, buildKeymap } from "prosemirror-example-setup";
 import { gapCursor } from "prosemirror-gapcursor";
+import { history } from "prosemirror-history";
+import { keymap } from "prosemirror-keymap";
 import { menuBar } from "prosemirror-menu";
 import { Schema } from "prosemirror-model";
-import { buildInputRules, buildKeymap } from "prosemirror-example-setup";
-import { DjangoProsemirrorSettings } from "@/types/types";
-import { buildMenuItems } from "./menubar";
 import { Plugin } from "prosemirror-state";
 
 export interface DjangoProsemirrorSetup {
@@ -26,15 +27,19 @@ export interface DjangoProsemirrorSetup {
  * @param settings
  * @returns The array of
  */
-export function getDjangoProsemirrorPlugins(
+export function getDPMPlugins(
     schema: Schema,
-    settings?: DjangoProsemirrorSettings,
+    settings?: DPMSettings,
 ): (Plugin & {
     type?: string;
     config?: { content: unknown };
     schema?: unknown;
 })[] {
     const plugins = [
+        /**
+         * Table plugin for table cell editing and a floating menubar.
+         */
+        ...(schema.nodes.table ? tablePlugins() : []),
         /**
          * Input rules for smart quotes and creating the block types in the schema
          * using markdown conventions.

@@ -1,0 +1,62 @@
+.ProseMirror .tableWrapper {
+  overflow-x: auto;
+  margin: 1em 0;
+}
+.ProseMirror table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  overflow: hidden;
+  margin: 0;
+}
+.ProseMirror td,
+.ProseMirror th {
+  vertical-align: top;
+  box-sizing: border-box;
+  position: relative;
+  min-width: 1em;
+  border: var(--border-width-thin) solid var(--color-gray-light);
+  padding: var(--spacing-tiny) var(--spacing-small);
+}
+.ProseMirror th {
+  font-weight: bold;
+  text-align: left;
+  background-color: var(--color-gray-lightest);
+}
+.ProseMirror td {
+  background-color: var(--color-white);
+}
+
+.ProseMirror td:not([data-colwidth]):not(.column-resize-dragging),
+.ProseMirror th:not([data-colwidth]):not(.column-resize-dragging) {
+  /* if there's no explicit width set and the column is not being resized, set a default width */
+  min-width: var(--default-cell-min-width);
+}
+
+.ProseMirror .column-resize-handle {
+  position: absolute;
+  right: calc(-1 * var(--spacing-tiny));
+  top: 0;
+  bottom: 0;
+  width: var(--spacing-small);
+  z-index: 20;
+  background-color: var(--color-accent-lighter);
+  pointer-events: none;
+}
+.ProseMirror.resize-cursor {
+  cursor: ew-resize;
+  cursor: col-resize;
+}
+/* Give selected cells a blue overlay */
+.ProseMirror .selectedCell:after {
+  z-index: 2;
+  position: absolute;
+  content: "";
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: var(--color-info-lighter);
+  opacity: 0.4;
+  pointer-events: none;
+}

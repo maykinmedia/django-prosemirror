@@ -1,47 +1,48 @@
 import { EditorView } from "prosemirror-view";
-import { getDjangoProsemirrorPlugins } from "./plugins/index.ts";
-import DjangoProsemirrorSchema from "./schema/prosemirror-schema.ts";
+import { getDPMPlugins } from "./plugins/index.ts";
+import DMPSchema from "./schema/prosemirror-schema.ts";
 import { EditorState } from "prosemirror-state";
 import { DOMParser, Node, Schema } from "prosemirror-model";
-import { DjangoProsemirrorSettings } from "./types/types.ts";
 import { translate } from "./i18n/translations.ts";
+import { DPMSettings } from "./schema/settings.ts";
+import { fixTables } from "prosemirror-tables";
 
 export class DjangoProsemirror {
-    editorSchema: Schema;
-    settings: DjangoProsemirrorSettings;
-    editor!: EditorView;
+    schema: Schema;
+    settings: DPMSettings;
     editorElement: HTMLDivElement;
+    editor?: EditorView;
 
     /**
      * @param inputElement
      * @param settings
      */
-    constructor(node: HTMLDivElement, settings: DjangoProsemirrorSettings) {
-        this.settings = settings;
-        this.debugLog(
-            "%cINITIALIZING DJANGO_PROSE_MIRROR",
-            "color: blue; font-weight: bold; font-size: 1.2rem;",
-        );
+    constructor(node: HTMLDivElement) {
+        this.debugLog("%cINIT DPM INSTANCE", "color: blue");
+
         this.editorElement = node;
-        this.editorSchema = new DjangoProsemirrorSchema(settings).schema;
+        this.settings = new DPMSettings(node);
+        this.schema = new DMPSchema(this.settings).schema;
+
         this.create();
     }
+
     get inputElement() {
-        return document.getElementById(
-            `${this.editorElement?.dataset.prosemirrorInputId}`,
-        ) as HTMLInputElement;
+        return document.querySelector<HTMLInputElement>(
+            `#${this.editorElement?.dataset.prosemirrorInputId}`,
+        );
     }
 
     get initialDoc() {
         try {
-            const inputValue = this.inputElement.value.trim();
+            const inputValue = this.inputElement?.value.trim();
             if (inputValue) {
                 // Parse JSON and create document from it
                 const jsonDoc = JSON.parse(inputValue);
-                return this.editorSchema.nodeFromJSON(jsonDoc);
+                return this.schema.nodeFromJSON(jsonDoc);
             } else {
                 // Fall back to parsing DOM content if no JSON
-                return DOMParser.fromSchema(this.editorSchema).parse(
+                return DOMParser.fromSchema(this.schema).parse(
                     this.editorElement!,
                 );
             }
@@ -51,15 +52,13 @@ export class DjangoProsemirror {
                 error,
             );
             // Fall back to parsing DOM content
-            return DOMParser.fromSchema(this.editorSchema).parse(
-                this.editorElement!,
-            );
+            return DOMParser.fromSchema(this.schema).parse(this.editorElement!);
         }
     }
 
     updateFormInputValue(doc: Node) {
         const json = JSON.stringify(doc.toJSON(), null, 2);
-        this.inputElement.value = json;
+        if (this.inputElement) this.inputElement.value = json;
         this.debugLog("Setting value to", json);
     }
 
@@ -80,19 +79,22 @@ export class DjangoProsemirror {
             "Input element:",
             this.inputElement,
             "Editor schema:",
-            this.editorSchema,
+            this.schema,
         );
 
         const updateFormInputValue = this.updateFormInputValue.bind(this);
 
-        this.editor = new EditorView(this.editorElement!, {
-            state: EditorState.create({
-                doc: this.initialDoc,
-                plugins: getDjangoProsemirrorPlugins(
-                    this.editorSchema,
-                    this.settings,
-                ),
-            }),
+        let state = EditorState.create({
+            doc: this.initialDoc,
+            plugins: getDPMPlugins(this.schema, this.settings),
+        });
+
+        // Make sure the history plugin works for the tables.
+        const fix = fixTables(state);
+        if (fix) state = state.apply(fix.setMeta("addToHistory", false));
+
+        this.editor = new EditorView(this.editorElement, {
+            state,
             dispatchTransaction(transaction) {
                 const newState = (this.state as EditorState).apply(transaction);
                 (this as unknown as EditorView).updateState(newState);
@@ -103,14 +105,10 @@ export class DjangoProsemirror {
         });
     }
 
-    debugLog(...msg: unknown[]) {
-        if (this.settings?.debug) {
-            console.debug(...msg);
-        }
+    private debugLog(...msg: unknown[]) {
+        if (this.settings?.debug) console.debug(...msg);
     }
-    warnLog(...msg: unknown[]) {
-        if (this.settings?.debug) {
-            console.warn(...msg);
-        }
+    private warnLog(...msg: unknown[]) {
+        if (this.settings?.debug) console.warn(...msg);
     }
 }
