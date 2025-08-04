@@ -1,23 +1,17 @@
-import { Schema } from "prosemirror-model";
-import { SchemaNodesEnum } from "@/schema/choices";
+import { MarkType, NodeType } from "@/schema/types";
 
-export interface DjangoProsemirrorSettings {
+export interface IDPMSettings {
     /** Set to false to disable the menu bar. */
     menubar?: boolean;
     /** Set to false to disable the history plugin.*/
     history?: boolean;
     /** Set to false to make the menu bar non-floating. */
     floatingMenu?: boolean;
-    language?: LanguageCodeEnum;
+    language?: LanguageCodeEnum | string;
     debug?: boolean;
-    classNames?: Partial<Record<SchemaNodesEnum, string>>;
-    allowedNodes: SchemaNodesEnum[];
-}
-
-export interface DjangoProsemirrorSetup
-    extends Omit<DjangoProsemirrorSettings, "language"> {
-    /** The model schema of the editor. */
-    schema: Schema;
+    classNames?: Record<string, string>;
+    allowedNodes: Array<NodeType>;
+    allowedMarks: Array<MarkType>;
 }
 
 export enum LanguageCodeEnum {
@@ -25,7 +19,7 @@ export enum LanguageCodeEnum {
     EN = "en",
 }
 
-export interface DjangoProsemirrorTranslations {
+export interface IDPMTranslations {
     "Join with above block": string;
     "Lift out of enclosing block": string;
     "Select parent node": string;
@@ -68,4 +62,19 @@ export interface DjangoProsemirrorTranslations {
     "Horizontal rule": string;
     OK: string;
     Cancel: string;
+    "Delete table": string;
+    "Add column after": string;
+    "Add column before": string;
+    "Delete column": string;
+    "Toggle header column": string;
+    "Merge cells": string;
+    "Split cell": string;
+    "Add row before": string;
+    "Add row after": string;
+    "Delete row": string;
+    "Toggle header row": string;
+    "Insert table": string;
+    "Row operations": string;
+    "Column operations": string;
+    "Cell operations": string;
 }

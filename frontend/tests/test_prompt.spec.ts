@@ -1,61 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
-    openPrompt,
     Field,
-    TextField,
-    SelectField,
     FileField,
-} from "../plugins/menubar/prompt";
-
-// Mock DOM environment - unused mockElement removed for ESLint compliance
-globalThis.document = {
-    createElement: vi.fn().mockImplementation((tagName) => {
-        const baseElement = {
-            type: "",
-            className: "",
-            textContent: "",
-            addEventListener: vi.fn(),
-            value: "",
-            placeholder: "",
-            autocomplete: "",
-            id: "",
-            selected: false,
-            label: "",
-        };
-
-        if (tagName === "select") {
-            return {
-                ...baseElement,
-                appendChild: vi.fn().mockReturnValue({
-                    value: "",
-                    selected: false,
-                    label: "",
-                }),
-            };
-        }
-
-        return {
-            ...baseElement,
-            appendChild: vi.fn().mockReturnValue({
-                value: "",
-                selected: false,
-                label: "",
-            }),
-        };
-    }),
-    activeElement: null,
-} as unknown as Document;
-
-globalThis.window = {
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    setTimeout: vi.fn((fn) => fn()),
-} as unknown as Window & typeof globalThis;
-
-// Mock translate function
-vi.mock("../../i18n/translations", () => ({
-    translate: vi.fn().mockImplementation((text) => `translated:${text}`),
-}));
+    openPrompt,
+    SelectField,
+    TableField,
+    TextField,
+} from "@/plugins/menubar/prompt";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 describe("plugins/menubar/prompt", () => {
     beforeEach(() => {
@@ -120,42 +71,72 @@ describe("plugins/menubar/prompt", () => {
         });
 
         it("should use custom validation function", () => {
-            const customValidate = vi.fn().mockReturnValue("Custom error");
-            const field = new TestField({
+            const options = {
                 label: "Test",
-                validate: customValidate,
-            });
+                validate: (value: unknown) => (value ? null : "Custom error"),
+            };
 
-            const result = field.validate("test value");
-            expect(customValidate).toHaveBeenCalledWith("test value");
+            vi.spyOn(options, "validate");
+
+            const field = new TestField(options);
+
+            // Should return custom error.
+            let result = field.validate("");
+            expect(options.validate).toHaveBeenCalledWith("");
             expect(result).toBe("Custom error");
+
+            // Should return no error.
+            result = field.validate("test value");
+            expect(options.validate).toHaveBeenCalledWith("test value");
+            expect(result).toBeNull();
         });
 
         it("should use custom clean function", () => {
-            const customClean = vi.fn().mockReturnValue("cleaned value");
-            const field = new TestField({
+            const options = {
                 label: "Test",
-                clean: customClean,
-            });
+                clean: (value: unknown) =>
+                    typeof value === "string" ? value.trim() : value,
+            };
+            vi.spyOn(options, "clean");
+            const field = new TestField(options);
 
-            const result = field.clean("raw value");
-            expect(customClean).toHaveBeenCalledWith("raw value");
-            expect(result).toBe("cleaned value");
+            // No difference after cleaning
+            let result = field.clean("same value");
+            expect(options.clean).toHaveBeenCalledWith("same value");
+            expect(result).toBe("same value");
+
+            // Trim string
+            result = field.clean("  trimmed value  ");
+            expect(options.clean).toHaveBeenCalledWith("  trimmed value  ");
+            expect(result).toBe("trimmed value");
+
+            // Different value than string
+            result = field.clean([]);
+            expect(options.clean).toHaveBeenCalledWith([]);
+            expect(result).toEqual([]);
         });
 
         it("should return value as-is when no clean function", () => {
             const field = new TestField({ label: "Test" });
-
             const result = field.clean("test value");
             expect(result).toBe("test value");
         });
 
-        it("should read value from DOM element", () => {
+        it("should read value from DOM element or found input", () => {
             const field = new TestField({ label: "Test" });
-            const mockDom = { value: "dom value" };
+            let mockDom = { value: "dom value" } as HTMLInputElement;
 
-            const result = field.read(mockDom as HTMLInputElement);
+            let result = field.read(mockDom);
             expect(result).toBe("dom value");
+
+            mockDom = {
+                querySelector: (() => ({
+                    value: "input value",
+                })) as HTMLInputElement["querySelector"],
+            } as HTMLInputElement;
+
+            result = field.read(mockDom);
+            expect(result).toBe("input value");
         });
 
         it("should return null from validateType by default", () => {
@@ -168,206 +149,223 @@ describe("plugins/menubar/prompt", () => {
 
     describe("TextField", () => {
         it("should render input element with correct properties", () => {
-            const field = new TextField({
+            const options = {
                 label: "Test Label",
                 value: "test value",
                 id: "test-id",
-            });
-
-            field.render();
-            expect(document.createElement).toHaveBeenCalledWith("input");
+            };
+            const field = new TextField(options);
+            const input = field.render();
+            expect(input.value).toBe(options.value);
+            expect(input.id).toBe(options.id);
+            expect(input.placeholder).toBe(options.label);
         });
 
         it("should set placeholder from label", () => {
-            const field = new TextField({ label: "Test Label" });
-            const mockInput = {
-                type: "",
-                placeholder: "",
-                value: "",
-                autocomplete: "",
-                id: "",
+            const options = {
+                label: "Test Label",
             };
-            (
-                document.createElement as ReturnType<typeof vi.fn>
-            ).mockReturnValue(mockInput);
-
-            field.render();
-            expect(mockInput.placeholder).toBe("Test Label");
+            const field = new TextField(options);
+            const input = field.render();
+            expect(input.placeholder).toBe(options.label);
         });
 
         it("should set value when provided", () => {
-            const field = new TextField({
-                label: "Test",
+            const options = {
+                label: "Test Label",
                 value: "initial value",
-            });
-            const mockInput = {
-                type: "",
-                placeholder: "",
-                value: "",
-                autocomplete: "",
-                id: "",
             };
-            (
-                document.createElement as ReturnType<typeof vi.fn>
-            ).mockReturnValue(mockInput);
-
-            field.render();
-            expect(mockInput.value).toBe("initial value");
+            const field = new TextField(options);
+            const input = field.render();
+            expect(input.value).toBe(options.value);
         });
 
         it("should use empty string when no value provided", () => {
             const field = new TextField({ label: "Test" });
-            const mockInput = {
-                type: "",
-                placeholder: "",
-                value: "",
-                autocomplete: "",
-                id: "",
-            };
-            (
-                document.createElement as ReturnType<typeof vi.fn>
-            ).mockReturnValue(mockInput);
-
-            field.render();
-            expect(mockInput.value).toBe("");
+            const input = field.render();
+            expect(input.value).toBe("");
         });
 
         it("should set id when provided", () => {
-            const field = new TextField({
-                label: "Test",
-                id: "custom-id",
-            });
-            const mockInput = {
-                type: "",
-                placeholder: "",
-                value: "",
-                autocomplete: "",
-                id: "",
+            const options = {
+                label: "Test Label",
+                id: "test-id",
             };
-            (
-                document.createElement as ReturnType<typeof vi.fn>
-            ).mockReturnValue(mockInput);
-
-            field.render();
-            expect(mockInput.id).toBe("custom-id");
+            const field = new TextField(options);
+            const input = field.render();
+            expect(input.id).toBe(options.id);
         });
     });
 
     describe("SelectField", () => {
+        let options = {} as SelectField["options"];
+        beforeEach(() => {
+            options = {
+                label: "Test",
+                options: [
+                    { value: "1", label: "Option 1" },
+                    { value: "2", label: "Option 2" },
+                ],
+            };
+        });
+
         it("should render select element", () => {
             expect(() => {
-                const field = new SelectField({
-                    label: "Test",
-                    options: [
-                        { value: "1", label: "Option 1" },
-                        { value: "2", label: "Option 2" },
-                    ],
-                });
-
+                const field = new SelectField(options);
                 // Just ensure the field can be created without error
-                expect(field.options.label).toBe("Test");
+                expect(field.options.label).toBe(options.label);
             }).not.toThrow();
         });
 
         it("should create option elements for each option", () => {
-            const field = new SelectField({
-                label: "Test",
-                options: [
-                    { value: "1", label: "Option 1" },
-                    { value: "2", label: "Option 2" },
-                ],
-            });
+            const field = new SelectField(options);
+            const input = field.render();
 
-            const mockSelect = {
-                appendChild: vi.fn().mockReturnValue({
-                    value: "",
-                    selected: false,
-                    label: "",
-                }),
-                id: "",
-            };
-            (
-                document.createElement as ReturnType<typeof vi.fn>
-            ).mockReturnValue(mockSelect);
-
-            field.render();
-            expect(mockSelect.appendChild).toHaveBeenCalledTimes(2);
+            expect(input.children.length).toBe(2);
+            const [child1, child2] = [...input.children] as HTMLOptionElement[];
+            expect(child1.label).toBe(options.options?.[0].label);
+            expect(child2.label).toBe(options.options?.[1].label);
         });
 
         it("should set selected option when value matches", () => {
-            const field = new SelectField({
-                label: "Test",
-                value: "2",
-                options: [
-                    { value: "1", label: "Option 1" },
-                    { value: "2", label: "Option 2" },
-                ],
-            });
+            options = { ...options, value: "2" };
+            const field = new SelectField(options);
 
-            const mockOption1 = { value: "", selected: false, label: "" };
-            const mockOption2 = { value: "", selected: false, label: "" };
-            const mockSelect = {
-                appendChild: vi
-                    .fn()
-                    .mockReturnValueOnce(mockOption1)
-                    .mockReturnValueOnce(mockOption2),
-                id: "",
-            };
-            (
-                document.createElement as ReturnType<typeof vi.fn>
-            ).mockReturnValue(mockSelect);
-
-            field.render();
-            expect(mockOption2.selected).toBe(true);
+            const input = field.render();
+            expect(input.value).toBe(options.value);
         });
     });
 
     describe("FileField", () => {
-        it("should render file input element", () => {
-            const field = new FileField({ label: "Test File" });
+        let options = {} as FileField["options"];
+        beforeEach(() => {
+            options = {
+                label: "Test File",
+                id: "",
+                value: "",
+            };
+        });
 
-            field.render();
-            expect(document.createElement).toHaveBeenCalledWith("input");
+        it("should render file input element", () => {
+            expect(() => {
+                const field = new FileField(options);
+                expect(field.options.label).toBe(options.label);
+            }).not.toThrow();
         });
 
         it("should set type to file", () => {
-            const field = new FileField({ label: "Test" });
-            const mockInput = {
-                type: "",
-                placeholder: "",
-                value: "",
-                autocomplete: "",
-                id: "",
-            };
-            (
-                document.createElement as ReturnType<typeof vi.fn>
-            ).mockReturnValue(mockInput);
-
-            field.render();
-            expect(mockInput.type).toBe("file");
+            options = { ...options, label: "Test" };
+            const field = new FileField(options);
+            const input = field.render();
+            expect(input.type).toBe("file");
         });
 
         it("should set all properties like TextField", () => {
-            const field = new FileField({
+            options = {
+                ...options,
                 label: "Test File",
-                value: "test.jpg",
-                id: "file-id",
-            });
-            const mockInput = {
-                type: "",
-                placeholder: "",
                 value: "",
-                autocomplete: "",
-                id: "",
+                id: "file-id",
             };
-            (
-                document.createElement as ReturnType<typeof vi.fn>
-            ).mockReturnValue(mockInput);
+            const field = new FileField(options);
 
-            field.render();
-            expect(mockInput.placeholder).toBe("Test File");
-            expect(mockInput.value).toBe("test.jpg");
-            expect(mockInput.id).toBe("file-id");
+            const input = field.render();
+            expect(input.placeholder).toBe(options.label);
+            expect(input.value).toBe(options.value);
+            expect(input.id).toBe(options.id);
+        });
+    });
+
+    describe("TableField", () => {
+        let options = {} as TableField["options"];
+        beforeEach(() => {
+            options = {
+                label: "Test File",
+                id: "test",
+                value: "",
+            };
+        });
+
+        it("should render table field without errors", () => {
+            expect(() => {
+                new TableField(options);
+            }).not.toThrow();
+        });
+
+        it("should render a hidden input", () => {
+            options = { ...options, label: "Test" };
+            const field = new TableField(options);
+            const container = field.render();
+            expect(container.querySelector("input")?.type).toBe("hidden");
+            expect(container.querySelector("input")?.id).toBe(options.id);
+        });
+
+        it("should contain a 8x8 grid of buttons", () => {
+            const field = new TableField(options);
+            const container = field.render();
+            const btns = container.querySelectorAll("button");
+            expect(btns.length).toBe(8 * 8);
+        });
+
+        it("should highlight the correct buttons on hover", () => {
+            const field = new TableField(options);
+            const container = field.render();
+
+            // Get the button at position [2,3]
+            const targetButton = container.querySelector(
+                "[data-pos='[2, 3]']",
+            ) as HTMLButtonElement;
+            expect(targetButton).toBeDefined();
+
+            // Trigger mouseenter event
+            const mouseenterEvent = new MouseEvent("mouseenter");
+            targetButton.dispatchEvent(mouseenterEvent);
+
+            // Check that buttons from [0,0] to [2,3] are highlighted
+            for (let row = 0; row <= 2; row++) {
+                for (let col = 0; col <= 3; col++) {
+                    const button = container.querySelector(
+                        `[data-pos='[${row}, ${col}]']`,
+                    );
+                    expect(button?.classList.contains("highlight")).toBe(true);
+                }
+            }
+
+            // Check that buttons outside the area are not highlighted
+            const outsideButton = container.querySelector(
+                "[data-pos='[3, 4]']",
+            );
+            expect(outsideButton?.classList.contains("highlight")).toBe(false);
+
+            // Trigger mouseleave event
+            const mouseleaveEvent = new MouseEvent("mouseleave");
+            targetButton.dispatchEvent(mouseleaveEvent);
+
+            // Check that highlights are removed
+            for (let row = 0; row <= 2; row++) {
+                for (let col = 0; col <= 3; col++) {
+                    const button = container.querySelector(
+                        `[data-pos='[${row}, ${col}]']`,
+                    );
+                    expect(button?.classList.contains("highlight")).toBe(false);
+                }
+            }
+        });
+
+        it("should update hidden input value on button click", () => {
+            const field = new TableField(options);
+            const container = field.render();
+
+            const button = container.querySelector(
+                "[data-pos='[4, 2]']",
+            ) as HTMLButtonElement;
+            const input = container.querySelector("input") as HTMLInputElement;
+
+            expect(input.value).toBe("[1,1]"); // default value
+
+            button.click();
+
+            expect(input.value).toBe("[4, 2]");
         });
     });
 });

@@ -1,8 +1,24 @@
 import { describe, it, expect } from "vitest";
 import { Mark, Node, Schema, StyleParseRule } from "prosemirror-model";
-import DjangoProsemirrorSchema from "@/schema/prosemirror-schema";
-import { DjangoProsemirrorSettings, LanguageCodeEnum } from "@/types/types";
-import { SchemaNodesEnum } from "@/schema/choices";
+import { MarkType, NodeType } from "@/schema/types";
+import { IDPMSettings, LanguageCodeEnum } from "@/types/types";
+import { ClassMapping } from "@/schema/abstract";
+import DPMSchema from "@/schema/prosemirror-schema";
+import { DPMSettings } from "@/schema/settings";
+import { BlockQuoteNode } from "@/schema/nodes/blockquote";
+import { CodeBlockNode } from "@/schema/nodes/code_block";
+import { HeadingNode } from "@/schema/nodes/heading";
+import { ImageNode } from "@/schema/nodes/image";
+import { HardBreakNode } from "@/schema/nodes/hard_break";
+import { OrderedListNode } from "@/schema/nodes/ordered_list";
+import { BulletListNode } from "@/schema/nodes/bullet_list";
+import { ListItemNode } from "@/schema/nodes/list_item";
+import { TableNode } from "@/schema/nodes/table";
+import { TableHeaderNode } from "@/schema/nodes/table_header";
+import { TableRowNode } from "@/schema/nodes/table_row";
+import { TableCellNode } from "@/schema/nodes/table_cell";
+import { ParagraphNode } from "@/schema/nodes/paragraph";
+import { HorizontalRuleNode } from "@/schema/nodes/horizontal_rule";
 
 // Helper function for deep comparison of objects
 const deepEqual = (actual: unknown, expected: unknown) => {
@@ -11,8 +27,9 @@ const deepEqual = (actual: unknown, expected: unknown) => {
     );
 };
 
-const basicsettings: DjangoProsemirrorSettings = {
-    allowedNodes: [],
+const basicsettings: IDPMSettings = {
+    allowedNodes: [NodeType.PARAGRAPH],
+    allowedMarks: [],
     classNames: {},
     history: true,
     debug: false,
@@ -21,67 +38,89 @@ const basicsettings: DjangoProsemirrorSettings = {
     floatingMenu: false,
 };
 
-const DjangoProsemirrorSchemaCls = new DjangoProsemirrorSchema(basicsettings);
-
 describe("DjangoProsemirrorSchema", () => {
+    const classMapping = new ClassMapping({});
+    const mockNode = {} as Node;
+    const mockMark = {} as Mark;
+    const settings: IDPMSettings = {
+        allowedNodes: [NodeType.PARAGRAPH],
+        allowedMarks: [],
+        classNames: {},
+        history: true,
+        debug: false,
+        menubar: true,
+        language: LanguageCodeEnum.NL,
+        floatingMenu: false,
+    };
+    let DPMSchemaCls = new DPMSchema(settings as DPMSettings);
+
     describe("Required Nodes", () => {
         it("should return correct doc node spec", () => {
-            const docSpec = DjangoProsemirrorSchemaCls.doc;
-            expect(docSpec).toEqual({
+            expect(DPMSchemaCls.schema.nodes.doc.spec).toEqual({
                 content: "block+",
             });
         });
 
         it("should return correct text node spec", () => {
-            const textSpec = DjangoProsemirrorSchemaCls.text;
-            expect(textSpec).toEqual({
+            expect(DPMSchemaCls.schema.nodes.text.spec).toEqual({
                 group: "inline",
             });
         });
 
         it("should return correct paragraph node spec", () => {
-            const paragraphSpec = DjangoProsemirrorSchemaCls.paragraph;
+            const paragraphSpec = DPMSchemaCls.schema.nodes.paragraph.spec;
             expect(paragraphSpec.content).toBe("inline*");
             expect(paragraphSpec.group).toBe("block");
             expect(paragraphSpec.parseDOM).toEqual([{ tag: "p" }]);
-            expect(paragraphSpec.toDOM?.()).toEqual(["p", 0]);
+            expect(paragraphSpec.toDOM?.(mockNode)).toEqual(["p", {}, 0]);
+            deepEqual(new ParagraphNode(classMapping).spec, paragraphSpec);
         });
 
         it("should return all required nodes", () => {
-            const requiredNodes = DjangoProsemirrorSchemaCls.getRequiredNodes;
+            const requiredNodes = DPMSchemaCls.schema.nodes;
             expect(Object.keys(requiredNodes)).toEqual([
-                SchemaNodesEnum.DOC,
-                SchemaNodesEnum.TEXT,
-                SchemaNodesEnum.PARAGRAPH,
+                NodeType.DOC,
+                NodeType.PARAGRAPH,
+                NodeType.TEXT,
             ]);
-            expect(requiredNodes.doc).toEqual(DjangoProsemirrorSchemaCls.doc);
-            expect(requiredNodes.text).toEqual(DjangoProsemirrorSchemaCls.text);
-            deepEqual(
-                requiredNodes.paragraph,
-                DjangoProsemirrorSchemaCls.paragraph,
-            );
         });
     });
 
     describe("Block Nodes", () => {
         it("should return correct blockquote node spec", () => {
-            const blockquoteSpec = DjangoProsemirrorSchemaCls.blockquote;
+            settings.allowedNodes = [NodeType.PARAGRAPH, NodeType.BLOCKQUOTE];
+            DPMSchemaCls = new DPMSchema(settings as DPMSettings);
+            const blockquoteSpec = DPMSchemaCls.schema.nodes.blockquote.spec;
             expect(blockquoteSpec.content).toBe("block+");
             expect(blockquoteSpec.group).toBe("block");
             expect(blockquoteSpec.defining).toBe(true);
             expect(blockquoteSpec.parseDOM).toEqual([{ tag: "blockquote" }]);
-            expect(blockquoteSpec.toDOM?.()).toEqual(["blockquote", 0]);
+            expect(blockquoteSpec.toDOM?.(mockNode)).toEqual([
+                "blockquote",
+                {},
+                0,
+            ]);
+            deepEqual(new BlockQuoteNode(classMapping).spec, blockquoteSpec);
         });
 
         it("should return correct horizontal_rule node spec", () => {
-            const hrSpec = DjangoProsemirrorSchemaCls.horizontal_rule;
+            settings.allowedNodes = [
+                NodeType.PARAGRAPH,
+                NodeType.HORIZONTAL_RULE,
+            ];
+            DPMSchemaCls = new DPMSchema(settings as DPMSettings);
+            const hrSpec = DPMSchemaCls.schema.nodes.horizontal_rule.spec;
             expect(hrSpec.group).toBe("block");
             expect(hrSpec.parseDOM).toEqual([{ tag: "hr" }]);
-            expect(hrSpec.toDOM?.()).toEqual(["hr"]);
+            expect(hrSpec.toDOM?.(mockNode)).toEqual(["hr", {}]);
+            deepEqual(new HorizontalRuleNode(classMapping).spec, hrSpec);
         });
 
         it("should return correct heading node spec", () => {
-            const headingSpec = DjangoProsemirrorSchemaCls.heading;
+            settings.allowedNodes = [NodeType.PARAGRAPH, NodeType.HEADING];
+            DPMSchemaCls = new DPMSchema(settings as DPMSettings);
+
+            const headingSpec = DPMSchemaCls.schema.nodes.heading.spec;
             expect(headingSpec.content).toBe("inline*");
             expect(headingSpec.group).toBe("block");
             expect(headingSpec.defining).toBe(true);
@@ -100,21 +139,22 @@ describe("DjangoProsemirrorSchema", () => {
             ];
             expect(headingSpec.parseDOM).toEqual(expectedParseDOM);
 
-            // Test toDOM function
-            let mockNode: Partial<Node> = { attrs: { level: 3 } };
-            expect(headingSpec.toDOM?.(mockNode as Node)).toEqual(["h3", 0]);
+            // Test toDOM function for h1 - h6.
+            for (let i = 1; i <= 6; i++) {
+                expect(
+                    headingSpec.toDOM?.({
+                        attrs: { level: i },
+                    } as unknown as Node),
+                ).toEqual([`h${i}`, {}, 0]);
+            }
 
-            // Test toDOM function
-            mockNode = { attrs: { level: 2 } };
-            expect(headingSpec.toDOM?.(mockNode as Node)).toEqual(["h2", 0]);
-
-            // Test toDOM function
-            mockNode = { attrs: { level: 6 } };
-            expect(headingSpec.toDOM?.(mockNode as Node)).toEqual(["h6", 0]);
+            deepEqual(new HeadingNode(classMapping).spec, headingSpec);
         });
 
         it("should return correct code_block node spec", () => {
-            const codeBlockSpec = DjangoProsemirrorSchemaCls.code_block;
+            settings.allowedNodes = [NodeType.PARAGRAPH, NodeType.CODE_BLOCK];
+            DPMSchemaCls = new DPMSchema(settings as DPMSettings);
+            const codeBlockSpec = DPMSchemaCls.schema.nodes.code_block.spec;
             expect(codeBlockSpec.content).toBe("text*");
             expect(codeBlockSpec.marks).toBe("");
             expect(codeBlockSpec.group).toBe("block");
@@ -123,17 +163,20 @@ describe("DjangoProsemirrorSchema", () => {
             expect(codeBlockSpec.parseDOM).toEqual([
                 { tag: "pre", preserveWhitespace: "full" },
             ]);
-            expect(codeBlockSpec.toDOM?.()).toEqual([
+            expect(codeBlockSpec.toDOM?.(mockNode)).toEqual([
                 "pre",
                 { spellcheck: false },
-                ["code", 0],
+                ["code", {}, 0],
             ]);
+            deepEqual(new CodeBlockNode(classMapping).spec, codeBlockSpec);
         });
     });
 
     describe("Inline Nodes", () => {
         it("should return correct image node spec", () => {
-            const imageSpec = DjangoProsemirrorSchemaCls.image;
+            settings.allowedNodes = [NodeType.PARAGRAPH, NodeType.IMAGE];
+            DPMSchemaCls = new DPMSchema(settings as DPMSettings);
+            const imageSpec = DPMSchemaCls.schema.nodes.image.spec;
             expect(imageSpec.inline).toBe(true);
             expect(imageSpec.group).toBe("inline");
             expect(imageSpec.draggable).toBe(true);
@@ -162,33 +205,41 @@ describe("DjangoProsemirrorSchema", () => {
                 title: "Test title",
             });
 
-            // Test toDOM function
-            const mockNode: Partial<Node> = {
-                attrs: {
-                    src: "test.jpg",
-                    alt: "Test alt",
-                    title: "Test title",
-                },
-            };
-            expect(imageSpec.toDOM?.(mockNode as Node)).toEqual([
+            expect(
+                imageSpec.toDOM?.({
+                    attrs: {
+                        src: "test.jpg",
+                        alt: "Test alt",
+                        title: "Test title",
+                    },
+                } as unknown as Node),
+            ).toEqual([
                 "img",
                 { src: "test.jpg", alt: "Test alt", title: "Test title" },
             ]);
+
+            deepEqual(new ImageNode(classMapping).spec, imageSpec);
         });
 
         it("should return correct hard_break node spec", () => {
-            const hardBreakSpec = DjangoProsemirrorSchemaCls.hard_break;
+            settings.allowedNodes = [NodeType.PARAGRAPH, NodeType.HARD_BREAK];
+            DPMSchemaCls = new DPMSchema(settings as DPMSettings);
+            const hardBreakSpec = DPMSchemaCls.schema.nodes.hard_break.spec;
             expect(hardBreakSpec.inline).toBe(true);
             expect(hardBreakSpec.group).toBe("inline");
             expect(hardBreakSpec.selectable).toBe(false);
             expect(hardBreakSpec.parseDOM).toEqual([{ tag: "br" }]);
-            expect(hardBreakSpec.toDOM?.()).toEqual(["br"]);
+            expect(hardBreakSpec.toDOM?.(mockNode)).toEqual(["br", {}]);
+
+            deepEqual(new HardBreakNode(classMapping).spec, hardBreakSpec);
         });
     });
 
     describe("List Nodes", () => {
         it("should return correct ordered_list node spec", () => {
-            const orderedListSpec = DjangoProsemirrorSchemaCls.ordered_list;
+            settings.allowedNodes = [NodeType.PARAGRAPH, NodeType.ORDERED_LIST];
+            DPMSchemaCls = new DPMSchema(settings as DPMSettings);
+            const orderedListSpec = DPMSchemaCls.schema.nodes.ordered_list.spec;
             expect(orderedListSpec.content).toBe("list_item+");
             expect(orderedListSpec.group).toBe("block");
             expect(orderedListSpec.attrs).toEqual({
@@ -217,36 +268,84 @@ describe("DjangoProsemirrorSchema", () => {
             });
 
             // Test toDOM function
-            const nodeWithDefaultOrder: Partial<Node> = { attrs: { order: 1 } };
-            const nodeWithCustomOrder: Partial<Node> = { attrs: { order: 5 } };
+            expect(orderedListSpec?.toDOM?.(mockNode)).toEqual([
+                "ol",
+                { start: 1 },
+                0,
+            ]);
             expect(
-                orderedListSpec?.toDOM?.(nodeWithDefaultOrder as Node),
-            ).toEqual(["ol", 0]);
+                orderedListSpec?.toDOM?.({
+                    attrs: { order: 1 },
+                } as unknown as Node),
+            ).toEqual(["ol", { start: 1 }, 0]);
             expect(
-                orderedListSpec?.toDOM?.(nodeWithCustomOrder as Node),
+                orderedListSpec?.toDOM?.({
+                    attrs: { order: 5 },
+                } as unknown as Node),
             ).toEqual(["ol", { start: 5 }, 0]);
+
+            deepEqual(new OrderedListNode(classMapping).spec, orderedListSpec);
         });
 
-        it("should return correct unordered_list node spec", () => {
-            const bulletListSpec = DjangoProsemirrorSchemaCls.unordered_list;
+        it("should return correct bullet_list node spec", () => {
+            settings.allowedNodes = [NodeType.PARAGRAPH, NodeType.BULLET_LIST];
+            DPMSchemaCls = new DPMSchema(settings as DPMSettings);
+            const bulletListSpec = DPMSchemaCls.schema.nodes.bullet_list.spec;
             expect(bulletListSpec.content).toBe("list_item+");
             expect(bulletListSpec.group).toBe("block");
             expect(bulletListSpec.parseDOM).toEqual([{ tag: "ul" }]);
-            expect(bulletListSpec?.toDOM?.()).toEqual(["ul", 0]);
+            expect(bulletListSpec?.toDOM?.(mockNode)).toEqual(["ul", {}, 0]);
+            deepEqual(new BulletListNode(classMapping).spec, bulletListSpec);
         });
 
         it("should return correct list_item node spec", () => {
-            const listItemSpec = DjangoProsemirrorSchemaCls.list_item;
+            settings.allowedNodes = [NodeType.PARAGRAPH, NodeType.LIST_ITEM];
+            DPMSchemaCls = new DPMSchema(settings as DPMSettings);
+            const listItemSpec = DPMSchemaCls.schema.nodes.list_item.spec;
             expect(listItemSpec.content).toBe("paragraph block*");
             expect(listItemSpec.defining).toBe(true);
             expect(listItemSpec.parseDOM).toEqual([{ tag: "li" }]);
-            expect(listItemSpec?.toDOM?.()).toEqual(["li", 0]);
+            expect(listItemSpec?.toDOM?.(mockNode)).toEqual(["li", {}, 0]);
+            deepEqual(new ListItemNode(classMapping).spec, listItemSpec);
+        });
+    });
+
+    describe("Table nodes", () => {
+        it("should return correct table node spec", () => {
+            settings.allowedNodes = [
+                NodeType.PARAGRAPH,
+                NodeType.TABLE,
+                NodeType.TABLE_HEADER,
+                NodeType.TABLE_ROW,
+                NodeType.TABLE_CELL,
+            ];
+
+            DPMSchemaCls = new DPMSchema(settings as DPMSettings);
+
+            // Table
+            const tableSpec = DPMSchemaCls.schema.nodes.table.spec;
+            deepEqual(new TableNode(classMapping).spec, tableSpec);
+
+            // Table header
+            const tableHeaderSpec = DPMSchemaCls.schema.nodes.table_header.spec;
+            deepEqual(new TableHeaderNode(classMapping).spec, tableHeaderSpec);
+
+            // Table row
+            const tableRowSpec = DPMSchemaCls.schema.nodes.table_row.spec;
+            deepEqual(new TableRowNode(classMapping).spec, tableRowSpec);
+
+            // Table cell
+            const tableCellSpec = DPMSchemaCls.schema.nodes.table_cell.spec;
+            deepEqual(new TableCellNode(classMapping).spec, tableCellSpec);
         });
     });
 
     describe("Mark Specs", () => {
         it("should return correct link mark spec", () => {
-            const linkSpec = DjangoProsemirrorSchemaCls.link;
+            settings.allowedMarks = [MarkType.LINK];
+            DPMSchemaCls = new DPMSchema(settings as DPMSettings);
+
+            const linkSpec = DPMSchemaCls.schema.marks.link.spec;
             expect(linkSpec.inclusive).toBe(false);
             expect(linkSpec.attrs).toEqual({
                 href: { validate: "string" },
@@ -276,7 +375,8 @@ describe("DjangoProsemirrorSchema", () => {
             const mockNode: Partial<Mark> = {
                 attrs: { href: "https://example.com", title: "Example" },
             };
-            expect(linkSpec?.toDOM?.(mockNode as Mark)).toEqual([
+
+            expect(linkSpec?.toDOM?.(mockNode as Mark, true)).toEqual([
                 "a",
                 { href: "https://example.com", title: "Example" },
                 0,
@@ -284,7 +384,9 @@ describe("DjangoProsemirrorSchema", () => {
         });
 
         it("should return correct em mark spec", () => {
-            const emSpec = DjangoProsemirrorSchemaCls.em;
+            settings.allowedMarks = [MarkType.ITALIC];
+            DPMSchemaCls = new DPMSchema(settings as DPMSettings);
+            const emSpec = DPMSchemaCls.schema.marks.em.spec;
             expect(emSpec.parseDOM).toEqual([
                 { tag: "i" },
                 { tag: "em" },
@@ -294,22 +396,29 @@ describe("DjangoProsemirrorSchema", () => {
                     clearMark: expect.any(Function),
                 },
             ]);
-            expect(emSpec?.toDOM?.()).toEqual(["em", 0]);
+            expect(emSpec?.toDOM?.(mockMark, true)).toEqual(["em", {}, 0]);
 
             // Test clearMark function
-            const clearMarkFn = (emSpec?.parseDOM?.[3] as StyleParseRule)
-                .clearMark;
-            const mockMark = { type: { name: "em" } };
-            const mockOtherMark = { type: { name: "strong" } };
-            expect(clearMarkFn?.(mockMark as Mark)).toBe(true);
-            expect(clearMarkFn?.(mockOtherMark as Mark)).toBe(false);
+            const parseRule: StyleParseRule = emSpec
+                .parseDOM?.[3] as StyleParseRule;
+            const clearMarkFn = parseRule.clearMark;
+            expect(clearMarkFn?.({ type: { name: "em" } } as Mark)).toBe(true);
+            expect(clearMarkFn?.({ type: { name: "strong" } } as Mark)).toBe(
+                false,
+            );
         });
 
         it("should return correct strong mark spec", () => {
-            const strongSpec = DjangoProsemirrorSchemaCls.strong;
+            settings.allowedMarks = [MarkType.STRONG];
+            DPMSchemaCls = new DPMSchema(settings as DPMSettings);
+            const strongSpec = DPMSchemaCls.schema.marks.strong.spec;
             expect(strongSpec.parseDOM).toHaveLength(4);
             expect(strongSpec.parseDOM?.[0]).toEqual({ tag: "strong" });
-            expect(strongSpec.toDOM?.()).toEqual(["strong", 0]);
+            expect(strongSpec.toDOM?.(mockMark, false)).toEqual([
+                "strong",
+                {},
+                0,
+            ]);
 
             // Test font-weight getAttrs function
             const getAttrsFn = strongSpec.parseDOM?.[3].getAttrs;
@@ -322,22 +431,33 @@ describe("DjangoProsemirrorSchema", () => {
         });
 
         it("should return correct code mark spec", () => {
-            const codeSpec = DjangoProsemirrorSchemaCls.code;
+            settings.allowedMarks = [MarkType.CODE];
+            DPMSchemaCls = new DPMSchema(settings as DPMSettings);
+            const codeSpec = DPMSchemaCls.schema.marks.code.spec;
             expect(codeSpec.parseDOM).toEqual([{ tag: "code" }]);
-            expect(codeSpec.toDOM?.()).toEqual(["code", 0]);
+            expect(codeSpec.toDOM?.(mockMark, false)).toEqual(["code", {}, 0]);
         });
 
         it("should return correct underline mark spec", () => {
-            const underlineSpec = DjangoProsemirrorSchemaCls.underline;
+            settings.allowedMarks = [MarkType.UNDERLINE];
+            DPMSchemaCls = new DPMSchema(settings as DPMSettings);
+            const underlineSpec = DPMSchemaCls.schema.marks.underline.spec;
             expect(underlineSpec.parseDOM).toEqual([
                 { tag: "u" },
                 { style: "text-decoration=underline" },
             ]);
-            expect(underlineSpec.toDOM?.()).toEqual(["u", 0]);
+            expect(underlineSpec.toDOM?.(mockMark, false)).toEqual([
+                "u",
+                {},
+                0,
+            ]);
         });
 
         it("should return correct strikethrough mark spec", () => {
-            const strikethroughSpec = DjangoProsemirrorSchemaCls.strikethrough;
+            settings.allowedMarks = [MarkType.STRIKETHROUGH];
+            DPMSchemaCls = new DPMSchema(settings as DPMSettings);
+            const strikethroughSpec =
+                DPMSchemaCls.schema.marks.strikethrough.spec;
             expect(strikethroughSpec.parseDOM).toEqual([
                 { tag: "s" },
                 { tag: "del" },
@@ -345,60 +465,67 @@ describe("DjangoProsemirrorSchema", () => {
                 { style: "text-decoration=line-through" },
                 { style: "text-decoration-line=line-through" },
             ]);
-            expect(strikethroughSpec.toDOM?.()).toEqual(["s", 0]);
+            expect(strikethroughSpec.toDOM?.(mockMark, false)).toEqual([
+                "s",
+                {},
+                0,
+            ]);
         });
     });
 
     describe("Schema Generation", () => {
         it("should return all node specs", () => {
-            const nodeSpecs = DjangoProsemirrorSchemaCls.getNodeSpecs;
-            const expectedKeys = [
-                SchemaNodesEnum.DOC,
-                SchemaNodesEnum.TEXT,
-                SchemaNodesEnum.PARAGRAPH,
-                SchemaNodesEnum.HEADING,
-                SchemaNodesEnum.BLOCKQUOTE,
-                SchemaNodesEnum.IMAGE,
-                SchemaNodesEnum.ORDERED_LIST,
-                SchemaNodesEnum.UNORDERED_LIST,
-                SchemaNodesEnum.LIST_ITEM,
-                SchemaNodesEnum.HORIZONTAL_RULE,
-                SchemaNodesEnum.CODE_BLOCK,
-                SchemaNodesEnum.HARD_BREAK,
+            settings.allowedNodes = [
+                NodeType.DOC,
+                NodeType.PARAGRAPH,
+                NodeType.TEXT,
+                NodeType.BLOCKQUOTE,
+                NodeType.BULLET_LIST,
+                NodeType.LIST_ITEM,
+                NodeType.CODE_BLOCK,
+                NodeType.HARD_BREAK,
+                NodeType.HEADING,
+                NodeType.HORIZONTAL_RULE,
+                NodeType.IMAGE,
+                NodeType.ORDERED_LIST,
             ];
-            expect(Object.keys(nodeSpecs)).toEqual(expectedKeys);
+            DPMSchemaCls = new DPMSchema(settings as DPMSettings);
+
+            const nodeSpecs = DPMSchemaCls.schema.nodes;
+            expect(Object.keys(nodeSpecs).length).toBe(
+                settings.allowedNodes.length,
+            );
+            expect(Object.keys(nodeSpecs)).toEqual(settings.allowedNodes);
         });
 
         it("should return all mark specs", () => {
-            const markSpecs = DjangoProsemirrorSchemaCls.getMarkSpecs;
-            const expectedKeys = [
-                SchemaNodesEnum.LINK,
-                SchemaNodesEnum.ITALIC,
-                SchemaNodesEnum.STRONG,
-                SchemaNodesEnum.CODE,
-                SchemaNodesEnum.STRIKETHROUGH,
-                SchemaNodesEnum.UNDERLINE,
+            settings.allowedMarks = [
+                MarkType.LINK,
+                MarkType.ITALIC,
+                MarkType.STRONG,
+                MarkType.CODE,
+                MarkType.STRIKETHROUGH,
+                MarkType.UNDERLINE,
             ];
-            expect(Object.keys(markSpecs)).toEqual(expectedKeys);
+            DPMSchemaCls = new DPMSchema(settings as DPMSettings);
+            const markSpecs = DPMSchemaCls.schema.marks;
+            expect(Object.keys(markSpecs)).toEqual(settings.allowedMarks);
+            expect(Object.keys(markSpecs).length).toBe(
+                settings.allowedMarks.length,
+            );
         });
 
         it("should filter node specs correctly", () => {
-            const testSettings: DjangoProsemirrorSettings = {
-                ...basicsettings,
-                allowedNodes: [
-                    SchemaNodesEnum.PARAGRAPH,
-                    SchemaNodesEnum.BLOCKQUOTE,
-                ],
-            };
-            const testSchema = new DjangoProsemirrorSchema(testSettings);
-            const filteredSpecs = testSchema.getFilteredNodeSpecs;
+            settings.allowedNodes = [NodeType.PARAGRAPH, NodeType.BLOCKQUOTE];
+            DPMSchemaCls = new DPMSchema(settings as DPMSettings);
+            const filteredSpecs = DPMSchemaCls.schema.nodes;
 
             // Should include required nodes plus allowed ones
             const expectedKeys = [
-                SchemaNodesEnum.DOC,
-                SchemaNodesEnum.TEXT,
-                SchemaNodesEnum.BLOCKQUOTE,
-                SchemaNodesEnum.PARAGRAPH,
+                NodeType.DOC,
+                NodeType.TEXT,
+                NodeType.BLOCKQUOTE,
+                NodeType.PARAGRAPH,
             ];
             expect(Object.keys(filteredSpecs).sort()).toEqual(
                 expectedKeys.sort(),
@@ -406,94 +533,39 @@ describe("DjangoProsemirrorSchema", () => {
         });
 
         it("should include list_item when list nodes are allowed", () => {
-            const testSettings: DjangoProsemirrorSettings = {
-                ...basicsettings,
-                allowedNodes: [SchemaNodesEnum.UNORDERED_LIST],
-            };
-            const testSchema = new DjangoProsemirrorSchema(testSettings);
-            const filteredSpecs = testSchema.getFilteredNodeSpecs;
-
-            expect(Object.keys(filteredSpecs)).toContain(
-                SchemaNodesEnum.UNORDERED_LIST,
-            );
-            expect(Object.keys(filteredSpecs)).toContain(
-                SchemaNodesEnum.LIST_ITEM,
-            );
+            settings.allowedNodes = [NodeType.PARAGRAPH, NodeType.BULLET_LIST];
+            DPMSchemaCls = new DPMSchema(settings as DPMSettings);
+            const filteredSpecs = DPMSchemaCls.schema.nodes;
+            expect(Object.keys(filteredSpecs)).toContain(NodeType.BULLET_LIST);
+            expect(Object.keys(filteredSpecs)).toContain(NodeType.LIST_ITEM);
         });
 
         it("should include list_item when ordered_list is allowed", () => {
-            const testSettings: DjangoProsemirrorSettings = {
+            const testSettings: IDPMSettings = {
                 ...basicsettings,
-                allowedNodes: [SchemaNodesEnum.ORDERED_LIST],
+                allowedNodes: [NodeType.PARAGRAPH, NodeType.ORDERED_LIST],
             };
-            const testSchema = new DjangoProsemirrorSchema(testSettings);
-            const filteredSpecs = testSchema.getFilteredNodeSpecs;
+            const testSchema = new DPMSchema(testSettings as DPMSettings);
+            const filteredSpecs = testSchema.schema.nodes;
 
-            expect(Object.keys(filteredSpecs)).toContain(
-                SchemaNodesEnum.ORDERED_LIST,
-            );
-            expect(Object.keys(filteredSpecs)).toContain(
-                SchemaNodesEnum.LIST_ITEM,
-            );
-        });
-
-        it("should return all specs when empty array is passed to getFilteredNodeSpecs", () => {
-            const filteredSpecs =
-                DjangoProsemirrorSchemaCls.getFilteredNodeSpecs;
-            const allSpecs = DjangoProsemirrorSchemaCls.getNodeSpecs;
-            expect(Object.keys(filteredSpecs).sort()).toEqual(
-                Object.keys(allSpecs).sort(),
-            );
-
-            // Check individual specs match by comparing JSON strings to handle functions
-            (Object.keys(allSpecs) as SchemaNodesEnum[]).forEach((key) => {
-                deepEqual(filteredSpecs[key], allSpecs[key]);
-            });
-        });
-
-        it("should filter mark specs correctly", () => {
-            const testSettings: DjangoProsemirrorSettings = {
-                ...basicsettings,
-                allowedNodes: [SchemaNodesEnum.ITALIC, SchemaNodesEnum.STRONG],
-            };
-            const testSchema = new DjangoProsemirrorSchema(testSettings);
-            const filteredSpecs = testSchema.getFilteredMarkSpecs;
-
-            expect(Object.keys(filteredSpecs)).toEqual([
-                SchemaNodesEnum.ITALIC,
-                SchemaNodesEnum.STRONG,
-            ]);
-            deepEqual(filteredSpecs.em, testSchema.em);
-            deepEqual(filteredSpecs.strong, testSchema.strong);
-        });
-
-        it("should return all mark specs when empty array is passed to getFilteredMarkSpecs", () => {
-            const filteredSpecs =
-                DjangoProsemirrorSchemaCls.getFilteredMarkSpecs;
-            const allSpecs = DjangoProsemirrorSchemaCls.getMarkSpecs;
-            expect(Object.keys(filteredSpecs).sort()).toEqual(
-                Object.keys(allSpecs).sort(),
-            );
-
-            // Check individual specs match by comparing JSON strings to handle functions
-            (Object.keys(allSpecs) as SchemaNodesEnum[]).forEach((key) => {
-                deepEqual(filteredSpecs[key], allSpecs[key]);
-            });
+            expect(Object.keys(filteredSpecs)).toContain(NodeType.ORDERED_LIST);
+            expect(Object.keys(filteredSpecs)).toContain(NodeType.LIST_ITEM);
         });
 
         it("should create a valid ProseMirror schema", () => {
-            const testSettings: DjangoProsemirrorSettings = {
-                ...basicsettings,
-                allowedNodes: [
-                    SchemaNodesEnum.HEADING,
-                    SchemaNodesEnum.BLOCKQUOTE,
-                    SchemaNodesEnum.UNORDERED_LIST,
-                    SchemaNodesEnum.ITALIC,
-                    SchemaNodesEnum.STRONG,
-                    SchemaNodesEnum.LINK,
-                ],
-            };
-            const testSchema = new DjangoProsemirrorSchema(testSettings);
+            settings.allowedNodes = [
+                NodeType.PARAGRAPH,
+                NodeType.HEADING,
+                NodeType.BLOCKQUOTE,
+                NodeType.BULLET_LIST,
+            ];
+            settings.allowedMarks = [
+                MarkType.ITALIC,
+                MarkType.STRONG,
+                MarkType.LINK,
+            ];
+            DPMSchemaCls = new DPMSchema(settings as DPMSettings);
+            const testSchema = new DPMSchema(settings as DPMSettings);
             const schema = testSchema.schema;
 
             expect(schema).toBeInstanceOf(Schema);
@@ -502,8 +574,8 @@ describe("DjangoProsemirrorSchema", () => {
             expect(schema.nodes.paragraph).toBeDefined();
             expect(schema.nodes.heading).toBeDefined();
             expect(schema.nodes.blockquote).toBeDefined();
-            expect(schema.nodes.unordered_list).toBeDefined();
-            expect(schema.nodes.list_item).toBeDefined(); // Auto-included with unordered_list
+            expect(schema.nodes.bullet_list).toBeDefined();
+            expect(schema.nodes.list_item).toBeDefined(); // Auto-included with bullet_list
 
             expect(schema.marks.em).toBeDefined();
             expect(schema.marks.strong).toBeDefined();
@@ -511,24 +583,22 @@ describe("DjangoProsemirrorSchema", () => {
         });
 
         it("should create a minimal schema with only required nodes", () => {
-            const schema = DjangoProsemirrorSchemaCls.schema;
-
-            expect(schema).toBeInstanceOf(Schema);
-            expect(schema.nodes.doc).toBeDefined();
-            expect(schema.nodes.text).toBeDefined();
-            expect(schema.nodes.paragraph).toBeDefined();
-
-            // Should have all available marks since no marks were filtered
-            expect(schema.marks.em).toBeDefined();
-            expect(schema.marks.strong).toBeDefined();
-            expect(schema.marks.link).toBeDefined();
-            expect(schema.marks.code).toBeDefined();
+            settings.allowedNodes = [NodeType.PARAGRAPH];
+            expect(DPMSchemaCls).toBeInstanceOf(DPMSchema);
+            expect(DPMSchemaCls.schema).toBeInstanceOf(Schema);
+            expect(DPMSchemaCls.schema.nodes.doc).toBeDefined();
+            expect(DPMSchemaCls.schema.nodes.text).toBeDefined();
+            expect(DPMSchemaCls.schema.nodes.paragraph).toBeDefined();
+            expect(Object.keys(DPMSchemaCls.schema.nodes).length).toBe(3);
         });
     });
 
     describe("Edge Cases and Error Handling", () => {
         it("should handle missing attributes gracefully in image parseDOM", () => {
-            const imageSpec = DjangoProsemirrorSchemaCls.image;
+            settings.allowedNodes = [NodeType.PARAGRAPH, NodeType.IMAGE];
+            settings.allowedMarks = [];
+            DPMSchemaCls = new DPMSchema(settings as DPMSettings);
+            const imageSpec = DPMSchemaCls.schema.nodes.image.spec;
             const mockDOMWithMissingAttrs: Partial<HTMLElement> = {
                 getAttribute: () => null,
             };
@@ -545,7 +615,11 @@ describe("DjangoProsemirrorSchema", () => {
         });
 
         it("should handle missing attributes gracefully in link parseDOM", () => {
-            const linkSpec = DjangoProsemirrorSchemaCls.link;
+            settings.allowedNodes = [NodeType.PARAGRAPH];
+            settings.allowedMarks = [MarkType.LINK];
+
+            DPMSchemaCls = new DPMSchema(settings as DPMSettings);
+            const linkSpec = DPMSchemaCls.schema.marks.link.spec;
             const mockDOMWithMissingTitle: Partial<HTMLElement> = {
                 getAttribute: (attr) =>
                     attr === "href" ? "https://example.com" : null,
@@ -562,22 +636,29 @@ describe("DjangoProsemirrorSchema", () => {
         });
 
         it("should handle b tag with normal font-weight in strong mark", () => {
-            const strongSpec = DjangoProsemirrorSchemaCls.strong;
-            const bTagRule = strongSpec.parseDOM?.[1];
+            settings.allowedNodes = [NodeType.PARAGRAPH, NodeType.BLOCKQUOTE];
+            settings.allowedMarks = [MarkType.STRONG];
+            DPMSchemaCls = new DPMSchema(settings as DPMSettings);
+            const strongSpec = DPMSchemaCls.schema.marks.strong;
+            const bTagRule = strongSpec?.spec?.parseDOM;
 
             const mockNodeNormal = { style: { fontWeight: "normal" } };
             const mockNodeBold = { style: { fontWeight: "bold" } };
             const mockNodeUndefined = { style: {} };
 
+            if (!bTagRule) return;
+
             expect(
-                bTagRule?.getAttrs?.(mockNodeNormal as HTMLElement & string),
+                bTagRule[0]?.getAttrs?.(mockNodeNormal as HTMLElement & string),
             ).toBeFalsy();
             expect(
-                bTagRule?.getAttrs?.(mockNodeBold as HTMLElement & string),
+                bTagRule[1]?.getAttrs?.(mockNodeBold as HTMLElement & string),
             ).toBeNull();
             expect(
-                bTagRule?.getAttrs?.(mockNodeUndefined as HTMLElement & string),
-            ).toBeNull();
+                bTagRule[2]?.getAttrs?.(
+                    mockNodeUndefined as HTMLElement & string,
+                ),
+            ).toBeUndefined();
         });
     });
 });

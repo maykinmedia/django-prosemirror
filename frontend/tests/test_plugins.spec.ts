@@ -1,8 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { getDjangoProsemirrorPlugins } from "../plugins/index";
-import { DjangoProsemirrorSettings, LanguageCodeEnum } from "../types/types";
+import { getDPMPlugins } from "@/plugins/index";
+import { tableToolbarKey } from "@/plugins/table/table-toolbar";
+import { DPMSettings } from "@/schema/settings";
+import { NodeType } from "@/schema/types";
+import { IDPMSettings, LanguageCodeEnum } from "@/types/types";
 import { Schema } from "prosemirror-model";
-import { SchemaNodesEnum } from "@/schema/choices";
+import { columnResizingPluginKey, tableEditingKey } from "prosemirror-tables";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock the ProseMirror plugins
 vi.mock("prosemirror-keymap", () => ({
@@ -34,7 +37,7 @@ vi.mock("prosemirror-example-setup", () => ({
     buildKeymap: vi.fn((schema) => ({ "Mod-b": "toggleStrong", schema })),
 }));
 
-vi.mock("../plugins/menubar/index.ts", () => ({
+vi.mock("@/plugins/menubar/index.ts", () => ({
     buildMenuItems: vi.fn((schema, history) => ({
         fullMenu: [
             [{ title: "Bold" }, { title: "Italic" }],
@@ -67,14 +70,14 @@ describe("plugins/index", () => {
 
     describe("getDjangoProsemirrorPlugins", () => {
         it("should return array of plugins with default settings", () => {
-            const plugins = getDjangoProsemirrorPlugins(mockSchema);
+            const plugins = getDPMPlugins(mockSchema);
 
             expect(Array.isArray(plugins)).toBe(true);
             expect(plugins).toMatchSnapshot(); // 7 plugins by default
         });
 
         it("should include input rules plugin", () => {
-            const plugins = getDjangoProsemirrorPlugins(mockSchema);
+            const plugins = getDPMPlugins(mockSchema);
             const inputRulesPlugin = plugins.find(
                 (p) => p.type === "inputRules",
             );
@@ -84,14 +87,14 @@ describe("plugins/index", () => {
         });
 
         it("should include keymap plugins", () => {
-            const plugins = getDjangoProsemirrorPlugins(mockSchema);
+            const plugins = getDPMPlugins(mockSchema);
             const keymapPlugins = plugins.filter((p) => p.type === "keymap");
 
             expect(keymapPlugins).toHaveLength(2); // Custom keymap + base keymap
         });
 
         it("should include drop cursor plugin", () => {
-            const plugins = getDjangoProsemirrorPlugins(mockSchema);
+            const plugins = getDPMPlugins(mockSchema);
             const dropCursorPlugin = plugins.find(
                 (p) => p.type === "dropCursor",
             );
@@ -100,37 +103,70 @@ describe("plugins/index", () => {
         });
 
         it("should include gap cursor plugin", () => {
-            const plugins = getDjangoProsemirrorPlugins(mockSchema);
+            const plugins = getDPMPlugins(mockSchema);
             const gapCursorPlugin = plugins.find((p) => p.type === "gapCursor");
 
             expect(gapCursorPlugin).toMatchSnapshot();
         });
 
         it("should include menu bar plugin", () => {
-            const plugins = getDjangoProsemirrorPlugins(mockSchema);
+            const plugins = getDPMPlugins(mockSchema);
             const menuBarPlugin = plugins.find((p) => p.type === "menuBar");
 
             expect(menuBarPlugin).toMatchSnapshot();
         });
 
+        it("should include table plugins", () => {
+            mockSchema = {
+                ...mockSchema,
+                nodes: {
+                    ...mockSchema.nodes,
+                    table: { name: "table" },
+                },
+            } as unknown as Schema;
+
+            const plugins = getDPMPlugins(mockSchema);
+            expect(plugins.length).toBe(11);
+
+            // Toolbar plugin
+            const toolbarPlugin = plugins.find(
+                (p) => p.spec?.key === tableToolbarKey,
+            );
+            expect(toolbarPlugin).toMatchSnapshot();
+
+            // Column resizing
+            const columnResizingPlugin = plugins.find(
+                (p) => p.spec?.key === columnResizingPluginKey,
+            );
+            expect(columnResizingPlugin).toMatchSnapshot();
+
+            // Table editing
+            const tableEditingKeyPlugin = plugins.find(
+                (p) => p.spec?.key === tableEditingKey,
+            );
+            expect(tableEditingKeyPlugin).toMatchSnapshot();
+
+            // Table keymap
+            const keymapPlugins = plugins.filter((p) => p.type === "keymap");
+            expect(keymapPlugins).toHaveLength(3); // Custom keymap + base keymap + table keymap
+        });
+
         it("should include history plugin", () => {
-            const plugins = getDjangoProsemirrorPlugins(mockSchema);
+            const plugins = getDPMPlugins(mockSchema);
             const historyPlugin = plugins.find((p) => p.type === "history");
 
             expect(historyPlugin).toMatchSnapshot();
         });
 
         it("should pass settings to buildMenuItems", () => {
-            const settings: DjangoProsemirrorSettings = {
-                allowedNodes: [
-                    SchemaNodesEnum.HEADING,
-                    SchemaNodesEnum.PARAGRAPH,
-                ],
+            const settings: IDPMSettings = {
+                allowedNodes: [NodeType.HEADING, NodeType.PARAGRAPH],
+                allowedMarks: [],
                 history: false,
                 language: LanguageCodeEnum.EN,
             };
 
-            const result = getDjangoProsemirrorPlugins(mockSchema, settings);
+            const result = getDPMPlugins(mockSchema, settings as DPMSettings);
 
             // Just verify that plugins are created without errors
             expect(result).toMatchSnapshot();
@@ -138,7 +174,7 @@ describe("plugins/index", () => {
         });
 
         it("should pass default history setting when not specified", () => {
-            const result = getDjangoProsemirrorPlugins(mockSchema);
+            const result = getDPMPlugins(mockSchema);
 
             // Just verify that plugins are created without errors
             expect(result).toMatchSnapshot();
@@ -151,7 +187,7 @@ describe("plugins/index", () => {
                 marks: {},
             } as unknown as Schema;
 
-            const plugins = getDjangoProsemirrorPlugins(minimalSchema);
+            const plugins = getDPMPlugins(minimalSchema);
 
             expect(Array.isArray(plugins)).toBe(true);
             expect(plugins.length).toBeGreaterThan(0);
@@ -159,22 +195,23 @@ describe("plugins/index", () => {
 
         it("should handle undefined settings gracefully", () => {
             expect(() => {
-                getDjangoProsemirrorPlugins(mockSchema, undefined);
+                getDPMPlugins(mockSchema, undefined);
             }).not.toThrow();
         });
 
         it("should handle empty settings object", () => {
-            const settings: DjangoProsemirrorSettings = {
+            const settings: IDPMSettings = {
                 allowedNodes: [],
+                allowedMarks: [],
             };
 
             expect(() => {
-                getDjangoProsemirrorPlugins(mockSchema, settings);
+                getDPMPlugins(mockSchema, settings as DPMSettings);
             }).not.toThrow();
         });
 
         it("should maintain plugin order", () => {
-            const plugins = getDjangoProsemirrorPlugins(mockSchema);
+            const plugins = getDPMPlugins(mockSchema);
             const pluginTypes = plugins.map((p) => p.type);
 
             expect(pluginTypes).toEqual([
@@ -189,7 +226,7 @@ describe("plugins/index", () => {
         });
 
         it("should pass correct parameters to each plugin factory", () => {
-            const plugins = getDjangoProsemirrorPlugins(mockSchema);
+            const plugins = getDPMPlugins(mockSchema);
 
             // Verify that all expected plugin types are present
             const pluginTypes = plugins.map((p) => p.type);
@@ -202,7 +239,7 @@ describe("plugins/index", () => {
         });
 
         it("should create menu bar with correct content structure", () => {
-            const plugins = getDjangoProsemirrorPlugins(mockSchema);
+            const plugins = getDPMPlugins(mockSchema);
             const menuBarPlugin = plugins.find((p) => p.type === "menuBar");
 
             expect(menuBarPlugin).toMatchSnapshot();
@@ -212,30 +249,39 @@ describe("plugins/index", () => {
 
     describe("Plugin configuration", () => {
         it("should configure plugins with different settings", () => {
-            const settings1: DjangoProsemirrorSettings = {
-                allowedNodes: [SchemaNodesEnum.HEADING],
+            const settings1: IDPMSettings = {
+                allowedNodes: [NodeType.HEADING],
+                allowedMarks: [],
                 history: true,
             };
-            const settings2: DjangoProsemirrorSettings = {
-                allowedNodes: [SchemaNodesEnum.PARAGRAPH],
+            const settings2: IDPMSettings = {
+                allowedNodes: [NodeType.PARAGRAPH],
+                allowedMarks: [],
                 history: false,
             };
 
-            const plugins1 = getDjangoProsemirrorPlugins(mockSchema, settings1);
-            const plugins2 = getDjangoProsemirrorPlugins(mockSchema, settings2);
+            const plugins1 = getDPMPlugins(
+                mockSchema,
+                settings1 as DPMSettings,
+            );
+            const plugins2 = getDPMPlugins(
+                mockSchema,
+                settings2 as DPMSettings,
+            );
 
             // Both should return the same structure
             expect(plugins1).toEqual(plugins2);
         });
 
         it("should handle complex settings object", () => {
-            const complexSettings: DjangoProsemirrorSettings = {
+            const complexSettings: IDPMSettings = {
                 allowedNodes: [
-                    SchemaNodesEnum.HEADING,
-                    SchemaNodesEnum.PARAGRAPH,
-                    SchemaNodesEnum.BLOCKQUOTE,
-                    SchemaNodesEnum.UNORDERED_LIST,
+                    NodeType.HEADING,
+                    NodeType.PARAGRAPH,
+                    NodeType.BLOCKQUOTE,
+                    NodeType.BULLET_LIST,
                 ],
+                allowedMarks: [],
                 menubar: true,
                 history: true,
                 floatingMenu: true,
@@ -248,7 +294,7 @@ describe("plugins/index", () => {
             };
 
             expect(() => {
-                getDjangoProsemirrorPlugins(mockSchema, complexSettings);
+                getDPMPlugins(mockSchema, complexSettings as DPMSettings);
             }).not.toThrow();
         });
     });

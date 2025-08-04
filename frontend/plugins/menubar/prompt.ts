@@ -1,5 +1,6 @@
 import { Attrs } from "prosemirror-model";
 import { translate } from "@/i18n/translations";
+import crelt from "crelt";
 
 const prefix = "prompt";
 
@@ -9,6 +10,7 @@ export function openPrompt(options: {
     fields: { [name: string]: Field };
     callback: (attrs: Attrs) => void;
     dom: HTMLElement;
+    hideButtons?: boolean;
 }) {
     if (!options.dom.previousElementSibling) return;
 
@@ -51,11 +53,14 @@ export function openPrompt(options: {
     domFields.forEach((field) => {
         form.appendChild(document.createElement("div")).appendChild(field);
     });
-    const buttons = form.appendChild(document.createElement("div"));
-    buttons.className = prefix + "-buttons";
-    buttons.appendChild(submitButton);
-    buttons.appendChild(document.createTextNode(" "));
-    buttons.appendChild(cancelButton);
+
+    if (!options.hideButtons) {
+        const buttons = form.appendChild(document.createElement("div"));
+        buttons.className = prefix + "-buttons";
+        buttons.appendChild(submitButton);
+        buttons.appendChild(document.createTextNode(" "));
+        buttons.appendChild(cancelButton);
+    }
 
     // Position the wrapper
     wrapper.getBoundingClientRect();
@@ -165,7 +170,9 @@ export abstract class Field {
 
     /// Read the field's value from its DOM node.
     read(dom: HTMLElement) {
-        return (dom as HTMLInputElement).value;
+        return (
+            (dom as HTMLInputElement).value ?? dom.querySelector("input")?.value
+        );
     }
 
     /// A field-type-specific validation function.
@@ -232,5 +239,78 @@ export class FileField extends Field {
         input.autocomplete = "off";
         input.id = this.options.id ?? "";
         return input;
+    }
+}
+export class TableField extends Field {
+    rows: number;
+    cols: number;
+    cells: Array<Array<HTMLButtonElement>>;
+    prefix = "table_field";
+
+    constructor(opts: Field["options"]) {
+        super(opts);
+        this.rows = 8;
+        this.cols = 8;
+        this.cells = [[]];
+    }
+
+    render() {
+        const container = crelt("div", {
+            class: this.prefix,
+        });
+        const input = crelt("input", {
+            type: "hidden",
+            value: "[1,1]",
+            id: this.options.id,
+        }) as HTMLInputElement;
+
+        // Append element
+        crelt(container, input);
+
+        // Store cells in a 2D array for easier column access
+        for (let row = 0; row < this.rows; row++) {
+            this.cells[row] = [];
+            for (let col = 0; col < this.cols; col++) {
+                const cell = crelt("button", {
+                    class: `${this.prefix}__cell`,
+                    type: "submit",
+                    "data-pos": `[${row}, ${col}]`,
+                }) as HTMLButtonElement;
+
+                // Click handler
+                cell.addEventListener("click", () => {
+                    input.value = cell.dataset.pos ?? "[1,1]";
+                });
+
+                // Mouse enter handler for area highlighting
+                cell.addEventListener(
+                    "mouseenter",
+                    this.highlightArea.bind(this, row, col, true),
+                );
+
+                // Mouse leave handler to remove area highlighting
+                cell.addEventListener(
+                    "mouseleave",
+                    this.highlightArea.bind(this, row, col, false),
+                );
+
+                this.cells[row][col] = cell;
+
+                // Append element
+                crelt(container, cell);
+            }
+        }
+
+        return container;
+    }
+
+    // Function to highlight/unhighlight area from [0,0] to hovered cell
+    highlightArea(maxRow: number, maxCol: number, highlight: boolean) {
+        for (let row = 0; row <= maxRow; row++) {
+            for (let col = 0; col <= maxCol; col++) {
+                // Highlight/unhighlight cell
+                this.cells[row][col]?.classList.toggle("highlight", highlight);
+            }
+        }
     }
 }
