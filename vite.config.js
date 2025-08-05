@@ -49,4 +49,22 @@ export default defineConfig({
             },
         },
     ],
+
+    test: {
+        globals: true,
+        environment: "jsdom",
+        coverage: {
+            include: ["frontend/**/*.ts"],
+            exclude: [
+                "frontend/tests/**",
+                "frontend/types/vite-env.d.ts",
+                "node_modules/**",
+                "dist/**",
+                "django_prosemirror/**",
+                "testapp/**",
+            ],
+            reporter: ["text", "html", "json"],
+            all: true,
+        },
+    },
 });
