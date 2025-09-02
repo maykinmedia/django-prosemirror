@@ -86,6 +86,14 @@ export class DPMSettings implements IDPMSettings {
     get history(): boolean {
         return this.getSetting("prosemirrorHistory", "true") === true;
     }
+    /**
+     * Setting that defines the the editor uses the history plugin.
+     * If true also the buttons are rendered.
+     * @default true
+     */
+    get uploadEndpoint(): string | undefined {
+        return this.getSetting("prosemirrorUploadEndpoint", undefined);
+    }
 
     /**
      * Setting that defines the language of the editor, used for translations.
@@ -120,21 +128,6 @@ export class DPMSettings implements IDPMSettings {
      * TODO: remove hardcoded value (if this setting becomes relevant).
      */
     get debug(): boolean {
-        return true;
-    }
-
-    get spec() {
-        return {
-            allowedNodes: this.allowedNodes,
-            allowedMarks: this.allowedMarks,
-            classNames: this.classNames,
-            history: this.history,
-            id: this.id,
-            inputId: this.inputId,
-            floatingMenu: this.floatingMenu,
-            menubar: this.menubar,
-            debug: this.debug,
-            language: this.language,
-        };
+        return false;
     }
 }

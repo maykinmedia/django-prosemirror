@@ -1,5 +1,8 @@
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import path
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+from django.urls import include, path
 
 from . import views
 
@@ -8,4 +11,13 @@ urlpatterns = [
     path("form", views.simple_form_view),
     path("model-form", views.model_form_view),
     path("admin/", admin.site.urls),
+    path("prosemirror/", include("django_prosemirror.urls")),
+    path("", include("filer.server.urls")),
 ]
+
+# NOTE: The staticfiles_urlpatterns also discovers static files (ie.
+# no need to run collectstatic). Both the static folder and the media
+# folder are only served via Django if DEBUG = True.
+urlpatterns += staticfiles_urlpatterns() + static(
+    settings.MEDIA_URL, document_root=settings.MEDIA_ROOT
+)

@@ -195,6 +195,19 @@ Plugin {
 
 exports[`plugins/index > getDjangoProsemirrorPlugins > should pass default history setting when not specified 1`] = `
 [
+  Plugin {
+    "key": "toolbar-plugin$",
+    "props": {},
+    "spec": {
+      "key": PluginKey {
+        "key": "toolbar-plugin$",
+      },
+      "state": {
+        "apply": [Function],
+        "init": [Function],
+      },
+    },
+  },
   {
     "schema": {
       "marks": {
@@ -287,6 +300,19 @@ exports[`plugins/index > getDjangoProsemirrorPlugins > should pass default histo
 
 exports[`plugins/index > getDjangoProsemirrorPlugins > should pass settings to buildMenuItems 1`] = `
 [
+  Plugin {
+    "key": "toolbar-plugin$",
+    "props": {},
+    "spec": {
+      "key": PluginKey {
+        "key": "toolbar-plugin$",
+      },
+      "state": {
+        "apply": [Function],
+        "init": [Function],
+      },
+    },
+  },
   {
     "schema": {
       "marks": {
@@ -379,6 +405,19 @@ exports[`plugins/index > getDjangoProsemirrorPlugins > should pass settings to b
 
 exports[`plugins/index > getDjangoProsemirrorPlugins > should return array of plugins with default settings 1`] = `
 [
+  Plugin {
+    "key": "toolbar-plugin$",
+    "props": {},
+    "spec": {
+      "key": PluginKey {
+        "key": "toolbar-plugin$",
+      },
+      "state": {
+        "apply": [Function],
+        "init": [Function],
+      },
+    },
+  },
   {
     "schema": {
       "marks": {

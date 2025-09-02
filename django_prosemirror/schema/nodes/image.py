@@ -14,13 +14,27 @@ class ImageNode(NodeDefinition):
 
     def to_dom(self, node) -> list:
         """Convert image node to DOM representation."""
-        base_attrs = {
-            "src": node.attrs["src"],
-            "alt": node.attrs["alt"],
-            "title": node.attrs["title"],
-        }
-        attrs = self.class_mapping.apply_to_attrs(base_attrs, "image")
-        return ["img", attrs]
+        attrs = {}
+
+        # Always include src (required attribute)
+        if "src" in node.attrs:
+            attrs["src"] = node.attrs["src"]
+
+        # Only include optional attributes if they don't match defaults
+        if node.attrs.get("alt") != "":
+            attrs["alt"] = node.attrs["alt"]
+
+        if node.attrs.get("title") is not None:
+            attrs["title"] = node.attrs["title"]
+
+        if node.attrs.get("imageId") is not None:
+            attrs["imageId"] = node.attrs["imageId"]
+
+        if node.attrs.get("caption") != "":
+            attrs["caption"] = node.attrs["caption"]
+
+        final_attrs = self.class_mapping.apply_to_attrs(attrs, "image")
+        return ["img", final_attrs]
 
     def dom_matcher(self) -> list:
         """Return DOM parsing rules for image."""
@@ -31,6 +45,8 @@ class ImageNode(NodeDefinition):
                     "src": attrs.get("src"),
                     "title": attrs.get("title"),
                     "alt": attrs.get("alt"),
+                    "imageId": attrs.get("imageId"),
+                    "caption": attrs.get("caption"),
                 },
             },
         ]
@@ -39,7 +55,13 @@ class ImageNode(NodeDefinition):
     def spec(self) -> NodeSpec:
         return {
             "inline": True,
-            "attrs": {"src": {}, "alt": {"default": ""}, "title": {"default": None}},
+            "attrs": {
+                "src": {},
+                "alt": {"default": ""},
+                "title": {"default": None},
+                "imageId": {"default": None},
+                "caption": {"default": ""},
+            },
             "group": "inline",
             "draggable": True,
             "parseDOM": self.dom_matcher(),

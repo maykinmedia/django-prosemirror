@@ -47,6 +47,9 @@ tests = [
     # "pyright",
     # "django-stubs",
 ]
+images = [
+    "django-filer",
+]
 docs = [
     "sphinx",
     "sphinx-rtd-theme",

@@ -7,7 +7,7 @@ export const getTranslations = (language: string): IDPMTranslations => {
     return map[language] ?? map.en;
 };
 
-export const translate = (text: string) => {
+export const translate = (text: keyof IDPMTranslations) => {
     const language = document?.documentElement?.lang ?? LanguageCodeEnum.NL;
     const translations = getTranslations(language);
     return translations[text as keyof IDPMTranslations] || text;

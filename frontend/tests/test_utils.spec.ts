@@ -1,10 +1,46 @@
 import { IconData } from "@/plugins/icons";
+import { ImageNodeAttrs } from "@/schema/nodes/image";
+import { getSelectedImageNode, insertImage, isImageSelected } from "@/utils";
 import { createSVG } from "@/utils/svg";
+import { NodeSelection } from "prosemirror-state";
+import { EditorView } from "prosemirror-view";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 describe("test utils folder", () => {
+    let mockView: EditorView;
+
     beforeEach(() => {
         vi.clearAllMocks();
+
+        const mockState = {
+            selection: { from: 0, to: 0 },
+            schema: { nodes: { image: { create: vi.fn() } } },
+            tr: {
+                replaceSelectionWith: vi.fn().mockReturnThis(),
+                scrollIntoView: vi.fn().mockReturnThis(),
+            },
+        };
+
+        const mockSelection = {
+            node: { type: { name: "image", create: vi.fn() } },
+        };
+
+        Object.setPrototypeOf(mockSelection, NodeSelection.prototype);
+
+        mockView = {
+            focused: true,
+            dispatch: vi.fn().mockReturnValue(undefined),
+            state: mockState,
+            dom: document.createElement("div"),
+            coordsAtPos: vi.fn().mockReturnValue({
+                left: 100,
+                top: 100,
+                right: 200,
+                bottom: 150,
+            }),
+            nodeDOM: vi.fn().mockReturnValue(document.createElement("img")),
+            selection: mockSelection,
+        } as unknown as EditorView;
     });
 
     describe("svg.ts -> createSVG function", () => {
@@ -104,6 +140,54 @@ describe("test utils folder", () => {
             );
 
             createElementNSSpy.mockRestore();
+        });
+    });
+
+    describe("nodes.ts", () => {
+        describe("test isImageSelected", () => {
+            it("should return true if a image is selected", () => {
+                const mockSelection = {
+                    node: { type: { name: "image", create: vi.fn() } },
+                };
+                Object.setPrototypeOf(mockSelection, NodeSelection.prototype);
+                mockView.state.selection =
+                    mockSelection as unknown as NodeSelection;
+                const isSelected = isImageSelected(mockView);
+                expect(isSelected).toBe(true);
+            });
+
+            it("should return false if a image is not selected", () => {
+                const isSelected = isImageSelected(mockView);
+                expect(isSelected).toBe(false);
+            });
+
+            it("should return false if view is not defined", () => {
+                const isSelected = isImageSelected(undefined!);
+                expect(isSelected).toBe(false);
+            });
+        });
+        describe("test getSelectedImageNode", () => {
+            it("should return the selected image", () => {
+                const mockSelection = {
+                    node: { type: { name: "image", create: vi.fn() } },
+                };
+                Object.setPrototypeOf(mockSelection, NodeSelection.prototype);
+                mockView.state.selection =
+                    mockSelection as unknown as NodeSelection;
+                const node = getSelectedImageNode(mockView);
+                expect(node).toEqual(mockSelection.node);
+            });
+
+            it("should return null instead of the image node", () => {
+                const node = getSelectedImageNode(mockView);
+                expect(node).toBe(null);
+            });
+        });
+        describe("test insertImage", () => {
+            it("should return the insert a image", () => {
+                const attrs = {} as ImageNodeAttrs;
+                expect(() => insertImage(attrs, mockView)).not.toThrow();
+            });
         });
     });
 });

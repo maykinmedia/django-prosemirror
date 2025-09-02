@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import { copyFileSync, mkdirSync } from "fs";
 import path from "path";
+import preact from "@preact/preset-vite";
 
 export default defineConfig({
     build: {
@@ -21,6 +22,7 @@ export default defineConfig({
         },
     },
     plugins: [
+        preact(),
         {
             name: "copy-to-django",
             writeBundle() {
@@ -54,7 +56,7 @@ export default defineConfig({
         globals: true,
         environment: "jsdom",
         coverage: {
-            include: ["frontend/**/*.ts"],
+            include: ["frontend/**/*.ts", "frontend/**/*.tsx"],
             exclude: [
                 "frontend/tests/**",
                 "frontend/types/vite-env.d.ts",
