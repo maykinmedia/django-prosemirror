@@ -51,6 +51,7 @@ describe("DjangoProsemirrorSchema", () => {
         menubar: true,
         language: LanguageCodeEnum.NL,
         floatingMenu: false,
+        uploadEndpoint: "/",
     };
     let DPMSchemaCls = new DPMSchema(settings as DPMSettings);
 
@@ -181,8 +182,10 @@ describe("DjangoProsemirrorSchema", () => {
             expect(imageSpec.group).toBe("inline");
             expect(imageSpec.draggable).toBe(true);
             expect(imageSpec.attrs).toEqual({
-                src: { validate: "string" },
                 alt: { default: "", validate: "string|null" },
+                caption: { default: null, validate: "string|null" },
+                imageId: { default: null, validate: "string" },
+                src: { validate: "string" },
                 title: { default: null, validate: "string|null" },
             });
 
@@ -203,6 +206,8 @@ describe("DjangoProsemirrorSchema", () => {
                 src: "test.jpg",
                 alt: "Test image",
                 title: "Test title",
+                caption: null,
+                imageId: undefined,
             });
 
             expect(
@@ -324,7 +329,11 @@ describe("DjangoProsemirrorSchema", () => {
 
             // Table
             const tableSpec = DPMSchemaCls.schema.nodes.table.spec;
-            deepEqual(new TableNode(classMapping).spec, tableSpec);
+            const tableNode = new TableNode(classMapping);
+
+            deepEqual(tableNode.spec, tableSpec);
+            expect(tableNode.isolating).toBe(true);
+            expect(tableNode.toDOM()).toEqual(["table", {}, ["tbody", 0]]);
 
             // Table header
             const tableHeaderSpec = DPMSchemaCls.schema.nodes.table_header.spec;
@@ -611,6 +620,8 @@ describe("DjangoProsemirrorSchema", () => {
                 src: null,
                 alt: null,
                 title: null,
+                caption: null,
+                imageId: null,
             });
         });
 

@@ -7,6 +7,7 @@
         "build:dev": "tsc -b && vite build --watch --mode=dev",
         "test": "vitest",
         "test:ci": "vitest --no-color --reporter=verbose --run --coverage",
+        "test:coverage": "vitest --reporter=verbose --coverage",
         "type-check": "tsc --noEmit",
         "type-check:watch": "tsc --noEmit --watch",
         "lint": "eslint frontend/",
@@ -14,6 +15,9 @@
         "format:check": "prettier --check frontend/"
     },
     "devDependencies": {
+        "@preact/preset-vite": "^2.10.2",
+        "@testing-library/jest-dom": "^6.6.4",
+        "@testing-library/preact": "^3.2.4",
         "@vitest/coverage-v8": "^3.2.4",
         "eslint": "^9.31.0",
         "jsdom": "^26.1.0",
@@ -24,9 +28,11 @@
         "vitest": "^3.2.4"
     },
     "dependencies": {
+        "@preact/signals": "^2.3.1",
         "clsx": "^2.1.1",
         "crelt": "^1.0.6",
         "microscope-sass": "^2.0.0",
+        "preact": "^10.27.0",
         "prosemirror-example-setup": "^1.2.3",
         "prosemirror-menu": "^1.2.5",
         "prosemirror-model": "^1.25.2",

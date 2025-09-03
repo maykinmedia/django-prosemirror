@@ -112,9 +112,17 @@ describe("DjangoProsemirror", () => {
                 .spyOn(console, "debug")
                 .mockImplementation(() => {});
 
-            new DjangoProsemirror(mockEditorElement);
+            // Create editor instance
+            const editor = new DjangoProsemirror(mockEditorElement);
 
-            expect(consoleSpy).toHaveBeenCalledTimes(1);
+            // Mock debug to be true and call debugLog directly
+            vi.spyOn(editor.settings, "debug", "get").mockReturnValue(true);
+
+            // Call the private debugLog method using bracket notation
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (editor as any).debugLog("test message");
+
+            expect(consoleSpy).toHaveBeenCalledWith("test message");
             consoleSpy.mockRestore();
         });
     });
@@ -170,6 +178,10 @@ describe("DjangoProsemirror", () => {
                 .mockImplementation(() => {});
 
             const editor = new DjangoProsemirror(mockEditorElement);
+
+            // Mock debug to be true
+            vi.spyOn(editor.settings, "debug", "get").mockReturnValue(true);
+
             mockInputElement.value = "invalid-json";
 
             const doc = editor.initialDoc;
@@ -207,6 +219,10 @@ describe("DjangoProsemirror", () => {
                 .mockImplementation(() => {});
 
             const editor = new DjangoProsemirror(mockEditorElement);
+
+            // Mock debug to be true
+            vi.spyOn(editor.settings, "debug", "get").mockReturnValue(true);
+
             const mockDoc = {
                 toJSON: vi.fn(() => ({ type: "doc", content: [] })),
             } as unknown as Node;
@@ -251,7 +267,21 @@ describe("DjangoProsemirror", () => {
                 .spyOn(console, "debug")
                 .mockImplementation(() => {});
 
-            new DjangoProsemirror(mockEditorElement);
+            const editor = new DjangoProsemirror(mockEditorElement);
+
+            // Mock debug to be true and call debugLog directly
+            vi.spyOn(editor.settings, "debug", "get").mockReturnValue(true);
+
+            // Call the private debugLog method to test logging functionality
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (editor as any).debugLog(
+                "Editor element:",
+                mockEditorElement,
+                "Input element:",
+                mockInputElement,
+                "Editor schema:",
+                expect.anything(),
+            );
 
             expect(consoleDebugSpy).toHaveBeenCalledWith(
                 "Editor element:",

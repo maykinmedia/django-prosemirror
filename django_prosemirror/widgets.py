@@ -4,6 +4,7 @@ import json
 from collections.abc import Mapping
 
 from django.forms.widgets import Widget
+from django.urls import reverse
 
 from django_prosemirror.config import ProsemirrorConfig
 from django_prosemirror.schema import MarkType, NodeType
@@ -49,6 +50,7 @@ class ProsemirrorWidget(Widget):
         )
         attrs["classes"] = json.dumps(self.config.tag_to_classes)
         attrs["history"] = json.dumps(self.config.history)
+        attrs["filer_upload_url"] = reverse("filer_upload_handler")
         return attrs
 
     class Media:

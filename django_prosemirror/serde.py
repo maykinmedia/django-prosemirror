@@ -18,7 +18,7 @@ def _clean_empty_attrs(doc: ProsemirrorDocument, schema: Schema) -> ProsemirrorD
     This function cleans those up to match the expected document structure.
 
     Also removes marks from text nodes inside nodes that don't allow marks (like code_
-    block).
+    block). Additionally, removes node attributes that match their default values.
     """
 
     def clean_node(node: dict, parent_node_type=None):
@@ -33,6 +33,24 @@ def _clean_empty_attrs(doc: ProsemirrorDocument, schema: Schema) -> ProsemirrorD
             parent_node_spec = schema.nodes.get(parent_node_type)
             if parent_node_spec and parent_node_spec.spec.get("marks") == "":
                 parent_disallows_marks = True
+
+        # Clean up image node attributes that match default values
+        if node_type == "image" and "attrs" in node:
+            node_spec = schema.nodes.get(node_type)
+            if node_spec and hasattr(node_spec, "spec") and "attrs" in node_spec.spec:
+                cleaned_attrs = {}
+                for attr_name, attr_value in node["attrs"].items():
+                    attr_spec = node_spec.spec["attrs"].get(attr_name, {})
+                    default_value = attr_spec.get("default")
+                    # Keep attribute only if it doesn't match the default value
+                    if attr_value != default_value:
+                        cleaned_attrs[attr_name] = attr_value
+
+                # Update node with cleaned attrs, or remove attrs entirely if empty
+                if cleaned_attrs:
+                    node = {**node, "attrs": cleaned_attrs}
+                else:
+                    node = {k: v for k, v in node.items() if k != "attrs"}
 
         # Clean up marks in text nodes
         if node_type == "text" and "marks" in node:

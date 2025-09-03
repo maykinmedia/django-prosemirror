@@ -12,6 +12,7 @@ export interface IDPMSettings {
     classNames?: Record<string, string>;
     allowedNodes: Array<NodeType>;
     allowedMarks: Array<MarkType>;
+    uploadEndpoint?: string;
 }
 
 export enum LanguageCodeEnum {
@@ -77,4 +78,20 @@ export interface IDPMTranslations {
     "Row operations": string;
     "Column operations": string;
     "Cell operations": string;
+    "Change image": string;
+    Or: string;
+    "Open filer": string;
+    "Upload file": string;
+    "Current file": string;
+    "Current image": string;
+    Change: string;
+    "Change image in filer": string;
+    "Upload image": string;
+    "Edit image": string;
+    "Replace image file": string;
+    Caption: string;
+    "Change image settings": string;
+    "Enter image title": string;
+    "Enter image description": string;
+    "Enter image caption": string;
 }

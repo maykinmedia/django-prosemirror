@@ -1,5 +1,11 @@
+import {
+    imageToolbarMenuConfig,
+    imageToolbarPlugin,
+} from "@/plugins/image-toolbar-plugin";
+import { imageUploadPlugin } from "@/plugins/image-upload-plugin";
 import { buildMenuItems } from "@/plugins/menubar";
 import { tablePlugins } from "@/plugins/table";
+import { toolbarPlugin } from "@/plugins/toolbar-plugin";
 import { type DPMSettings } from "@/schema/settings";
 import { baseKeymap } from "prosemirror-commands";
 import { dropCursor } from "prosemirror-dropcursor";
@@ -11,31 +17,66 @@ import { menuBar } from "prosemirror-menu";
 import { Schema } from "prosemirror-model";
 import { Plugin } from "prosemirror-state";
 
-export interface DjangoProsemirrorSetup {
-    /** The model schema of the editor. */
-    schema: Schema;
-    /** Set to false to disable the menu bar. */
-    menubar?: boolean;
-    /** Set to false to disable the history plugin.*/
-    history?: boolean;
-    /** Set to false to make the menu bar non-floating. */
-    floatingMenu?: boolean;
-}
-
 /**
  * Get the plugins for the django prosemirror editor.
- * @param settings
- * @returns The array of
+ *
+ * Function specs:
+ * - Assembles and returns all ProseMirror plugins required for the editor
+ * - Configures core functionality: settings, toolbar creation, image handling
+ * - Includes standard editing features: input rules, keymaps, history, cursors
+ * - Conditionally adds table plugins based on schema support
+ * - Maintains proper plugin loading order for dependencies
+ *
+ * @param schema The ProseMirror schema defining document structure
+ * @param settings Configuration settings for the editor
+ * @returns Array of configured ProseMirror plugins
  */
 export function getDPMPlugins(
     schema: Schema,
-    settings?: DPMSettings,
+    settings: DPMSettings,
 ): (Plugin & {
     type?: string;
     config?: { content: unknown };
     schema?: unknown;
 })[] {
     const plugins = [
+        /**
+         * Core toolbar plugin
+         *
+         * Plugin specs:
+         * - Provides createToolbar factory method to other plugins
+         * - Manages contextual toolbar instances and positioning
+         * - Handles toolbar lifecycle (show/hide/destroy/update)
+         * - Supports both ProseMirror node and HTML element targeting
+         * - Must be loaded early as dependency for toolbar-using plugins
+         */
+        toolbarPlugin(),
+        /**
+         * Image upload and management plugin
+         *
+         * Plugin specs:
+         * - Handles image uploads via drag-and-drop and paste operations
+         * - Processes image resizing and format conversion
+         * - Provides keybindings for image deletion (delete, backspace, mod-i)
+         * - Manages image node creation and attribute updates
+         * - Integrates with backend upload endpoints
+         */
+        ...(schema.nodes.image
+            ? imageUploadPlugin(settings, !!schema.nodes.image)
+            : []),
+        /**
+         * Image-specific toolbar plugin
+         *
+         * Plugin specs:
+         * - Creates contextual toolbar for selected images
+         * - Provides image-specific actions (resize, align, delete, alt text)
+         * - Uses Preact components for UI rendering
+         * - Depends on both toolbarPlugin and imageUploadPlugin
+         * - Auto-positions relative to selected image nodes
+         */
+        ...(schema.nodes.image
+            ? [imageToolbarPlugin(imageToolbarMenuConfig)]
+            : []),
         /**
          * Table plugin for table cell editing and a floating menubar.
          */
@@ -88,5 +129,5 @@ export function getDPMPlugins(
 
     // if (settings.history !== false) plugins.push(history());
 
-    return plugins;
+    return plugins.filter((x) => !!x);
 }

@@ -23,6 +23,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.admin",
     "django_prosemirror",
+    "filer",
+    "easy_thumbnails",
     "testapp",
 ]
 
