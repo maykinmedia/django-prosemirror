@@ -18,6 +18,6 @@ export class HardBreakNode extends NodeDefinition {
     override parseDOM = [{ tag: "br" }];
     override toDOM(): DOMOutputSpec {
         const attrs = this.classMapping.apply_to_attrs({}, this.name);
-        return attrs ? ["br", attrs] : ["br"];
+        return ["br", attrs];
     }
 }

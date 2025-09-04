@@ -21,6 +21,6 @@ export class StrikeThroughMark extends MarkDefinition {
     ];
     override toDOM(): DOMOutputSpec {
         const attrs = this.classMapping.apply_to_attrs({}, this.name);
-        return attrs ? ["s", attrs, 0] : ["s", 0];
+        return ["s", attrs, 0];
     }
 }

@@ -18,6 +18,6 @@ export class BlockQuoteNode extends NodeDefinition {
     override parseDOM = [{ tag: "blockquote" }];
     override toDOM(): DOMOutputSpec {
         const attrs = this.classMapping.apply_to_attrs({}, this.name);
-        return attrs ? ["blockquote", attrs, 0] : ["blockquote", 0];
+        return ["blockquote", attrs, 0];
     }
 }

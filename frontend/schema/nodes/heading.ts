@@ -29,8 +29,6 @@ export class HeadingNode extends NodeDefinition {
     override toDOM(node: Node): DOMOutputSpec {
         const attrs = this.classMapping.apply_to_attrs({}, this.name);
         // const level = node?.attrs?.level ?? 1;
-        return attrs
-            ? ["h" + (node?.attrs?.level ?? 1), attrs, 0]
-            : ["h" + (node?.attrs?.level ?? 1), 0];
+        return ["h" + (node?.attrs?.level ?? 1), attrs, 0];
     }
 }

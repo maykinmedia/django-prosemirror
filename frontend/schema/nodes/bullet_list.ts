@@ -17,6 +17,6 @@ export class BulletListNode extends NodeDefinition {
     override parseDOM = [{ tag: "ul" }];
     override toDOM(): DOMOutputSpec {
         const attrs = this.classMapping.apply_to_attrs({}, this.name);
-        return attrs ? ["ul", attrs, 0] : ["ul", 0];
+        return ["ul", attrs, 0];
     }
 }
