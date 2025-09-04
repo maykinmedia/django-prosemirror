@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect, useLayoutEffect } from "preact/hooks";
-import { FunctionComponent as FC } from "preact";
 import { translate } from "@/i18n/translations";
 import {
     ToolbarModalFormField,
@@ -7,20 +6,20 @@ import {
 } from "@/plugins/toolbar-plugin";
 import { ImageDOMAttrs } from "@/schema/nodes/image";
 
-export const ToolbarModalForm: FC<IToolbarModalFormProps<ImageDOMAttrs>> = ({
+export const ToolbarModalForm = <
+    D extends Record<string, unknown> = ImageDOMAttrs,
+>({
     isOpen,
     onClose,
     triggerRef,
     formProps,
     view,
-}) => {
+}: IToolbarModalFormProps<D>) => {
     const modalRef = useRef<HTMLDivElement>(null);
     const [position, setPosition] = useState({ top: -9999, left: -9999 }); // Start offscreen to prevent flash
 
     // Form state
-    const [formState, setFormState] = useState<ImageDOMAttrs>(
-        {} as ImageDOMAttrs,
-    );
+    const [formState, setFormState] = useState<D>({} as D);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -35,7 +34,7 @@ export const ToolbarModalForm: FC<IToolbarModalFormProps<ImageDOMAttrs>> = ({
             calculatePosition();
         } else if (!isOpen) {
             // Clear form data when modal closes
-            setFormState({} as ImageDOMAttrs);
+            setFormState({} as D);
             setError(null);
         }
     }, [isOpen, formProps.initialData]);
@@ -161,7 +160,7 @@ export const ToolbarModalForm: FC<IToolbarModalFormProps<ImageDOMAttrs>> = ({
                     <ToolbarModalFormField
                         key={index}
                         {...field}
-                        value={formState[field.name] || ""}
+                        value={(formState[field.name] || "") as string}
                         onChange={(value: string) => {
                             setFormState((prev) => ({
                                 ...prev,

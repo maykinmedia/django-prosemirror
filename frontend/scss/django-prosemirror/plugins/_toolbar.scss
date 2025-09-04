@@ -90,7 +90,7 @@
 
     &-button {
       position: relative;
-      padding-right: 20px;
+      padding-inline: 4px 20px;
       width: fit-content;
 
       &::after {
@@ -135,7 +135,6 @@
       border-bottom: 1px solid var(--color-gray-lightest);
       border: none;
       background: transparent;
-      width: 100%;
       text-align: left;
       text-decoration: none;
 

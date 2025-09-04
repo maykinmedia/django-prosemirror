@@ -17,7 +17,7 @@ export const imageToolbarMenuConfig: CreateMenuItems<Node, ImageDOMAttrs> = (
             title: translate("Replace image file"),
             enabled: (state) => {
                 // Check if target has a valid src
-                if (!target.attrs.src) {
+                if (!target || !target.attrs.src) {
                     return false;
                 }
 
@@ -49,7 +49,7 @@ export const imageToolbarMenuConfig: CreateMenuItems<Node, ImageDOMAttrs> = (
         {
             icon: "changeAlt",
             title: translate("Change image settings"),
-            enabled: () => Boolean(target.attrs.src),
+            enabled: () => Boolean(target && target.attrs.src),
             modalFormProps: {
                 title: translate("Change image settings"),
                 fields: [
@@ -79,7 +79,10 @@ export const imageToolbarMenuConfig: CreateMenuItems<Node, ImageDOMAttrs> = (
                 ],
                 initialData: async (state) => {
                     const uploader = state["image-upload-plugin$"]?.uploader;
-                    if (!uploader) return target.attrs as ImageDOMAttrs;
+
+                    if (!target) return {} as ImageDOMAttrs;
+
+                    if (!uploader) return target?.attrs as ImageDOMAttrs;
 
                     try {
                         const data = await uploader.getImageAttributes(
@@ -106,6 +109,8 @@ export const imageToolbarMenuConfig: CreateMenuItems<Node, ImageDOMAttrs> = (
                         );
                         return;
                     }
+
+                    if (!target || !view) return;
 
                     const fallback = target.attrs as ImageNodeAttrs;
 

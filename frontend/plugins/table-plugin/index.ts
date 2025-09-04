@@ -1,6 +1,7 @@
 import { columnResizing, goToNextCell, tableEditing } from "prosemirror-tables";
 import { keymap } from "prosemirror-keymap";
-import { tableToolbarPlugin } from "./table-toolbar";
+import { tableToolbarPlugin } from "./plugin";
+import { tableToolbarMenuConfig } from "./config";
 
 /**
  * ## Create table plugins
@@ -28,6 +29,6 @@ export const tablePlugins = () => {
             Tab: goToNextCell(1),
             "Shift-Tab": goToNextCell(-1),
         }),
-        tableToolbarPlugin(),
+        tableToolbarPlugin(tableToolbarMenuConfig),
     ];
 };

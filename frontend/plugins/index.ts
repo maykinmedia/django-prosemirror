@@ -4,7 +4,7 @@ import {
 } from "@/plugins/image-toolbar-plugin";
 import { imageUploadPlugin } from "@/plugins/image-upload-plugin";
 import { buildMenuItems } from "@/plugins/menubar";
-import { tablePlugins } from "@/plugins/table";
+import { tablePlugins } from "@/plugins/table-plugin";
 import { toolbarPlugin } from "@/plugins/toolbar-plugin";
 import { type DPMSettings } from "@/schema/settings";
 import { baseKeymap } from "prosemirror-commands";

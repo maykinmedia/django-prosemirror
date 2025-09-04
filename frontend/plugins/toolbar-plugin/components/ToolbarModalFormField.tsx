@@ -1,7 +1,9 @@
-import { FunctionComponent as FC } from "preact";
 import { IToolbarModalFormFieldProps } from "../types";
+import { ImageDOMAttrs } from "@/schema/nodes/image";
 
-export const ToolbarModalFormField: FC<IToolbarModalFormFieldProps> = ({
+export const ToolbarModalFormField = <
+    D extends Record<string, unknown> = ImageDOMAttrs,
+>({
     label,
     name,
     value,
@@ -9,7 +11,7 @@ export const ToolbarModalFormField: FC<IToolbarModalFormFieldProps> = ({
     type = "text",
     required = false,
     placeholder,
-}) => {
+}: IToolbarModalFormFieldProps<D>) => {
     if (type === "hidden") {
         return <input type="hidden" name={name} value={value} />;
     }
