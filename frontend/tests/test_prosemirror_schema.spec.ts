@@ -669,8 +669,6 @@ describe("DjangoProsemirrorSchema", () => {
             expect(getAttrsFn?.("700" as HTMLElement & string)).toBeNull();
             expect(getAttrsFn?.("normal" as HTMLElement & string)).toBeFalsy();
             expect(getAttrsFn?.("400" as HTMLElement & string)).toBeFalsy();
-
-            // Test clearMarkFn
         });
 
         it("should return correct code mark spec", () => {
