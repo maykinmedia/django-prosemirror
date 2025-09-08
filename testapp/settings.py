@@ -59,7 +59,7 @@ STATIC_ROOT = BASE_DIR / "static"
 
 ROOT_URLCONF = "testapp.urls"
 
-PROSEMIRROR_CONFIG = {
+DJANGO_PROSEMIRROR = {
     "tag_to_classes": {
         "paragraph": "from_settings",
         "heading": "from_settings",
