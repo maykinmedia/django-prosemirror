@@ -112,6 +112,17 @@ class ProsemirrorConfig:
                 "allowed_mark_types must be an iterable of MarkType enums"
             ) from None
 
+        # Validate IMAGE node type dependencies
+        if NodeType.IMAGE in self.allowed_node_types:
+            try:
+                import filer  # noqa: F401
+            except ImportError as exc:
+                from django.core.exceptions import ImproperlyConfigured
+
+                raise ImproperlyConfigured(
+                    "To use IMAGE node type, you must install django-filer"
+                ) from exc
+
     @staticmethod
     def _create_nodes(class_mapping) -> dict[NodeType, NodeDefinition]:
         """Create all available node instances with class mapping."""

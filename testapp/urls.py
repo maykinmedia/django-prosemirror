@@ -12,8 +12,15 @@ urlpatterns = [
     path("model-form", views.model_form_view),
     path("admin/", admin.site.urls),
     path("prosemirror/", include("django_prosemirror.urls")),
-    path("", include("filer.server.urls")),
 ]
+
+# Include filer URLs only if filer is available
+try:
+    import filer  # noqa: F401
+
+    urlpatterns.append(path("", include("filer.server.urls")))
+except ImportError:
+    pass
 
 # NOTE: The staticfiles_urlpatterns also discovers static files (ie.
 # no need to run collectstatic). Both the static folder and the media

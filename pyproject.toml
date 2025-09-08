@@ -79,6 +79,9 @@ namespaces = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 DJANGO_SETTINGS_MODULE = "testapp.settings"
+markers = [
+    "nofiler: marks tests as requiring no filer dependency (deselect with '-m \"not nofiler\"')",
+]
 
 [tool.bumpversion]
 current_version = "0.1.0"
