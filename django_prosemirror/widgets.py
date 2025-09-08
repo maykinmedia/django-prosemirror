@@ -50,7 +50,11 @@ class ProsemirrorWidget(Widget):
         )
         attrs["classes"] = json.dumps(self.config.tag_to_classes)
         attrs["history"] = json.dumps(self.config.history)
-        attrs["filer_upload_url"] = reverse("filer_upload_handler")
+        # Check if IMAGE node type is enabled and filer is available
+        has_image_support = NodeType.IMAGE in self.config.allowed_node_types
+        attrs["filer_upload_url"] = (
+            reverse("filer_upload_handler") if has_image_support else None
+        )
         return attrs
 
     class Media:

@@ -23,10 +23,21 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.admin",
     "django_prosemirror",
-    "filer",
-    "easy_thumbnails",
     "testapp",
 ]
+
+try:
+    import filer  # noqa: F401, I001
+    import easy_thumbnails  # noqa: F401
+
+    INSTALLED_APPS.extend(
+        [
+            "filer",
+            "easy_thumbnails",
+        ]
+    )
+except ModuleNotFoundError:
+    pass
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -72,5 +83,5 @@ DJANGO_PROSEMIRROR = {
         "bullet_list": "from_settings",
         "list_item": "from_settings",
         "horizontal_rule": "from_settings",
-    }
+    },
 }
