@@ -26,7 +26,7 @@ export class CodeBlockNode extends NodeDefinition {
             { spellcheck: false },
             this.name,
         );
-        return attrs ? ["pre", attrs, this.codeToDOM] : ["pre", this.codeToDOM];
+        return ["pre", attrs, this.codeToDOM];
     }
     /**
      * Helper property to get the correct toDOM of the inner code mark.

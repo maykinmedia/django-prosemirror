@@ -15,6 +15,6 @@ export class CodeMark extends MarkDefinition {
     override parseDOM = [{ tag: "code" }];
     override toDOM(): DOMOutputSpec {
         const attrs = this.classMapping.apply_to_attrs({}, this.name);
-        return attrs ? ["code", attrs, 0] : ["code", 0];
+        return ["code", attrs, 0];
     }
 }

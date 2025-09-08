@@ -17,6 +17,6 @@ export class ParagraphNode extends NodeDefinition {
     override parseDOM = [{ tag: "p" }];
     override toDOM(): DOMOutputSpec {
         const attrs = this.classMapping.apply_to_attrs({}, this.name);
-        return attrs ? ["p", attrs, 0] : ["p", 0];
+        return ["p", attrs, 0];
     }
 }

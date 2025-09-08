@@ -15,6 +15,6 @@ export class UnderlineMark extends MarkDefinition {
     override parseDOM = [{ tag: "u" }, { style: "text-decoration=underline" }];
     override toDOM(): DOMOutputSpec {
         const attrs = this.classMapping.apply_to_attrs({}, this.name);
-        return attrs ? ["u", attrs, 0] : ["u", 0];
+        return ["u", attrs, 0];
     }
 }
