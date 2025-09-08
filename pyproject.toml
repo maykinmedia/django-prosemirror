@@ -3,15 +3,27 @@ requires = ["setuptools>=61.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "django_prosemirror"
+name = "maykin-django-prosemirror"
 version = "0.1.0"
-description = "TODO"
+description = "Rich-text fields for Django using Prosemirror - a powerful, schema-driven rich text editor."
 authors = [
     {name = "Maykin Media", email = "support@maykinmedia.nl"}
 ]
 readme = "README.rst"
 license = {file = "LICENSE"}
-keywords = ["TODO"]
+keywords = [
+    "Django",
+    "Prosemirror",
+    "rich-text",
+    "editor",
+    "document",
+    "JSON",
+    "WYSIWYG",
+    "content editor",
+    "text editor",
+    "markdown",
+    "html",
+]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Framework :: Django",
@@ -21,6 +33,7 @@ classifiers = [
     "Operating System :: Unix",
     "Operating System :: MacOS",
     "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: Libraries :: Python Modules",
@@ -32,10 +45,10 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/maykinmedia/django_prosemirror"
-Documentation = "http://django_prosemirror.readthedocs.io/en/latest/"
-"Bug Tracker" = "https://github.com/maykinmedia/django_prosemirror/issues"
-"Source Code" = "https://github.com/maykinmedia/django_prosemirror"
+Homepage = "https://github.com/maykinmedia/django-prosemirror"
+Documentation = "http://django-prosemirror.readthedocs.io/en/latest/"
+"Bug Tracker" = "https://github.com/maykinmedia/django-prosemirror/issues"
+"Source Code" = "https://github.com/maykinmedia/django-prosemirror"
 
 [project.optional-dependencies]
 tests = [
@@ -60,6 +73,7 @@ release = [
 
 [tool.setuptools.packages.find]
 include = ["django_prosemirror*"]
+exclude = ["tests*", "testapp*", "build*", "docs*"]
 namespaces = true
 
 [tool.pytest.ini_options]

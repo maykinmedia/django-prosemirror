@@ -5,7 +5,7 @@ django-prosemirror
 
 :Version: 0.1.0
 :Source: https://github.com/maykinmedia/django_prosemirror
-:Keywords: Django, Prosemirror, rich-text, editor, document, JSON, WYSIWIG
+:Keywords: Django, Prosemirror, rich-text, editor, document, JSON, WYSIWYG, content editor, text editor, markdown, html
 :PythonVersion: 3.11+
 
 |build-status| |code-quality| |ruff| |coverage| |docs|
@@ -45,7 +45,7 @@ Install
 
 .. code-block:: bash
 
-    pip install django_prosemirror
+    pip install maykin-django-prosemirror
 
 Add to your Django settings:
 
