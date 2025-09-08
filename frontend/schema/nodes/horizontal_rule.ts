@@ -16,6 +16,6 @@ export class HorizontalRuleNode extends NodeDefinition {
     override parseDOM = [{ tag: "hr" }];
     override toDOM(): DOMOutputSpec {
         const attrs = this.classMapping.apply_to_attrs({}, this.name);
-        return attrs ? ["hr", attrs] : ["hr"];
+        return ["hr", attrs];
     }
 }

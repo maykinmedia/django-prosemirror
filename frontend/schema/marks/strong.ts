@@ -33,6 +33,6 @@ export class StrongMark extends MarkDefinition {
     ];
     override toDOM(): DOMOutputSpec {
         const attrs = this.classMapping.apply_to_attrs({}, this.name);
-        return attrs ? ["strong", attrs, 0] : ["strong", 0];
+        return ["strong", attrs, 0];
     }
 }

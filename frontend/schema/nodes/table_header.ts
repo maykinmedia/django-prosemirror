@@ -32,7 +32,7 @@ export class TableHeaderNode extends NodeDefinition {
     override toDOM(node: Node): DOMOutputSpec {
         let attrs = this._setCellAttrs(node);
         attrs = this.classMapping.apply_to_attrs(attrs, this.name);
-        return attrs ? ["th", attrs, 0] : ["th", 0];
+        return ["th", attrs, 0];
     }
 
     private _getCellAttrs(element: HTMLElement) {

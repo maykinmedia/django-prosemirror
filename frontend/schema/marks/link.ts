@@ -42,6 +42,6 @@ export class LinkMark extends MarkDefinition {
             },
             this.name,
         );
-        return attrs ? ["a", attrs, 0] : ["a", 0];
+        return ["a", attrs, 0];
     }
 }

@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { Mark, Node, Schema, StyleParseRule } from "prosemirror-model";
 import { MarkType, NodeType } from "@/schema/types";
 import { IDPMSettings, LanguageCodeEnum } from "@/types/types";
@@ -149,6 +149,13 @@ describe("DjangoProsemirrorSchema", () => {
                 ).toEqual([`h${i}`, {}, 0]);
             }
 
+            // Test toDOM function without level
+            expect(
+                headingSpec.toDOM?.({
+                    attrs: {},
+                } as unknown as Node),
+            ).toEqual(["h1", {}, 0]);
+
             deepEqual(new HeadingNode(classMapping).spec, headingSpec);
         });
 
@@ -199,6 +206,7 @@ describe("DjangoProsemirrorSchema", () => {
                     };
                     return attrs[attr as keyof typeof attrs];
                 },
+                dataset: { caption: "caption" },
             };
             const parseDOMRule = imageSpec.parseDOM?.[0];
             const attrs = parseDOMRule?.getAttrs?.(mockDOM as HTMLElement);
@@ -206,7 +214,7 @@ describe("DjangoProsemirrorSchema", () => {
                 src: "test.jpg",
                 alt: "Test image",
                 title: "Test title",
-                caption: null,
+                caption: "caption",
                 imageId: undefined,
             });
 
@@ -216,11 +224,17 @@ describe("DjangoProsemirrorSchema", () => {
                         src: "test.jpg",
                         alt: "Test alt",
                         title: "Test title",
+                        caption: "test caption",
                     },
                 } as unknown as Node),
             ).toEqual([
                 "img",
-                { src: "test.jpg", alt: "Test alt", title: "Test title" },
+                {
+                    src: "test.jpg",
+                    alt: "Test alt",
+                    title: "Test title",
+                    "data-caption": "test caption",
+                },
             ]);
 
             deepEqual(new ImageNode(classMapping).spec, imageSpec);
@@ -347,6 +361,196 @@ describe("DjangoProsemirrorSchema", () => {
             const tableCellSpec = DPMSchemaCls.schema.nodes.table_cell.spec;
             deepEqual(new TableCellNode(classMapping).spec, tableCellSpec);
         });
+
+        describe("test table_cell attrs", () => {
+            it("should set correct attrs", () => {
+                // @ts-expect-error this is a valid statement, but the ts type is incorrect.
+                const defaultCell = new Node("table_cell", {
+                    colspan: 1,
+                    rowspan: 1,
+                });
+                expect(
+                    new TableCellNode(classMapping).toDOM(defaultCell),
+                ).toEqual(["td", {}, 0]);
+
+                // Col-span
+                // @ts-expect-error this is a valid statement, but the ts type is incorrect.
+                const cellWithColspan = new Node("table_cell", {
+                    colspan: 4,
+                    rowspan: 1,
+                });
+                expect(
+                    new TableCellNode(classMapping).toDOM(cellWithColspan),
+                ).toEqual(["td", { colspan: 4 }, 0]);
+
+                // Row-span
+                // @ts-expect-error this is a valid statement, but the ts type is incorrect.
+                const cellWithRowspan = new Node("table_cell", {
+                    colspan: 1,
+                    rowspan: 3,
+                });
+                expect(
+                    new TableCellNode(classMapping).toDOM(cellWithRowspan),
+                ).toEqual(["td", { rowspan: 3 }, 0]);
+
+                // Both
+                // @ts-expect-error this is a valid statement, but the ts type is incorrect.
+                const cellWithBothSpans = new Node("table_cell", {
+                    colspan: 2,
+                    rowspan: 2,
+                });
+                expect(
+                    new TableCellNode(classMapping).toDOM(cellWithBothSpans),
+                ).toEqual(["td", { rowspan: 2, colspan: 2 }, 0]);
+
+                // Colwidth
+                // @ts-expect-error this is a valid statement, but the ts type is incorrect.
+                const cellWithColwidth = new Node("table_cell", {
+                    colspan: 2,
+                    rowspan: 2,
+                    colwidth: ["10"],
+                });
+                expect(
+                    new TableCellNode(classMapping).toDOM(cellWithColwidth),
+                ).toEqual([
+                    "td",
+                    { rowspan: 2, colspan: 2, "data-colwidth": "10" },
+                    0,
+                ]);
+            });
+
+            it("should get correct attrs", () => {
+                const node = new TableCellNode(classMapping);
+
+                // element is a string
+                const stringAttrs = node.parseDOM[0].getAttrs?.(
+                    "" as unknown as HTMLElement,
+                );
+                expect(stringAttrs).toEqual({});
+
+                // Return only once a value for getAttribute so the next time it returns null.
+                const mockElement = {
+                    getAttribute: vi.fn().mockReturnValueOnce("10"),
+                };
+                const attrWithColwidth = node.parseDOM[0].getAttrs?.(
+                    mockElement as unknown as HTMLElement,
+                );
+                expect(attrWithColwidth).toEqual({
+                    colspan: 1,
+                    colwidth: [10],
+                    rowspan: 1,
+                });
+
+                const attrWithoutColwidth = node.parseDOM[0].getAttrs?.(
+                    mockElement as unknown as HTMLElement,
+                );
+                expect(attrWithoutColwidth).toEqual({
+                    colspan: 1,
+                    colwidth: null,
+                    rowspan: 1,
+                });
+            });
+        });
+
+        describe("test table_header attrs", () => {
+            it("should set correct attrs", () => {
+                // @ts-expect-error this is a valid statement, but the ts type is incorrect.
+                const defaultCell = new Node("table_header", {
+                    colspan: 1,
+                    rowspan: 1,
+                });
+                expect(
+                    new TableHeaderNode(classMapping).toDOM(defaultCell),
+                ).toEqual(["th", {}, 0]);
+
+                // Col-span
+                // @ts-expect-error this is a valid statement, but the ts type is incorrect.
+                const cellWithColspan = new Node("table_cell", {
+                    colspan: 4,
+                    rowspan: 1,
+                });
+                expect(
+                    new TableHeaderNode(classMapping).toDOM(cellWithColspan),
+                ).toEqual(["th", { colspan: 4 }, 0]);
+
+                // Row-span
+                // @ts-expect-error this is a valid statement, but the ts type is incorrect.
+                const cellWithRowspan = new Node("table_cell", {
+                    colspan: 1,
+                    rowspan: 3,
+                });
+                expect(
+                    new TableHeaderNode(classMapping).toDOM(cellWithRowspan),
+                ).toEqual(["th", { rowspan: 3 }, 0]);
+
+                // Both
+                // @ts-expect-error this is a valid statement, but the ts type is incorrect.
+                const cellWithBothSpans = new Node("table_cell", {
+                    colspan: 2,
+                    rowspan: 2,
+                });
+                expect(
+                    new TableHeaderNode(classMapping).toDOM(cellWithBothSpans),
+                ).toEqual(["th", { rowspan: 2, colspan: 2 }, 0]);
+
+                // Colwidth
+                // @ts-expect-error this is a valid statement, but the ts type is incorrect.
+                const cellWithColwidth = new Node("table_cell", {
+                    colspan: 2,
+                    rowspan: 2,
+                    colwidth: ["10"],
+                });
+                expect(
+                    new TableHeaderNode(classMapping).toDOM(cellWithColwidth),
+                ).toEqual([
+                    "th",
+                    { rowspan: 2, colspan: 2, "data-colwidth": "10" },
+                    0,
+                ]);
+            });
+
+            it("should get correct attrs", () => {
+                const node = new TableHeaderNode(classMapping);
+
+                // element is a string
+                const stringAttrs = node.parseDOM[0].getAttrs?.(
+                    "" as unknown as HTMLElement,
+                );
+                expect(stringAttrs).toEqual({});
+
+                // Return only once a value for getAttribute so the next time it returns null.
+                const mockElement = {
+                    getAttribute: vi.fn().mockReturnValueOnce("10"),
+                };
+                const attrWithColwidth = node.parseDOM[0].getAttrs?.(
+                    mockElement as unknown as HTMLElement,
+                );
+                expect(attrWithColwidth).toEqual({
+                    colspan: 1,
+                    colwidth: [10],
+                    rowspan: 1,
+                });
+
+                const attrWithoutColwidth = node.parseDOM[0].getAttrs?.(
+                    mockElement as unknown as HTMLElement,
+                );
+                expect(attrWithoutColwidth).toEqual({
+                    colspan: 1,
+                    colwidth: null,
+                    rowspan: 1,
+                });
+            });
+        });
+
+        describe("test table_row attrs", () => {
+            it("should set correct attrs", () => {
+                expect(new TableRowNode(classMapping).toDOM()).toEqual([
+                    "tr",
+                    {},
+                    0,
+                ]);
+            });
+        });
     });
 
     describe("Mark Specs", () => {
@@ -429,7 +633,35 @@ describe("DjangoProsemirrorSchema", () => {
                 0,
             ]);
 
-            // Test font-weight getAttrs function
+            // Test getAttrs fn in parseDOM[1]
+            const getAttrsFn2 = strongSpec.parseDOM?.[1].getAttrs;
+            expect(
+                getAttrsFn2?.({
+                    style: { fontWeight: "normal" },
+                } as unknown as HTMLElement & string),
+            ).toBe(false);
+            expect(
+                getAttrsFn2?.({
+                    style: { fontWeight: "bold" },
+                } as unknown as HTMLElement & string),
+            ).toBe(null);
+            expect(
+                getAttrsFn2?.({
+                    style: { fontWeight: null },
+                } as unknown as HTMLElement & string),
+            ).toBe(null);
+
+            // Test clearMark fn in parseDOM[2]
+            const clearMark = (strongSpec.parseDOM?.[2] as StyleParseRule)
+                .clearMark;
+            expect(clearMark?.({ type: { name: "strong" } } as Mark)).toBe(
+                true,
+            );
+            expect(clearMark?.({ type: { name: "normal" } } as Mark)).toBe(
+                false,
+            );
+
+            // Test getAttrs fn in parseDOM[3]
             const getAttrsFn = strongSpec.parseDOM?.[3].getAttrs;
             expect(getAttrsFn?.("bold" as HTMLElement & string)).toBeNull();
             expect(getAttrsFn?.("bolder" as HTMLElement & string)).toBeNull();

@@ -17,6 +17,6 @@ export class ListItemNode extends NodeDefinition {
     override parseDOM = [{ tag: "li" }];
     override toDOM(): DOMOutputSpec {
         const attrs = this.classMapping.apply_to_attrs({}, this.name);
-        return attrs ? ["li", attrs, 0] : ["li", 0];
+        return ["li", attrs, 0];
     }
 }

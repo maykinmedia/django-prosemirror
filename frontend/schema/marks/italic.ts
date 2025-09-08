@@ -24,6 +24,6 @@ export class ItalicMark extends MarkDefinition {
 
     override toDOM(): DOMOutputSpec {
         const attrs = this.classMapping.apply_to_attrs({}, this.name);
-        return attrs ? ["em", attrs, 0] : ["em", 0];
+        return ["em", attrs, 0];
     }
 }
