@@ -6,19 +6,13 @@ import { signal } from "@preact/signals";
 import { IToolbarInstance, CreateMenuItems, IToolbarMenuItem } from "../types";
 import { ToolbarComponent } from "./ToolbarComponent";
 import { isImageSelected } from "@/utils";
-import { ImageDOMAttrs } from "@/schema/nodes/image";
-// import { ImageDOMAttrs } from "@/schema/nodes/image";
-
-// type MenuItemGuard<D extends unk = ImageDOMAttrs> = D extends ImageDOMAttrs ? ImageDOMAttrs : D[] | null
 
 /**
  * Preact-first base toolbar instance that uses dynamic components
  * Refactored to mount once and update via signals instead of full re-renders
  */
-export class ToolbarInstance<
-    T extends Node = Node,
-    D extends Record<string, unknown> = ImageDOMAttrs,
-> implements IToolbarInstance
+export class ToolbarInstance<T extends Node, D extends Record<string, unknown>>
+    implements IToolbarInstance
 {
     public view: EditorView;
     protected target: T;
@@ -35,17 +29,20 @@ export class ToolbarInstance<
         name: "view",
     });
     private targetSignal = signal<T | null>(null, { name: "target" });
+    private id: string;
 
     constructor(
         view: EditorView,
         target: T,
         createMenuItems: CreateMenuItems<T, D>,
         shouldShow: (view: EditorView) => boolean = isImageSelected,
+        id: string = "toolbar",
     ) {
         this.view = view;
         this.target = target;
         this.createMenuItems = createMenuItems;
         this.shouldShow = shouldShow;
+        this.id = id;
 
         // Create and append DOM container
         this.dom = crelt("div");
@@ -61,6 +58,7 @@ export class ToolbarInstance<
                 menuItems={this.menuItems}
                 isVisible={this.isVisible}
                 onItemClick={this.handleItemClick}
+                id={this.id}
             />,
             this.dom,
         );

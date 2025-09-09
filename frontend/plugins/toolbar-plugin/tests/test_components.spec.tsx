@@ -517,13 +517,6 @@ describe("toolbar-plugin/components", () => {
                 new Event("submit", { bubbles: true, cancelable: true }),
             );
 
-            // console.log(form);
-            // expect(() => form.submit()).not.toThrow();
-
-            // form.addEventListener("submit", () => {
-            // console.log("i actually submit!");
-            // });
-
             fireEvent.click(screen.getByRole("button", { name: "OK" }));
             expect(fieldprops.formProps.onSubmit).toHaveBeenCalled();
             expect(fieldprops.onClose).toHaveBeenCalled();

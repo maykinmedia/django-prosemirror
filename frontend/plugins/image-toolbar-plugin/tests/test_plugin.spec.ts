@@ -3,6 +3,7 @@ import {
     imageToolbarKey,
 } from "@/plugins/image-toolbar-plugin";
 import { CreateMenuItems, IToolbarInstance } from "@/plugins/toolbar-plugin";
+import { ImageDOMAttrs } from "@/schema/nodes/image";
 import * as utils from "@/utils";
 import { Node } from "prosemirror-model";
 import { EditorState } from "prosemirror-state";
@@ -17,7 +18,7 @@ vi.mock("@/utils", () => ({
 
 describe("image-toolbar-plugin/plugin", () => {
     let mockView: EditorView;
-    let mockConfig: CreateMenuItems<Node>;
+    let mockConfig: CreateMenuItems<Node, ImageDOMAttrs>;
     let mockCreateToolbar: Mock;
     let mockToolbarInstance: IToolbarInstance;
 
@@ -146,6 +147,7 @@ describe("image-toolbar-plugin/plugin", () => {
                     mockImageNode,
                     mockConfig,
                     expect.any(Function),
+                    "image-toolbar",
                 );
             });
 
@@ -266,10 +268,12 @@ describe("image-toolbar-plugin/plugin", () => {
 
     describe("plugin integration", () => {
         it("should work with different config functions", () => {
-            const altConfig: CreateMenuItems<Node> = vi.fn().mockReturnValue([
-                { icon: "image", title: "Replace image", command: vi.fn() },
-                { icon: "delete", title: "Delete image", command: vi.fn() },
-            ]);
+            const altConfig: CreateMenuItems<Node, ImageDOMAttrs> = vi
+                .fn()
+                .mockReturnValue([
+                    { icon: "image", title: "Replace image", command: vi.fn() },
+                    { icon: "delete", title: "Delete image", command: vi.fn() },
+                ]);
 
             const plugin = imageToolbarPlugin(altConfig);
             const view = plugin.spec.view!(mockView);
@@ -290,6 +294,7 @@ describe("image-toolbar-plugin/plugin", () => {
                 mockImageNode,
                 altConfig,
                 expect.any(Function),
+                "image-toolbar",
             );
         });
 
@@ -319,6 +324,7 @@ describe("image-toolbar-plugin/plugin", () => {
                 mockImageNode1,
                 mockConfig,
                 expect.any(Function),
+                "image-toolbar",
             );
             expect(mockCreateToolbar).toHaveBeenCalledTimes(1);
 
@@ -331,6 +337,7 @@ describe("image-toolbar-plugin/plugin", () => {
                 mockImageNode2,
                 mockConfig,
                 expect.any(Function),
+                "image-toolbar",
             );
             expect(mockCreateToolbar).toHaveBeenCalledTimes(2);
 

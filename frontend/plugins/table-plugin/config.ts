@@ -14,13 +14,11 @@ import {
 } from "prosemirror-tables";
 import { isHeaderColumnActive, isHeaderRowActive } from "@/utils";
 import { CreateMenuItems } from "../toolbar-plugin";
-// import { ImageDOMAttrs } from "@/schema/nodes/image";
 import { Node } from "prosemirror-model";
-import { ImageDOMAttrs } from "@/schema/nodes/image";
 
 export const tableToolbarMenuConfig: CreateMenuItems<
     Node,
-    ImageDOMAttrs
+    Record<string, unknown>
 > = () => [
     {
         icon: "rowDropdown",

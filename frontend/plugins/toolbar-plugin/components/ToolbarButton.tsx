@@ -5,7 +5,7 @@ import {
 } from "@/plugins/toolbar-plugin";
 import { ImageDOMAttrs } from "@/schema/nodes/image";
 import clsx from "clsx";
-import { ComponentChildren } from "preact";
+import { ComponentChildren, RefObject } from "preact";
 import { useRef } from "preact/hooks";
 import { EditorView } from "prosemirror-view";
 
@@ -16,7 +16,7 @@ interface ToolbarButtonProps<
     onItemClick: (item: IToolbarMenuItem<D>) => void;
     view: EditorView;
     onModalOpen?: (
-        triggerRef: React.RefObject<HTMLElement>,
+        triggerRef: RefObject<HTMLElement>,
         item: IToolbarMenuItem<D>,
     ) => void;
 }

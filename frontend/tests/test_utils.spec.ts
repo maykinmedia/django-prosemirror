@@ -293,7 +293,6 @@ describe("test utils folder", () => {
                 const result = getSelectedTableNode(
                     viewWithTable as unknown as EditorView,
                 );
-                console.log(result);
 
                 expect(result).toEqual(mockSelection.node);
             });
@@ -318,8 +317,6 @@ describe("test utils folder", () => {
                 // Use the default mockView which doesn't have a table selected
                 const result = getSelectedTableNode(mockView);
 
-                console.log(result);
-
                 // With our mock, findParentNodeOfType returns null, so result should be null
                 expect(result).toBeNull();
             });
@@ -341,8 +338,6 @@ describe("test utils folder", () => {
                 const result = getSelectedTableNode(
                     viewWithNonTable as unknown as EditorView,
                 );
-
-                console.log(result);
                 expect(result).toBeNull();
             });
         });

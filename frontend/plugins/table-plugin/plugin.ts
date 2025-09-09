@@ -1,6 +1,5 @@
 import { CreateMenuItems, ToolbarInstance } from "@/plugins/toolbar-plugin";
-import { ImageDOMAttrs } from "@/schema/nodes/image";
-import { getSelectedTableNode, isImageSelected, isInsideTable } from "@/utils";
+import { getSelectedTableNode, isInsideTable } from "@/utils";
 import { Node } from "prosemirror-model";
 import { Plugin, PluginKey } from "prosemirror-state";
 
@@ -8,16 +7,17 @@ import { Plugin, PluginKey } from "prosemirror-state";
 export const tableToolbarKey = new PluginKey("floatingTableToolbar");
 
 /**
- * Plugin to manage the floating image toolbar
+ * Plugin to manage the floating table toolbar
  * Depends on toolbar plugin being available via pluginMethods
  */
 export const tableToolbarPlugin = (
-    config: CreateMenuItems<Node, ImageDOMAttrs>,
+    config: CreateMenuItems<Node, Record<string, unknown>>,
 ) => {
     return new Plugin({
         key: tableToolbarKey,
         view() {
-            let toolbar: ToolbarInstance | null = null;
+            let toolbar: ToolbarInstance<Node, Record<string, unknown>> | null =
+                null;
             return {
                 update: (view, prevState) => {
                     try {
@@ -48,10 +48,9 @@ export const tableToolbarPlugin = (
                                 view,
                                 tableNode,
                                 config,
-                                isImageSelected,
+                                isInsideTable,
+                                "table-toolbar",
                             );
-
-                            console.log(toolbar);
                         }
                     } catch (err) {
                         console.error("Could not create image toolbar:", err);

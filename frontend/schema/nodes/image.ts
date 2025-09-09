@@ -10,13 +10,13 @@ export type ImageNodeAttrs = {
     title: string | null;
 };
 
-export type ImageDOMAttrs = {
+export interface ImageDOMAttrs extends Record<string, unknown> {
     alt: string;
     caption: string | null;
     id: string;
     src: string;
     title: string | null;
-};
+}
 
 /**
  * Class that returns the spec of a image node.

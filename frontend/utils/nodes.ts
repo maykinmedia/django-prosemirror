@@ -68,7 +68,6 @@ export function getSelectedTableNode(view: EditorView): Node | null {
         selection,
     );
 
-    console.log("do i access this");
     return tableParent ? tableParent.node : null;
 }
 

@@ -17,7 +17,7 @@ export const imageToolbarPlugin = (
     return new Plugin({
         key: imageToolbarKey,
         view() {
-            let toolbar: ToolbarInstance | null = null;
+            let toolbar: ToolbarInstance<Node, ImageDOMAttrs> | null = null;
             return {
                 update: (view, prevState) => {
                     try {
@@ -49,6 +49,7 @@ export const imageToolbarPlugin = (
                                 imageNode,
                                 config,
                                 isImageSelected,
+                                "image-toolbar",
                             );
                         }
                     } catch (err) {

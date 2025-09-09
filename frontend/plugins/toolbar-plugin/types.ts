@@ -5,19 +5,18 @@ import { ToolbarInstance } from "./components";
 import { Node } from "prosemirror-model";
 import { ImageDOMAttrs } from "@/schema/nodes/image";
 import { Signal } from "@preact/signals";
+import { RefObject } from "preact";
 
 /**
  * Methods for creating and managing toolbar instances.
  */
 export interface ToolbarMethods {
-    createToolbar: <
-        T extends Node = Node,
-        D extends Record<string, unknown> = ImageDOMAttrs,
-    >(
+    createToolbar: <T extends Node, D extends Record<string, unknown>>(
         view: EditorView,
         target: T,
         createMenuItems: CreateMenuItems<T, D>,
         shouldShow?: (view: EditorView) => boolean,
+        id?: string,
     ) => ToolbarInstance<T, D>;
 }
 
@@ -42,14 +41,14 @@ export interface IToolbarInstance {
  */
 export type CreateMenuItems<
     T,
-    D extends Record<string, unknown> = ImageDOMAttrs,
+    D extends Record<string, unknown> = Record<string, unknown>,
 > = (view?: EditorView, target?: T) => IToolbarMenuItem<D>[];
 
 /**
  * Configuration for a toolbar menu item.
  */
 export interface IToolbarMenuItem<
-    D extends Record<string, unknown> = ImageDOMAttrs,
+    D extends Record<string, unknown> = Record<string, unknown>,
 > {
     /** Display title for the menu item */
     title?: string;
@@ -105,7 +104,7 @@ export interface IToolbarPosition {
  * Props for the main toolbar component.
  */
 export interface IToolbarProps<
-    D extends Record<string, unknown> = ImageDOMAttrs,
+    D extends Record<string, unknown> = Record<string, unknown>,
 > {
     /** ProseMirror editor view */
     /** Target element (Node or HTML element) for positioning */
@@ -118,14 +117,15 @@ export interface IToolbarProps<
     /** Callback when a menu item is clicked */
     onItemClick: (item: IToolbarMenuItem<D>) => void;
     /** Optional callback when a modal is opened */
-    onModalOpen?: (triggerRef: React.RefObject<HTMLElement>) => void;
+    onModalOpen?: (triggerRef: RefObject<HTMLElement>) => void;
+    id?: string;
 }
 
 /**
  * Props for the toolbar dropdown component.
  */
 export interface IToolbarDropdownProps<
-    D extends Record<string, unknown> = ImageDOMAttrs,
+    D extends Record<string, unknown> = Record<string, unknown>,
 > {
     /** Menu item containing dropdown configuration */
     item: IToolbarMenuItem<D>;
@@ -139,7 +139,7 @@ export interface IToolbarDropdownProps<
  * Configuration for form fields in modal forms.
  */
 export interface IFormFieldConfig<
-    D extends Record<string, unknown> = ImageDOMAttrs,
+    D extends Record<string, unknown> = Record<string, unknown>,
 > {
     /** Name of the field, must match a key in InitialImageData */
     readonly name: Extract<keyof D, string>;
@@ -187,7 +187,7 @@ export interface IToolbarModalFormProps<
     /** Callback to close the modal */
     readonly onClose: VoidFunction;
     /** Reference to the trigger element for positioning */
-    readonly triggerRef: React.RefObject<HTMLElement> | null;
+    readonly triggerRef: RefObject<HTMLElement> | null;
     /** Form configuration props */
     readonly formProps: IToolbarModalFormFormProps<D>;
     /** ProseMirror editor view */

@@ -9,7 +9,7 @@ import {
 } from "@/plugins/toolbar-plugin";
 import { ImageDOMAttrs } from "@/schema/nodes/image";
 import clsx from "clsx";
-import { ComponentChildren, Fragment } from "preact";
+import { ComponentChildren, Fragment, RefObject } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { NodeSelection } from "prosemirror-state";
 
@@ -22,6 +22,7 @@ export const ToolbarComponent = <
     menuItems,
     onItemClick,
     onModalOpen,
+    id,
 }: IToolbarProps<D>): ComponentChildren => {
     const viewState = view?.value,
         targetState = target?.value,
@@ -32,9 +33,10 @@ export const ToolbarComponent = <
         top: -9999,
         left: -9999,
     });
+
+    const modalTrigRef = useRef<HTMLElement | null>(null);
+
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [modalTriggerRef, setModalTriggerRef] =
-        useState<React.RefObject<HTMLElement> | null>(null);
     const [currentModalItem, setCurrentModalItem] =
         useState<IToolbarMenuItem<D> | null>(null);
     const toolbarRef = useRef<HTMLDivElement>(null);
@@ -51,7 +53,8 @@ export const ToolbarComponent = <
         // Get target element - image or table
         if (
             selection instanceof NodeSelection &&
-            selection.node.type.name === "image"
+            selection.node.type.name === "image" &&
+            id === "image-toolbar"
         ) {
             const nodeDOM = viewState.nodeDOM(selection.from);
             targetRect = (nodeDOM as HTMLElement).getBoundingClientRect();
@@ -189,10 +192,10 @@ export const ToolbarComponent = <
     }, [viewState, targetState, isVisibleState]);
 
     const handleModalOpen = (
-        triggerRef: React.RefObject<HTMLElement>,
+        triggerRef: RefObject<HTMLElement>,
         item: IToolbarMenuItem<D>,
     ) => {
-        setModalTriggerRef(triggerRef);
+        modalTrigRef.current = triggerRef.current;
         setCurrentModalItem(item);
         setIsModalOpen(true);
         onModalOpen?.(triggerRef);
@@ -200,8 +203,8 @@ export const ToolbarComponent = <
 
     const handleModalClose = () => {
         setIsModalOpen(false);
-        setModalTriggerRef(null);
         setCurrentModalItem(null);
+        modalTrigRef.current = null;
     };
 
     return (
@@ -210,7 +213,7 @@ export const ToolbarComponent = <
                 <ToolbarModalForm
                     isOpen={isModalOpen}
                     onClose={handleModalClose}
-                    triggerRef={modalTriggerRef}
+                    triggerRef={modalTrigRef}
                     formProps={currentModalItem.modalFormProps}
                     view={viewState!}
                 />

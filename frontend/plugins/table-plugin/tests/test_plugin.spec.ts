@@ -148,6 +148,7 @@ describe("table-toolbar-plugin/plugin", () => {
                     mockTableNode,
                     mockConfig,
                     expect.any(Function),
+                    "table-toolbar",
                 );
             });
 
@@ -329,6 +330,7 @@ describe("table-toolbar-plugin/plugin", () => {
                 mockImageNode,
                 altConfig,
                 expect.any(Function),
+                "table-toolbar",
             );
         });
 
@@ -358,6 +360,7 @@ describe("table-toolbar-plugin/plugin", () => {
                 mockImageNode1,
                 mockConfig,
                 expect.any(Function),
+                "table-toolbar",
             );
             expect(mockCreateToolbar1).toHaveBeenCalledTimes(1);
 
@@ -370,6 +373,7 @@ describe("table-toolbar-plugin/plugin", () => {
                 mockImageNode2,
                 mockConfig,
                 expect.any(Function),
+                "table-toolbar",
             );
             expect(mockCreateToolbar1).toHaveBeenCalledTimes(2);
 

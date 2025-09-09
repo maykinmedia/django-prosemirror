@@ -30,12 +30,19 @@ export const toolbarPlugin = () => {
         state: {
             init() {
                 const methods: ToolbarMethods = {
-                    createToolbar(view, target, createMenuItems, shouldShow) {
+                    createToolbar(
+                        view,
+                        target,
+                        createMenuItems,
+                        shouldShow,
+                        id,
+                    ) {
                         return new ToolbarInstance(
                             view,
                             target,
                             createMenuItems,
                             shouldShow,
+                            id,
                         );
                     },
                 };

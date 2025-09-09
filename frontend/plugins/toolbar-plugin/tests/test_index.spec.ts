@@ -182,7 +182,7 @@ describe("toolbar-plugin/index", () => {
                 show: () => {},
                 hide: () => {},
                 destroy: () => {},
-            } as unknown as ToolbarInstance<Node>;
+            } as unknown as ToolbarInstance<Node, Record<string, unknown>>;
 
             const toolbarMenuItem: IToolbarMenuItem = {
                 title: "Test",
