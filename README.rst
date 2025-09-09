@@ -347,6 +347,43 @@ Create ProseMirror content programmatically:
     
     article = Article.objects.create(content=content)
 
+Custom CSRF source
+------------------
+
+You might want to use a custom source for the CSRF token where this is not available at first.
+Auto is the default and checks for the csrf hidden form input, meta tag and then the csrf cookie (in this order).
+
+.. code-block:: html
+    <!-- Custom example -->
+    <script>
+        window.PROSEMIRROR_CSRF_CONFIG = {
+            csrf_token_source: 'custom',
+            csrf_token_selector: '[data-app-csrf]',
+            csrf_token_attribute: 'data-token'
+        };
+    </script>
+    <!-- The token -->
+    <div data-app-csrf data-token="{{ csrf_token }}"></div>
+
+    <!-- Meta example -->
+    <script>
+        window.PROSEMIRROR_CSRF_CONFIG = { csrf_token_source: 'meta_tag' };
+    </script>
+    <!-- The token -->
+    <meta name="csrf-token" content="{{ csrf_token }}">
+
+    <!-- Cookie example -->
+    <script>
+        window.PROSEMIRROR_CSRF_CONFIG = { csrf_token_source: 'cookie' };
+    </script>
+
+Available Token Sources
+
+* django_form - [name=csrfmiddlewaretoken]
+* meta_tag - <meta name="csrf-token">
+* cookie - document.cookie['csrftoken']
+* custom - User-defined CSS selector and attribute
+* auto - Automatic detection (default) → first form, second meta_tag and last cookie.
 
 Local development
 =================

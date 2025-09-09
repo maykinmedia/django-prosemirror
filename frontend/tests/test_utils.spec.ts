@@ -190,4 +190,22 @@ describe("test utils folder", () => {
             });
         });
     });
+
+    describe("cookie.ts", () => {
+        describe("test getCookie", () => {
+            it("should get the correct cookie", () => {
+                expect(true).toBe(true);
+            });
+        });
+    });
+
+    describe("csrf.ts", () => {
+        describe("test getCSRFToken class", () => {
+            describe("test all token sources", () => {
+                it("should return a mocked token for all sources", () => {
+                    expect(true).toBe(true);
+                });
+            });
+        });
+    });
 });

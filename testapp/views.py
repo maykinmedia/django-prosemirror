@@ -62,8 +62,16 @@ FORM_TEMPLATE = """{% load static django_prosemirror %}
         body { font-family: Arial, sans-serif; margin: 40px; }
     </style>
     <title>Simple Form Page</title>
+    <script>
+window.PROSEMIRROR_CSRF_CONFIG = {
+    csrf_token_source: 'custom',
+    csrf_token_selector: '[data-app-csrf]',
+    csrf_token_attribute: 'data-token'
+};
+    </script>
 </head>
 <body>
+    <div data-app-csrf data-token="{{ csrf_token }}"></div>
     <h1>Form demo: {{ form_type }}</h1>
     <form method="post" action="">
         {% csrf_token %}
@@ -75,7 +83,6 @@ FORM_TEMPLATE = """{% load static django_prosemirror %}
 """
 
 
-@csrf_exempt
 def simple_form_view(request):
     """Simple form view for testing ProseMirror form fields."""
     form = TestForm(request.POST)
@@ -95,7 +102,6 @@ def simple_form_view(request):
     return HttpResponse(rendered_html)
 
 
-@csrf_exempt
 def model_form_view(request):
     """Model form view for testing ProseMirror model fields."""
     if request.method == "POST":

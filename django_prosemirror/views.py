@@ -46,7 +46,6 @@ class ImageDataResponse:
         )
 
 
-@csrf_exempt
 @login_required
 @require_http_methods(["POST"])
 def filer_upload_handler(request) -> JsonResponse:
@@ -78,7 +77,6 @@ def filer_upload_handler(request) -> JsonResponse:
     )
 
 
-@csrf_exempt
 @login_required
 @require_http_methods(["GET", "PATCH"])
 def filer_edit_handler(request, image_pk: str) -> JsonResponse:

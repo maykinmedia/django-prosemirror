@@ -3,6 +3,7 @@ import { EditorView } from "prosemirror-view";
 import { insertImage } from "@/utils";
 import crelt from "crelt";
 import { ImageDOMAttrs, ImageNodeAttrs } from "@/schema/nodes/image";
+import { getCSRFToken } from "@/utils/csrf";
 
 export type UploadOptions = {
     attrs: Attrs;
@@ -276,9 +277,7 @@ export class UploadImage {
             );
 
             // Add CSRF token if available
-            const csrfToken = document.querySelector<HTMLInputElement>(
-                "[name=csrfmiddlewaretoken]",
-            )?.value;
+            const csrfToken = getCSRFToken();
 
             if (csrfToken) xhr.setRequestHeader("X-CSRFToken", csrfToken);
 
