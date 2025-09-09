@@ -1,5 +1,5 @@
 import { getDPMPlugins } from "@/plugins/index";
-import { tableToolbarKey } from "@/plugins/table/table-toolbar";
+import { tableToolbarKey } from "@/plugins/table-plugin/plugin";
 import { DPMSettings } from "@/schema/settings";
 import { NodeType } from "@/schema/types";
 import { IDPMSettings, LanguageCodeEnum } from "@/types/types";

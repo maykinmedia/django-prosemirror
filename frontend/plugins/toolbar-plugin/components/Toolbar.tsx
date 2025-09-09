@@ -11,34 +11,38 @@ import { isImageSelected } from "@/utils";
  * Preact-first base toolbar instance that uses dynamic components
  * Refactored to mount once and update via signals instead of full re-renders
  */
-export class ToolbarInstance<T extends Node = Node>
+export class ToolbarInstance<T extends Node, D extends Record<string, unknown>>
     implements IToolbarInstance
 {
     public view: EditorView;
     protected target: T;
-    protected createMenuItems: CreateMenuItems<T>;
+    protected createMenuItems: CreateMenuItems<T, D>;
     public dom: HTMLElement;
     private clickEvent?: (event: Event) => void;
     public shouldShow: (view: EditorView) => boolean;
 
-    // 🔹 Signals replace re-renders
     public isVisible = signal(true, { name: "visibility" });
-    private menuItems = signal<IToolbarMenuItem[]>([], { name: "menuItems" });
+    private menuItems = signal<IToolbarMenuItem<D>[]>([], {
+        name: "menuItems",
+    });
     private viewSignal = signal<EditorView | null>(null, {
         name: "view",
     });
     private targetSignal = signal<T | null>(null, { name: "target" });
+    private id: string;
 
     constructor(
         view: EditorView,
         target: T,
-        createMenuItems: CreateMenuItems<T>,
+        createMenuItems: CreateMenuItems<T, D>,
         shouldShow: (view: EditorView) => boolean = isImageSelected,
+        id: string = "toolbar",
     ) {
         this.view = view;
         this.target = target;
         this.createMenuItems = createMenuItems;
         this.shouldShow = shouldShow;
+        this.id = id;
 
         // Create and append DOM container
         this.dom = crelt("div");
@@ -54,6 +58,7 @@ export class ToolbarInstance<T extends Node = Node>
                 menuItems={this.menuItems}
                 isVisible={this.isVisible}
                 onItemClick={this.handleItemClick}
+                id={this.id}
             />,
             this.dom,
         );
@@ -83,7 +88,7 @@ export class ToolbarInstance<T extends Node = Node>
         }
     }
 
-    protected handleItemClick = (item: IToolbarMenuItem) => {
+    protected handleItemClick = (item: IToolbarMenuItem<D>) => {
         if (item.command) {
             item.command(this.view.state, this.view.dispatch, this.view);
         }

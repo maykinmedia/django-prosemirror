@@ -3,27 +3,32 @@ import {
     TOOLBAR_CLS,
     ToolbarIcon,
 } from "@/plugins/toolbar-plugin";
+import { ImageDOMAttrs } from "@/schema/nodes/image";
 import clsx from "clsx";
-import { FunctionComponent as FC } from "preact";
+import { ComponentChildren, RefObject } from "preact";
 import { useRef } from "preact/hooks";
 import { EditorView } from "prosemirror-view";
 
-interface ToolbarButtonProps {
-    item: IToolbarMenuItem;
-    onItemClick: (item: IToolbarMenuItem) => void;
+interface ToolbarButtonProps<
+    D extends Record<string, unknown> = ImageDOMAttrs,
+> {
+    item: IToolbarMenuItem<D>;
+    onItemClick: (item: IToolbarMenuItem<D>) => void;
     view: EditorView;
     onModalOpen?: (
-        triggerRef: React.RefObject<HTMLElement>,
-        item: IToolbarMenuItem,
+        triggerRef: RefObject<HTMLElement>,
+        item: IToolbarMenuItem<D>,
     ) => void;
 }
 
-export const ToolbarButton: FC<ToolbarButtonProps> = ({
+export const ToolbarButton = <
+    D extends Record<string, unknown> = ImageDOMAttrs,
+>({
     item,
     onItemClick,
     view,
     onModalOpen,
-}) => {
+}: ToolbarButtonProps<D>): ComponentChildren => {
     const buttonRef = useRef<HTMLButtonElement>(null);
     const active = item.isActive ? item.isActive(view) : false;
     const isEnabled = item.enabled ? item.enabled(view.state) : true;

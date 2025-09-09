@@ -1,3 +1,4 @@
+import { translate } from "@/i18n/translations";
 import {
     addColumnAfter,
     addColumnBefore,
@@ -11,14 +12,14 @@ import {
     toggleHeaderColumn,
     toggleHeaderRow,
 } from "prosemirror-tables";
-import { translate } from "@/i18n/translations";
-import {
-    isHeaderRowActive,
-    isHeaderColumnActive,
-    ButtonOrDropdown,
-} from "@/components/table-toolbar";
+import { isHeaderColumnActive, isHeaderRowActive } from "@/utils";
+import { CreateMenuItems } from "../toolbar-plugin";
+import { Node } from "prosemirror-model";
 
-export const tableToolbarMenuConfig: ButtonOrDropdown[] = [
+export const tableToolbarMenuConfig: CreateMenuItems<
+    Node,
+    Record<string, unknown>
+> = () => [
     {
         icon: "rowDropdown",
         title: translate("Row operations"),
@@ -95,30 +96,3 @@ export const tableToolbarMenuConfig: ButtonOrDropdown[] = [
         command: deleteTable,
     },
 ];
-
-export const TABLE_TOOLBAR_CLS = {
-    toolbar: "table-toolbar",
-    toolbar__visible: "table-toolbar--visible",
-    // Separator
-    separator: "table-toolbar__separator",
-
-    // Button
-    button: "table-toolbar__button",
-    button__disabled: "table-toolbar__button--disabled",
-    button__active: "table-toolbar__button--active",
-
-    // Dropdown
-    dropdown: "table-toolbar__dropdown",
-    dropdown__open: "table-toolbar__dropdown--open",
-
-    // Menu
-    dropdown_menu: "table-toolbar__dropdown-menu",
-
-    // Button
-    dropdown_button: "table-toolbar__dropdown-button",
-
-    // Item
-    dropdown_item: "table-toolbar__dropdown-item",
-    dropdown_item__disabled: "table-toolbar__dropdown-item--disabled",
-    dropdown_item__active: "table-toolbar__dropdown-item--active",
-} as const;

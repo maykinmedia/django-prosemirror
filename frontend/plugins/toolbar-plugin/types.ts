@@ -5,17 +5,19 @@ import { ToolbarInstance } from "./components";
 import { Node } from "prosemirror-model";
 import { ImageDOMAttrs } from "@/schema/nodes/image";
 import { Signal } from "@preact/signals";
+import { RefObject } from "preact";
 
 /**
  * Methods for creating and managing toolbar instances.
  */
 export interface ToolbarMethods {
-    createToolbar: <T extends Node = Node>(
+    createToolbar: <T extends Node, D extends Record<string, unknown>>(
         view: EditorView,
         target: T,
-        createMenuItems: CreateMenuItems<T>,
+        createMenuItems: CreateMenuItems<T, D>,
         shouldShow?: (view: EditorView) => boolean,
-    ) => ToolbarInstance<T>;
+        id?: string,
+    ) => ToolbarInstance<T, D>;
 }
 
 /**
@@ -37,15 +39,17 @@ export interface IToolbarInstance {
 /**
  * Function to create toolbar menu items.
  */
-export type CreateMenuItems<T, D extends ImageDOMAttrs = ImageDOMAttrs> = (
-    view: EditorView,
-    target: T,
-) => IToolbarMenuItem<D>[];
+export type CreateMenuItems<
+    T,
+    D extends Record<string, unknown> = Record<string, unknown>,
+> = (view?: EditorView, target?: T) => IToolbarMenuItem<D>[];
 
 /**
  * Configuration for a toolbar menu item.
  */
-export interface IToolbarMenuItem<D extends ImageDOMAttrs = ImageDOMAttrs> {
+export interface IToolbarMenuItem<
+    D extends Record<string, unknown> = Record<string, unknown>,
+> {
     /** Display title for the menu item */
     title?: string;
     /** CSS class to apply to the menu item */
@@ -99,39 +103,46 @@ export interface IToolbarPosition {
 /**
  * Props for the main toolbar component.
  */
-export interface IToolbarProps {
+export interface IToolbarProps<
+    D extends Record<string, unknown> = Record<string, unknown>,
+> {
     /** ProseMirror editor view */
     /** Target element (Node or HTML element) for positioning */
     view: Signal<EditorView | null>;
     target: Signal<Node | HTMLElement | null>;
     /** Array of menu items to display in the toolbar */
-    menuItems: Signal<IToolbarMenuItem[] | null>;
+    menuItems: Signal<IToolbarMenuItem<D>[] | null>;
     /** Whether the toolbar should be visible */
     isVisible: Signal<boolean | null>;
     /** Callback when a menu item is clicked */
-    onItemClick: (item: IToolbarMenuItem) => void;
+    onItemClick: (item: IToolbarMenuItem<D>) => void;
     /** Optional callback when a modal is opened */
-    onModalOpen?: (triggerRef: React.RefObject<HTMLElement>) => void;
+    onModalOpen?: (triggerRef: RefObject<HTMLElement>) => void;
+    id?: string;
 }
 
 /**
  * Props for the toolbar dropdown component.
  */
-export interface IToolbarDropdownProps {
+export interface IToolbarDropdownProps<
+    D extends Record<string, unknown> = Record<string, unknown>,
+> {
     /** Menu item containing dropdown configuration */
-    item: IToolbarMenuItem;
+    item: IToolbarMenuItem<D>;
     /** ProseMirror editor view */
     view: EditorView;
     /** Callback when a dropdown item is clicked */
-    onItemClick: (item: IToolbarMenuItem) => void;
+    onItemClick: (item: IToolbarMenuItem<D>) => void;
 }
 
 /**
  * Configuration for form fields in modal forms.
  */
-export interface IFormFieldConfig<D extends ImageDOMAttrs = ImageDOMAttrs> {
+export interface IFormFieldConfig<
+    D extends Record<string, unknown> = Record<string, unknown>,
+> {
     /** Name of the field, must match a key in InitialImageData */
-    readonly name: keyof D;
+    readonly name: Extract<keyof D, string>;
     /** Display label for the field */
     readonly label: string;
     /** Input type for the field */
@@ -142,7 +153,9 @@ export interface IFormFieldConfig<D extends ImageDOMAttrs = ImageDOMAttrs> {
     readonly placeholder?: string;
 }
 
-export interface IToolbarModalFormFieldProps extends IFormFieldConfig {
+export interface IToolbarModalFormFieldProps<
+    D extends Record<string, unknown> = ImageDOMAttrs,
+> extends IFormFieldConfig<D> {
     value: string;
     onChange: (value: string) => void;
 }
@@ -151,7 +164,7 @@ export interface IToolbarModalFormFieldProps extends IFormFieldConfig {
  * Props for configuring a toolbar modal form.
  */
 export interface IToolbarModalFormFormProps<
-    D extends ImageDOMAttrs = ImageDOMAttrs,
+    D extends Record<string, unknown> = ImageDOMAttrs,
 > {
     /** Title of the modal form */
     readonly title?: string;
@@ -167,14 +180,14 @@ export interface IToolbarModalFormFormProps<
  * Props for the toolbar modal form component.
  */
 export interface IToolbarModalFormProps<
-    D extends ImageDOMAttrs = ImageDOMAttrs,
+    D extends Record<string, unknown> = ImageDOMAttrs,
 > {
     /** Whether the modal is open */
     readonly isOpen: boolean;
     /** Callback to close the modal */
     readonly onClose: VoidFunction;
     /** Reference to the trigger element for positioning */
-    readonly triggerRef: React.RefObject<HTMLElement> | null;
+    readonly triggerRef: RefObject<HTMLElement> | null;
     /** Form configuration props */
     readonly formProps: IToolbarModalFormFormProps<D>;
     /** ProseMirror editor view */

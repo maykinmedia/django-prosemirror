@@ -7,19 +7,23 @@ import {
     type IToolbarPosition,
     type IToolbarProps,
 } from "@/plugins/toolbar-plugin";
+import { ImageDOMAttrs } from "@/schema/nodes/image";
 import clsx from "clsx";
-import { FunctionComponent as FC, Fragment } from "preact";
+import { ComponentChildren, Fragment, RefObject } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
-import { Node } from "prosemirror-model";
+import { NodeSelection } from "prosemirror-state";
 
-export const ToolbarComponent: FC<IToolbarProps> = ({
+export const ToolbarComponent = <
+    D extends Record<string, unknown> = ImageDOMAttrs,
+>({
     view,
     target,
     isVisible,
     menuItems,
     onItemClick,
     onModalOpen,
-}) => {
+    id,
+}: IToolbarProps<D>): ComponentChildren => {
     const viewState = view?.value,
         targetState = target?.value,
         menuItemsState = menuItems?.value,
@@ -29,93 +33,87 @@ export const ToolbarComponent: FC<IToolbarProps> = ({
         top: -9999,
         left: -9999,
     });
+
+    const modalTrigRef = useRef<HTMLElement | null>(null);
+
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [modalTriggerRef, setModalTriggerRef] =
-        useState<React.RefObject<HTMLElement> | null>(null);
     const [currentModalItem, setCurrentModalItem] =
-        useState<IToolbarMenuItem | null>(null);
+        useState<IToolbarMenuItem<D> | null>(null);
     const toolbarRef = useRef<HTMLDivElement>(null);
 
     const calculatePosition = (): IToolbarPosition => {
         if (!toolbarRef.current || !isVisibleState || !viewState)
             return { top: -9999, left: -9999 };
+
+        const selection = viewState.state.selection;
+
+        if (!selection) return { top: -9999, left: -9999 };
         let targetRect: DOMRect;
 
-        // Get target element based on type
-        if (targetState instanceof Node) {
-            // For ProseMirror nodes, find the actual DOM element
-            const from = viewState.state.selection.from;
+        // Get target element - image or table
+        if (
+            selection instanceof NodeSelection &&
+            selection.node.type.name === "image" &&
+            id === "image-toolbar"
+        ) {
+            const nodeDOM = viewState.nodeDOM(selection.from);
+            targetRect = (nodeDOM as HTMLElement).getBoundingClientRect();
+        } else {
+            // Find table (direct selection, cell, header, or text within)
+            const $pos = viewState.state.doc?.resolve(selection.from);
+            let tablePos = null;
 
-            // Use ProseMirror's nodeDOM to find the actual HTML element
-            const nodeDOM = view.value?.nodeDOM(from);
-            if (
-                typeof window !== "undefined" &&
-                nodeDOM instanceof window.HTMLElement
-            ) {
-                targetRect = nodeDOM.getBoundingClientRect();
-            } else {
-                // Fallback: try to find image by src attribute
-                const imgElement = viewState.dom.querySelector(
-                    `img[src$="${targetState.attrs.src}"]`,
-                ) as HTMLElement;
-                if (imgElement) {
-                    targetRect = imgElement.getBoundingClientRect();
-                } else {
-                    // Last resort: use ProseMirror coordinates but they won't have proper width
-                    const coords = viewState.coordsAtPos(from);
-                    targetRect = new DOMRect(
-                        coords.left,
-                        coords.top,
-                        coords.right - coords.left,
-                        coords.bottom - coords.top,
-                    );
+            if (!$pos) return { top: -9999, left: -9999 };
+
+            for (let depth = $pos.depth; depth >= 0; depth--) {
+                if ($pos.node(depth).type.name === "table") {
+                    tablePos = $pos.start(depth);
+                    break;
                 }
             }
-        } else if (
-            typeof window !== "undefined" &&
-            targetState instanceof window.HTMLElement
-        ) {
-            targetRect = targetState.getBoundingClientRect();
-        } else {
-            return { top: -9999, left: -9999 };
-        }
 
+            if (!tablePos) return { top: -9999, left: -9999 };
+
+            const tableDOM = viewState.nodeDOM(tablePos) as HTMLElement;
+            const wrapper = tableDOM.parentElement;
+            const tableRect = tableDOM.getBoundingClientRect();
+            const wrapperRect = wrapper?.getBoundingClientRect();
+
+            // Use wrapper positioning if available
+            targetRect =
+                wrapper && wrapperRect
+                    ? new DOMRect(
+                          wrapperRect.left,
+                          tableRect.top,
+                          Math.min(wrapperRect.width, tableRect.width),
+                          tableRect.height,
+                      )
+                    : tableRect;
+        }
         const toolbarRect = toolbarRef.current.getBoundingClientRect();
-        const viewportWidth = window.innerWidth;
-
-        let top: number;
-        let left: number;
-
-        const toolbarHeight = toolbarRect.height || 40; // fallback for initial render
-        const toolbarWidth = toolbarRect.width || 200; // fallback for initial render
         const gap = 8;
-        const horizontalPadding = 16;
+        const padding = 16;
 
-        // Try to place 8px above the image first
-        const spaceAbove = targetRect.top;
-        if (spaceAbove >= toolbarHeight + gap) {
-            // Place 8px above the image
-            top = targetRect.top - toolbarHeight - gap;
-        } else {
-            // Fallback: place 8px below the image
-            top = targetRect.bottom + gap;
-        }
+        // Position above if space, otherwise below
+        const top =
+            targetRect.top >= toolbarRect.height + gap
+                ? targetRect.top - toolbarRect.height - gap
+                : targetRect.bottom + gap;
 
-        // Center horizontally on the image
-        const targetCenter = targetRect.left + targetRect.width / 2;
-        left = targetCenter - toolbarWidth / 2;
-
-        // Ensure toolbar stays within viewport horizontally with padding
-        const maxLeft = viewportWidth - toolbarWidth - horizontalPadding;
-        left = Math.max(horizontalPadding, Math.min(left, maxLeft));
-
-        // Add scroll offset to convert viewport coordinates to page coordinates
-        top += window.scrollY;
-        left += window.scrollX;
+        // Center horizontally with viewport bounds
+        const centerLeft =
+            targetRect.left + targetRect.width / 2 - toolbarRect.width / 2;
+        const left = Math.max(
+            padding,
+            Math.min(
+                centerLeft,
+                window.innerWidth - toolbarRect.width - padding,
+            ),
+        );
 
         return {
-            top,
-            left,
+            top: top + window.scrollY,
+            left: left + window.scrollX,
         };
     };
 
@@ -194,10 +192,10 @@ export const ToolbarComponent: FC<IToolbarProps> = ({
     }, [viewState, targetState, isVisibleState]);
 
     const handleModalOpen = (
-        triggerRef: React.RefObject<HTMLElement>,
-        item: IToolbarMenuItem,
+        triggerRef: RefObject<HTMLElement>,
+        item: IToolbarMenuItem<D>,
     ) => {
-        setModalTriggerRef(triggerRef);
+        modalTrigRef.current = triggerRef.current;
         setCurrentModalItem(item);
         setIsModalOpen(true);
         onModalOpen?.(triggerRef);
@@ -205,8 +203,8 @@ export const ToolbarComponent: FC<IToolbarProps> = ({
 
     const handleModalClose = () => {
         setIsModalOpen(false);
-        setModalTriggerRef(null);
         setCurrentModalItem(null);
+        modalTrigRef.current = null;
     };
 
     return (
@@ -215,7 +213,7 @@ export const ToolbarComponent: FC<IToolbarProps> = ({
                 <ToolbarModalForm
                     isOpen={isModalOpen}
                     onClose={handleModalClose}
-                    triggerRef={modalTriggerRef}
+                    triggerRef={modalTrigRef}
                     formProps={currentModalItem.modalFormProps}
                     view={viewState!}
                 />

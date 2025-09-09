@@ -4,13 +4,16 @@ import { ToolbarIcon } from "./ToolbarIcon";
 import clsx from "clsx";
 import { IToolbarMenuItem, IToolbarDropdownProps } from "../";
 import { type MouseEventHandler } from "preact/compat";
-import { FunctionComponent as FC } from "preact";
+import { ComponentChildren } from "preact";
+import { ImageDOMAttrs } from "@/schema/nodes/image";
 
-export const ToolbarDropdown: FC<IToolbarDropdownProps> = ({
+export const ToolbarDropdown = <
+    D extends Record<string, unknown> = ImageDOMAttrs,
+>({
     item,
     view,
     onItemClick,
-}) => {
+}: IToolbarDropdownProps<D>): ComponentChildren => {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const active = item.isActive ? item.isActive(view) : false;
@@ -62,7 +65,7 @@ export const ToolbarDropdown: FC<IToolbarDropdownProps> = ({
         setIsOpen(!isOpen);
     };
 
-    const handleItemClick = (subItem: IToolbarMenuItem) => {
+    const handleItemClick = (subItem: IToolbarMenuItem<D>) => {
         setIsOpen(false); // Close dropdown after selection
         onItemClick(subItem);
     };
@@ -87,7 +90,7 @@ export const ToolbarDropdown: FC<IToolbarDropdownProps> = ({
                 title={item.title}
             >
                 {item.icon && <ToolbarIcon icon={item.icon} />}
-                <span>{item.title}</span>
+                {item.title && item.visibleTitle && <span>{item.title}</span>}
             </button>
 
             {isOpen && item.items && (

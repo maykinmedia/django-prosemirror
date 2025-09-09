@@ -1,23 +1,23 @@
 import { CreateMenuItems, ToolbarInstance } from "@/plugins/toolbar-plugin";
-import { ImageDOMAttrs } from "@/schema/nodes/image";
-import { getSelectedImageNode, isImageSelected } from "@/utils";
+import { getSelectedTableNode, isInsideTable } from "@/utils";
 import { Node } from "prosemirror-model";
 import { Plugin, PluginKey } from "prosemirror-state";
 
-// Plugin key for the floating image toolbar
-export const imageToolbarKey = new PluginKey("floatingImageToolbar");
+// Plugin key for the floating table toolbar
+export const tableToolbarKey = new PluginKey("floatingTableToolbar");
 
 /**
- * Plugin to manage the floating image toolbar
+ * Plugin to manage the floating table toolbar
  * Depends on toolbar plugin being available via pluginMethods
  */
-export const imageToolbarPlugin = (
-    config: CreateMenuItems<Node, ImageDOMAttrs>,
+export const tableToolbarPlugin = (
+    config: CreateMenuItems<Node, Record<string, unknown>>,
 ) => {
     return new Plugin({
-        key: imageToolbarKey,
+        key: tableToolbarKey,
         view() {
-            let toolbar: ToolbarInstance<Node, ImageDOMAttrs> | null = null;
+            let toolbar: ToolbarInstance<Node, Record<string, unknown>> | null =
+                null;
             return {
                 update: (view, prevState) => {
                     try {
@@ -33,8 +33,8 @@ export const imageToolbarPlugin = (
                             return;
                         }
 
-                        const imageSelected = isImageSelected(view);
-                        const imageNode = getSelectedImageNode(view);
+                        const tableSelected = isInsideTable(view);
+                        const tableNode = getSelectedTableNode(view);
 
                         // Destroy existing toolbar if it exists
                         if (toolbar) {
@@ -43,13 +43,13 @@ export const imageToolbarPlugin = (
                         }
 
                         // Create new toolbar if an image is selected
-                        if (imageSelected && imageNode) {
+                        if (tableSelected && tableNode) {
                             toolbar = createToolbar(
                                 view,
-                                imageNode,
+                                tableNode,
                                 config,
-                                isImageSelected,
-                                "image-toolbar",
+                                isInsideTable,
+                                "table-toolbar",
                             );
                         }
                     } catch (err) {
