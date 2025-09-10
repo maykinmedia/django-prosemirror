@@ -16,15 +16,15 @@
     },
     "devDependencies": {
         "@preact/preset-vite": "^2.10.2",
-        "@testing-library/jest-dom": "^6.6.4",
+        "@testing-library/jest-dom": "^6.8.0",
         "@testing-library/preact": "^3.2.4",
         "@vitest/coverage-v8": "^3.2.4",
-        "eslint": "^9.31.0",
+        "eslint": "^9.35.0",
         "jsdom": "^26.1.0",
         "prettier": "^3.6.2",
-        "sass-embedded": "^1.89.2",
-        "typescript-eslint": "^8.37.0",
-        "vite": "^6.3.5",
+        "sass-embedded": "^1.92.1",
+        "typescript-eslint": "^8.43.0",
+        "vite": "^7.1.5",
         "vitest": "^3.2.4"
     },
     "dependencies": {
@@ -35,12 +35,12 @@
         "preact": "^10.27.0",
         "prosemirror-example-setup": "^1.2.3",
         "prosemirror-menu": "^1.2.5",
-        "prosemirror-model": "^1.25.2",
+        "prosemirror-model": "^1.25.3",
         "prosemirror-schema-basic": "^1.2.4",
         "prosemirror-schema-list": "^1.5.1",
         "prosemirror-state": "^1.4.3",
         "prosemirror-tables": "^1.7.1",
         "prosemirror-utils": "^1.2.2",
-        "prosemirror-view": "^1.40.1"
+        "prosemirror-view": "^1.41.0"
     }
 }
