@@ -38,7 +38,8 @@ from django_prosemirror.schema.types import MarkType, NodeType
 def get_setting(key: str):
     from django.conf import settings
 
-    return getattr(settings, SETTINGS_KEY, DEFAULT_SETTINGS)[key]
+    settings_with_fallbacks = DEFAULT_SETTINGS | getattr(settings, SETTINGS_KEY, {})
+    return settings_with_fallbacks[key]
 
 
 class ProsemirrorConfig:
@@ -109,6 +110,17 @@ class ProsemirrorConfig:
             raise TypeError(
                 "allowed_mark_types must be an iterable of MarkType enums"
             ) from None
+
+        # Validate IMAGE node type dependencies
+        if NodeType.IMAGE in self.allowed_node_types:
+            try:
+                import filer  # noqa: F401
+            except ImportError as exc:
+                from django.core.exceptions import ImproperlyConfigured
+
+                raise ImproperlyConfigured(
+                    "To use IMAGE node type, you must install django-filer"
+                ) from exc
 
     @staticmethod
     def _create_nodes(class_mapping) -> dict[NodeType, NodeDefinition]:

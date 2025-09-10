@@ -12,7 +12,7 @@ from django.views.decorators.http import require_http_methods
 from filer import settings as filer_settings
 from filer.models import Image
 
-from .forms import FileUploadForm, ImageEditForm
+from django_prosemirror.forms.filer import FileUploadForm, ImageEditForm
 
 
 @dataclasses.dataclass

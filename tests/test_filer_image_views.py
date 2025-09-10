@@ -7,9 +7,16 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 
-from filer import settings as filer_settings
-from filer.models import Image
-from PIL import Image as PILImage
+import pytest
+
+from django_prosemirror import urls as prosemirror_urls
+
+try:
+    from filer import settings as filer_settings
+    from filer.models import Image
+    from PIL import Image as PILImage
+except ModuleNotFoundError:
+    pytest.skip("filer not available", allow_module_level=True)
 
 
 def create_test_image(name="test_image.jpg", format="JPEG", size=(100, 100)):
@@ -20,6 +27,31 @@ def create_test_image(name="test_image.jpg", format="JPEG", size=(100, 100)):
     return SimpleUploadedFile(
         name, buffer.getvalue(), content_type=f"image/{format.lower()}"
     )
+
+
+class TestFilerUrlsEnabled(TestCase):
+    """Test that filer URLs are included when filer is available."""
+
+    def test_filer_urls_included_when_filer_available(self):
+        """Test that filer URLs are included when filer is available."""
+        # Check that filer URLs are in the urlpatterns
+        url_names = [
+            pattern.name
+            for pattern in prosemirror_urls.urlpatterns
+            if hasattr(pattern, "name")
+        ]
+
+        self.assertIn("filer_upload_handler", url_names)
+        self.assertIn("filer_edit_handler", url_names)
+
+    def test_reverse_works_for_filer_urls_when_available(self):
+        """Test that reversing filer URLs works when filer is available."""
+        # These should not raise NoReverseMatch
+        try:
+            reverse("filer_upload_handler")
+            reverse("filer_edit_handler", kwargs={"image_pk": "1"})
+        except Exception as e:
+            self.fail(f"URL reversal should work when filer is available: {e}")
 
 
 class FilerUploadHandlerViewTestCase(TestCase):
