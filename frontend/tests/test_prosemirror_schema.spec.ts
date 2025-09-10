@@ -230,9 +230,9 @@ describe("DjangoProsemirrorSchema", () => {
             ).toEqual([
                 "img",
                 {
-                    src: "test.jpg",
-                    alt: "Test alt",
-                    title: "Test title",
+                    "src": "test.jpg",
+                    "alt": "Test alt",
+                    "title": "Test title",
                     "data-caption": "test caption",
                 },
             ]);
@@ -414,7 +414,7 @@ describe("DjangoProsemirrorSchema", () => {
                     new TableCellNode(classMapping).toDOM(cellWithColwidth),
                 ).toEqual([
                     "td",
-                    { rowspan: 2, colspan: 2, "data-colwidth": "10" },
+                    { "rowspan": 2, "colspan": 2, "data-colwidth": "10" },
                     0,
                 ]);
             });
@@ -504,7 +504,7 @@ describe("DjangoProsemirrorSchema", () => {
                     new TableHeaderNode(classMapping).toDOM(cellWithColwidth),
                 ).toEqual([
                     "th",
-                    { rowspan: 2, colspan: 2, "data-colwidth": "10" },
+                    { "rowspan": 2, "colspan": 2, "data-colwidth": "10" },
                     0,
                 ]);
             });
