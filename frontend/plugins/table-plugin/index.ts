@@ -26,7 +26,7 @@ export const tablePlugins = () => {
         columnResizing(),
         tableEditing(),
         keymap({
-            Tab: goToNextCell(1),
+            "Tab": goToNextCell(1),
             "Shift-Tab": goToNextCell(-1),
         }),
         tableToolbarPlugin(tableToolbarMenuConfig),
