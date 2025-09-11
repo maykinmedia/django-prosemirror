@@ -29,8 +29,43 @@ export async function pressShortcut(
     };
 
     // Fire keydown and keyup to simulate a real shortcut
-    const a = await fireEvent.keyDown(element, eventInit);
-    console.log(a);
-    const b = await fireEvent.keyUp(element, eventInit);
-    console.log(b);
+    await fireEvent.keyDown(element, eventInit);
+    await fireEvent.keyUp(element, eventInit);
 }
+
+// Helper functions for interaction tests
+export const waitForEditor = async (canvasElement: HTMLElement) => {
+    const canvas = canvasElement.querySelector(
+        '[data-prosemirror-id="storybook-prosemirror-editor"]',
+    );
+    if (!canvas) throw new Error("Canvas element not found");
+
+    // Wait for the ProseMirror editor to be initialized
+    let editor = canvas.querySelector(".ProseMirror");
+    let attempts = 0;
+    const maxAttempts = 50; // 5 seconds with 100ms intervals
+
+    while (!editor && attempts < maxAttempts) {
+        await sleep(100);
+        editor = canvas.querySelector(".ProseMirror");
+        attempts++;
+    }
+
+    if (!editor) throw new Error("Editor not found after waiting");
+    return editor as HTMLElement;
+};
+
+export const getEditorHTML = (canvasElement: HTMLElement) => {
+    const editor = canvasElement.querySelector(".ProseMirror");
+    return editor?.innerHTML || "";
+};
+
+export const getEditorJSON = (canvasElement: HTMLElement) => {
+    const input = canvasElement.querySelector(
+        "#storybook-prosemirror-input",
+    ) as HTMLInputElement;
+    return input ? JSON.parse(input.value) : null;
+};
+
+export const sleep = (ms: number) =>
+    new Promise((resolve) => setTimeout(resolve, ms));
