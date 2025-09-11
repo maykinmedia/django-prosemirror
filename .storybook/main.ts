@@ -12,7 +12,7 @@ const config: StorybookConfig = {
         // "@storybook/addon-vitest",
     ],
     framework: {
-        name: "@storybook/react-vite",
+        name: "@storybook/preact-vite",
         options: {},
     },
 };
