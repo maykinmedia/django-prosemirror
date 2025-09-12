@@ -5,12 +5,7 @@ const config: StorybookConfig = {
         "../stories/**/*.mdx",
         "../stories/**/*.stories.@(js|jsx|mjs|ts|tsx)",
     ],
-    addons: [
-        // "@chromatic-com/storybook",
-        "@storybook/addon-docs",
-        "@storybook/addon-a11y",
-        // "@storybook/addon-vitest",
-    ],
+    addons: ["@storybook/addon-a11y"],
     framework: {
         name: "@storybook/preact-vite",
         options: {},

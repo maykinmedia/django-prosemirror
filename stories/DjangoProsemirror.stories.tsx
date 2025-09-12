@@ -32,6 +32,17 @@ const meta: Meta<typeof DjangoProsemirrorWrapper> = {
         allowedMarks: { control: "check", options: MarkType },
         history: { control: "boolean" },
         classes: { control: "object" },
+        resize: {
+            control: "radio",
+            options: [
+                "both",
+                "horizontal",
+                "vertical",
+                "block",
+                "inline",
+                "none",
+            ],
+        },
     },
 };
 

@@ -1,11 +1,9 @@
-import { Meta, StoryObj } from "@storybook/preact-vite";
 import { useEffect, useRef } from "preact/hooks";
 import { DjangoProsemirror } from "../frontend/create";
-import { MouseEventHandler, useState } from "react";
-import "../frontend/scss/index.scss";
-import { expect, fireEvent, userEvent, within } from "storybook/test";
-import { pressShortcut } from "./utils";
+import type { JSX } from "preact";
+import { useState } from "preact/hooks";
 import { MarkType, NodeType } from "../frontend/schema/types";
+import "../frontend/scss/index.scss";
 
 interface DjangoProsemirrorWrapperProps {
     initialContent?: Record<string, unknown>;
@@ -14,6 +12,7 @@ interface DjangoProsemirrorWrapperProps {
     allowedMarks: Array<MarkType>;
     classes: Partial<Record<MarkType | NodeType, string>>;
     history: boolean;
+    resize: "both" | "horizontal" | "vertical" | "block" | "inline" | "none";
 }
 
 // Mock Django data structure
@@ -48,6 +47,7 @@ export const DjangoProsemirrorWrapper = ({
     allowedMarks = [],
     classes = {},
     history = true,
+    resize = "none",
 }: DjangoProsemirrorWrapperProps) => {
     const [doc, setDoc] = useState<Record<string, unknown>>(initialContent);
     const editorRef = useRef<HTMLDivElement>(null);
@@ -133,6 +133,7 @@ export const DjangoProsemirrorWrapper = ({
                 )}
                 // data-prosemirror-allowed-mark-types='["strong", "em", "link", "code", "underline", "strikethrough"]'
                 data-prosemirror-upload-endpoint="/prosemirror/filer-image-upload/"
+                style={resize !== "none" ? { resize, overflow: "hidden" } : {}}
             />
             {/* Display current state for debugging */}
             <div style={{ marginTop: "20px" }}>
@@ -144,7 +145,7 @@ export const DjangoProsemirrorWrapper = ({
 };
 
 const JsonDisplay = ({ data }: { data: string | object }) => {
-    const handleCopy: MouseEventHandler<HTMLButtonElement> = async (e) => {
+    const handleCopy = async (e: JSX.TargetedMouseEvent<HTMLButtonElement>) => {
         try {
             const textToCopy =
                 typeof data === "string" ? data : JSON.stringify(data, null, 2);
@@ -164,7 +165,7 @@ const JsonDisplay = ({ data }: { data: string | object }) => {
             console.error("Failed to copy text: ", err);
         }
     };
-    const syntaxHighlight = (json) => {
+    const syntaxHighlight = (json: string | object) => {
         // Ensure we have a string to work with
         let jsonString =
             typeof json === "string" ? json : JSON.stringify(json, null, 2);

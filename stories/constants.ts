@@ -41,4 +41,5 @@ export const defaultArgs = {
         list_item: "story_classes",
         horizontal_rule: "story_classes",
     },
+    resize: "none",
 };
