@@ -3,6 +3,8 @@
 import itertools
 from collections.abc import Mapping
 
+from django.test import TestCase, override_settings
+
 import pytest
 from prosemirror import Schema
 
@@ -176,6 +178,62 @@ class TestProsemirrorConfigExplicitValues:
     def test_empty_mark_types_allowed(self):
         """Test that empty mark types list is allowed."""
         config = ProsemirrorConfig(allowed_mark_types=[])
+
+        assert config.allowed_mark_types == []
+
+
+class TestProsemirrorConfigFromSettings(TestCase):
+    """Test ProsemirrorConfig reads values from Django settings."""
+
+    @override_settings(
+        DJANGO_PROSEMIRROR={"allowed_node_types": ["paragraph", "heading"]}
+    )
+    def test_node_types_from_settings(self):
+        config = ProsemirrorConfig()
+        expected_nodes = [NodeType.PARAGRAPH, NodeType.HEADING]
+
+        assert config.allowed_node_types == expected_nodes
+
+    @override_settings(DJANGO_PROSEMIRROR={"allowed_mark_types": ["strong", "em"]})
+    def test_mark_types_from_settings(self):
+        config = ProsemirrorConfig()
+        expected_marks = [MarkType.STRONG, MarkType.ITALIC]
+
+        assert config.allowed_mark_types == expected_marks
+
+    @override_settings(DJANGO_PROSEMIRROR={"history": False})
+    def test_history_from_settings(self):
+        config = ProsemirrorConfig()
+
+        assert config.history is False
+
+    @override_settings(
+        DJANGO_PROSEMIRROR={"tag_to_classes": {"paragraph": "custom-para"}}
+    )
+    def test_tag_to_classes_from_settings(self):
+        config = ProsemirrorConfig()
+
+        assert config.tag_to_classes["paragraph"] == "custom-para"
+
+    @override_settings(
+        DJANGO_PROSEMIRROR={
+            "allowed_node_types": ["paragraph", "blockquote"],
+            "allowed_mark_types": ["strong"],
+            "history": False,
+            "tag_to_classes": {"blockquote": "quote-style"},
+        }
+    )
+    def test_all_values_from_settings(self):
+        config = ProsemirrorConfig()
+
+        assert config.allowed_node_types == [NodeType.PARAGRAPH, NodeType.BLOCKQUOTE]
+        assert config.allowed_mark_types == [MarkType.STRONG]
+        assert config.history is False
+        assert config.tag_to_classes["blockquote"] == "quote-style"
+
+    @override_settings(DJANGO_PROSEMIRROR={"allowed_mark_types": []})
+    def test_empty_mark_types_from_settings(self):
+        config = ProsemirrorConfig()
 
         assert config.allowed_mark_types == []
 
