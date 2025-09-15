@@ -38,7 +38,9 @@ from django_prosemirror.schema.types import MarkType, NodeType
 def get_setting(key: str):
     from django.conf import settings
 
-    return getattr(settings, SETTINGS_KEY, DEFAULT_SETTINGS)[key]
+    user_settings = getattr(settings, SETTINGS_KEY, None) or {}
+    settings_with_fallbacks = DEFAULT_SETTINGS | user_settings
+    return settings_with_fallbacks[key]
 
 
 class ProsemirrorConfig:
