@@ -17,7 +17,12 @@ export const imageUploadPlugin = (
     settings: IDPMSettings,
     imageInSchema: boolean = false,
 ) => {
-    if (!settings?.uploadEndpoint || !imageInSchema) return [];
+    if (
+        !settings?.filerUploadEnabled ||
+        !settings?.filerUploadEndpoint ||
+        !imageInSchema
+    )
+        return [];
 
     return [uploadPlugin(settings), imageKeymapPlugin(settings)];
 };

@@ -7,8 +7,9 @@ import { IDPMSettings } from "@/types/types";
  * Create keymap for image functionality
  */
 export const imageKeymapPlugin = (settings: IDPMSettings) => {
-    if (!settings.uploadEndpoint) return undefined;
-    const uploadImageInstance = new UploadImage(settings.uploadEndpoint);
+    if (!settings.filerUploadEnabled || !settings.filerUploadEndpoint)
+        return undefined;
+    const uploadImageInstance = new UploadImage(settings.filerUploadEndpoint);
 
     return keymap({
         // Ctrl/Cmd + I to replace selected image (open file picker)

@@ -12,7 +12,8 @@ export interface IDPMSettings {
     classNames?: Record<string, string>;
     allowedNodes: Array<NodeType>;
     allowedMarks: Array<MarkType>;
-    uploadEndpoint?: string;
+    filerUploadEndpoint?: string;
+    filerUploadEnabled?: boolean;
 }
 
 export enum LanguageCodeEnum {

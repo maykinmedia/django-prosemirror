@@ -21,9 +21,10 @@ declare module "prosemirror-state" {
  * Plugin that handles the uploading of images.
  */
 export const uploadPlugin = (settings: IDPMSettings) => {
-    if (!settings.uploadEndpoint) return undefined;
+    if (!settings.filerUploadEnabled || !settings.filerUploadEndpoint)
+        return undefined;
 
-    const uploadImageInstance = new UploadImage(settings.uploadEndpoint);
+    const uploadImageInstance = new UploadImage(settings.filerUploadEndpoint);
 
     return new Plugin({
         key: imageUploadKey,

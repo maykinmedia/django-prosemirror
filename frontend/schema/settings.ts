@@ -87,14 +87,32 @@ export class DPMSettings implements IDPMSettings {
         return this.getSetting("prosemirrorHistory", "true") === true;
     }
     /**
-     * Setting that defines the the editor uses the history plugin.
-     * If true also the buttons are rendered.
-     * @default true
+     * Setting that defines if the filer upload is enabled. If this is not
+     * true @type {NodeType.FILER_IMAGE} can't be used as node.
+     * @default false
      */
-    get uploadEndpoint(): string | undefined {
-        return this.getSetting("prosemirrorUploadEndpoint", undefined);
+    get filerUploadEnabled(): boolean | undefined {
+        const setting = this.getSetting(
+            "prosemirrorFilerUploadEnabled",
+            "false",
+        );
+        if (setting === "True" || setting === "true") return true;
+        return false;
     }
-
+    /**
+     * Setting that defines the filer upload endpoint. If this is
+     * endpoint is not defined @type {NodeType.FILER_IMAGE} can't
+     * be used as node.
+     * @default undefined
+     */
+    get filerUploadEndpoint(): string | undefined {
+        const setting = this.getSetting(
+            "prosemirrorFilerUploadEndpoint",
+            "undefined",
+        );
+        if (setting === "None") return undefined;
+        return setting;
+    }
     /**
      * Setting that defines the language of the editor, used for translations.
      * This value is read from the html lang attribute.

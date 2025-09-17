@@ -51,7 +51,7 @@ describe("DjangoProsemirrorSchema", () => {
         menubar: true,
         language: LanguageCodeEnum.NL,
         floatingMenu: false,
-        uploadEndpoint: "/",
+        filerUploadEndpoint: "/",
     };
     let DPMSchemaCls = new DPMSchema(settings as DPMSettings);
 
