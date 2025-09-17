@@ -272,8 +272,8 @@ export class TableField extends Field {
             this.cells[row] = [];
             for (let col = 0; col < this.cols; col++) {
                 const cell = crelt("button", {
-                    class: `${this.prefix}__cell`,
-                    type: "submit",
+                    "class": `${this.prefix}__cell`,
+                    "type": "submit",
                     "data-pos": `[${row}, ${col}]`,
                 }) as HTMLButtonElement;
 
