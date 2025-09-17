@@ -23,10 +23,21 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.admin",
     "django_prosemirror",
-    "filer",
-    "easy_thumbnails",
     "testapp",
 ]
+
+try:
+    import filer  # noqa: F401, I001
+    import easy_thumbnails  # noqa: F401
+
+    INSTALLED_APPS.extend(
+        [
+            "filer",
+            "easy_thumbnails",
+        ]
+    )
+except ModuleNotFoundError:
+    pass
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -58,19 +69,3 @@ STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "static"
 
 ROOT_URLCONF = "testapp.urls"
-
-PROSEMIRROR_CONFIG = {
-    "tag_to_classes": {
-        "paragraph": "from_settings",
-        "heading": "from_settings",
-        "image": "from_settings",
-        "link": "from_settings",
-        "blockquote": "from_settings",
-        "code_block": "from_settings",
-        "code": "from_settings",
-        "ordered_list": "from_settings",
-        "bullet_list": "from_settings",
-        "list_item": "from_settings",
-        "horizontal_rule": "from_settings",
-    }
-}

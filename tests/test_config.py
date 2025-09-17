@@ -13,7 +13,8 @@ from django_prosemirror.constants import DEFAULT_SETTINGS
 from django_prosemirror.schema import MarkType, NodeType
 
 
-class TestProsemirrorConfigDefaults:
+@override_settings(DJANGO_PROSEMIRROR=None)
+class TestProsemirrorConfigDefaults(TestCase):
     """Test default values for ProsemirrorConfig."""
 
     def test_default_settings_contains_all_node_types(self):
@@ -168,12 +169,13 @@ class TestProsemirrorConfigExplicitValues:
 
     def test_explicit_tag_to_classes(self):
         """Test setting explicit tag_to_classes mapping."""
+        from django_prosemirror.config import get_setting
+
         custom_classes = {"paragraph": "my-paragraph", "heading": "my-heading"}
         config = ProsemirrorConfig(tag_to_classes=custom_classes)
 
-        assert (
-            config.tag_to_classes == DEFAULT_SETTINGS["tag_to_classes"] | custom_classes
-        )
+        expected_classes = get_setting("tag_to_classes") | custom_classes
+        assert config.tag_to_classes == expected_classes
 
     def test_empty_mark_types_allowed(self):
         """Test that empty mark types list is allowed."""
