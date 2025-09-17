@@ -8,7 +8,7 @@ import { DPMSettings } from "@/schema/settings";
 import { BlockQuoteNode } from "@/schema/nodes/blockquote";
 import { CodeBlockNode } from "@/schema/nodes/code_block";
 import { HeadingNode } from "@/schema/nodes/heading";
-import { ImageNode } from "@/schema/nodes/image";
+import { FilerImageNode } from "@/schema/nodes/image";
 import { HardBreakNode } from "@/schema/nodes/hard_break";
 import { OrderedListNode } from "@/schema/nodes/ordered_list";
 import { BulletListNode } from "@/schema/nodes/bullet_list";
@@ -182,7 +182,7 @@ describe("DjangoProsemirrorSchema", () => {
 
     describe("Inline Nodes", () => {
         it("should return correct image node spec", () => {
-            settings.allowedNodes = [NodeType.PARAGRAPH, NodeType.IMAGE];
+            settings.allowedNodes = [NodeType.PARAGRAPH, NodeType.FILER_IMAGE];
             DPMSchemaCls = new DPMSchema(settings as DPMSettings);
             const imageSpec = DPMSchemaCls.schema.nodes.image.spec;
             expect(imageSpec.inline).toBe(true);
@@ -237,7 +237,7 @@ describe("DjangoProsemirrorSchema", () => {
                 },
             ]);
 
-            deepEqual(new ImageNode(classMapping).spec, imageSpec);
+            deepEqual(new FilerImageNode(classMapping).spec, imageSpec);
         });
 
         it("should return correct hard_break node spec", () => {
@@ -727,7 +727,7 @@ describe("DjangoProsemirrorSchema", () => {
                 NodeType.HARD_BREAK,
                 NodeType.HEADING,
                 NodeType.HORIZONTAL_RULE,
-                NodeType.IMAGE,
+                NodeType.FILER_IMAGE,
                 NodeType.ORDERED_LIST,
             ];
             DPMSchemaCls = new DPMSchema(settings as DPMSettings);
@@ -836,7 +836,7 @@ describe("DjangoProsemirrorSchema", () => {
 
     describe("Edge Cases and Error Handling", () => {
         it("should handle missing attributes gracefully in image parseDOM", () => {
-            settings.allowedNodes = [NodeType.PARAGRAPH, NodeType.IMAGE];
+            settings.allowedNodes = [NodeType.PARAGRAPH, NodeType.FILER_IMAGE];
             settings.allowedMarks = [];
             DPMSchemaCls = new DPMSchema(settings as DPMSettings);
             const imageSpec = DPMSchemaCls.schema.nodes.image.spec;

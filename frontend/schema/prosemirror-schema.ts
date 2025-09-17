@@ -15,7 +15,7 @@ import { CodeBlockNode } from "@/schema/nodes/code_block";
 import { HardBreakNode } from "@/schema/nodes/hard_break";
 import { HeadingNode } from "@/schema/nodes/heading";
 import { HorizontalRuleNode } from "@/schema/nodes/horizontal_rule";
-import { ImageNode } from "@/schema/nodes/image";
+import { FilerImageNode } from "@/schema/nodes/image";
 import { ListItemNode } from "@/schema/nodes/list_item";
 import { OrderedListNode } from "@/schema/nodes/ordered_list";
 import { ParagraphNode } from "@/schema/nodes/paragraph";
@@ -51,7 +51,7 @@ class DMPSchema {
             // Default
             [NodeType.HEADING]: new HeadingNode(this.classMapping!),
             [NodeType.BLOCKQUOTE]: new BlockQuoteNode(this.classMapping!),
-            [NodeType.IMAGE]: new ImageNode(this.classMapping!),
+            [NodeType.FILER_IMAGE]: new FilerImageNode(this.classMapping!),
             [NodeType.HORIZONTAL_RULE]: new HorizontalRuleNode(
                 this.classMapping!,
             ),

@@ -22,7 +22,7 @@ describe("image-upload-plugin/index", () => {
 
         mockSettings = {
             uploadEndpoint: "http://example.com/upload",
-            allowedNodes: [NodeType.IMAGE],
+            allowedNodes: [NodeType.FILER_IMAGE],
             allowedMarks: [],
         };
     });
