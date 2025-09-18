@@ -49,7 +49,8 @@ describe("image-upload-plugin/plugin", () => {
         mockSettings = {
             allowedNodes: [NodeType.PARAGRAPH],
             allowedMarks: [],
-            uploadEndpoint: "http://example.com/upload",
+            filerUploadEndpoint: "http://example.com/upload",
+            filerUploadEnabled: true,
             language: LanguageCodeEnum.EN,
         };
 
@@ -86,7 +87,7 @@ describe("image-upload-plugin/plugin", () => {
             expect(initialState).toHaveProperty("uploader");
             expect(initialState.uploader).toBe(mockUploadImageInstance);
             expect(mockUploadImage).toHaveBeenCalledWith(
-                mockSettings.uploadEndpoint,
+                mockSettings.filerUploadEndpoint,
             );
         });
 
@@ -107,10 +108,11 @@ describe("image-upload-plugin/plugin", () => {
             expect(appliedState).toBe(initialState);
         });
 
-        it("should handle missing uploadEndpoint", () => {
+        it("should handle missing filerUploadEndpoint", () => {
             const settingsWithoutEndpoint = {
                 ...mockSettings,
-                uploadEndpoint: undefined,
+                filerUploadEndpoint: undefined,
+                filerUploadEnabled: false,
             };
 
             const plugin = uploadPlugin(settingsWithoutEndpoint);

@@ -23,12 +23,12 @@ export interface ImageDOMAttrs extends Record<string, unknown> {
  * Prosemirror processes this node like ->
  * `<img src={attrs.src} alt={attrs.alt} title={attrs.title} />`
  */
-export class ImageNode extends NodeDefinition {
+export class FilerImageNode extends NodeDefinition {
     /** Image node. */
     constructor(classes: ClassMapping) {
         super(classes);
     }
-    override name = NodeType.IMAGE;
+    override name = NodeType.FILER_IMAGE;
     override attrs = {
         alt: { default: "", validate: "string|null" },
         caption: { default: null, validate: "string|null" },

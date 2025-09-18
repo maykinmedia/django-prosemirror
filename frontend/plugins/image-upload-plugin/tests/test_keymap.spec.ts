@@ -32,7 +32,8 @@ describe("image-upload-plugin/keymap", () => {
         vi.clearAllMocks();
 
         mockSettings = {
-            uploadEndpoint: "http://example.com/upload",
+            filerUploadEndpoint: "http://example.com/upload",
+            filerUploadEnabled: true,
         } as unknown as IDPMSettings;
 
         mockDispatch = vi.fn();
@@ -62,7 +63,7 @@ describe("image-upload-plugin/keymap", () => {
             imageKeymapPlugin(mockSettings);
 
             expect(UploadImage).toHaveBeenCalledWith(
-                mockSettings.uploadEndpoint,
+                mockSettings.filerUploadEndpoint,
             );
         });
     });
@@ -141,17 +142,23 @@ describe("image-upload-plugin/keymap", () => {
     describe("integration scenarios", () => {
         it("should work with different upload endpoints", () => {
             const settings1 = {
-                uploadEndpoint: "http://example1.com/upload",
+                filerUploadEndpoint: "http://example1.com/upload",
+                filerUploadEnabled: true,
             } as unknown as IDPMSettings;
             const settings2 = {
-                uploadEndpoint: "http://example2.com/upload",
+                filerUploadEndpoint: "http://example2.com/upload",
+                filerUploadEnabled: true,
             } as unknown as IDPMSettings;
 
             imageKeymapPlugin(settings1);
             imageKeymapPlugin(settings2);
 
-            expect(UploadImage).toHaveBeenCalledWith(settings1.uploadEndpoint);
-            expect(UploadImage).toHaveBeenCalledWith(settings2.uploadEndpoint);
+            expect(UploadImage).toHaveBeenCalledWith(
+                settings1.filerUploadEndpoint,
+            );
+            expect(UploadImage).toHaveBeenCalledWith(
+                settings2.filerUploadEndpoint,
+            );
         });
 
         it("should handle all commands consistently", () => {

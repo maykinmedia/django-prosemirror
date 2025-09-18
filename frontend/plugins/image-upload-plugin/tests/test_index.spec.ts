@@ -21,8 +21,9 @@ describe("image-upload-plugin/index", () => {
         vi.clearAllMocks();
 
         mockSettings = {
-            uploadEndpoint: "http://example.com/upload",
-            allowedNodes: [NodeType.IMAGE],
+            filerUploadEndpoint: "http://example.com/upload",
+            filerUploadEnabled: true,
+            allowedNodes: [NodeType.FILER_IMAGE],
             allowedMarks: [],
         };
     });
@@ -46,7 +47,8 @@ describe("image-upload-plugin/index", () => {
         it("should return empty array if no upload endpoint", () => {
             mockSettings = {
                 ...mockSettings,
-                uploadEndpoint: undefined,
+                filerUploadEndpoint: undefined,
+                filerUploadEnabled: false,
             };
 
             plugins = imageUploadPlugin(mockSettings, true);
