@@ -1,6 +1,11 @@
 import { buildMenuItems } from "@/plugins/menubar/index";
+import { NodeType } from "@/schema/types";
 import { redoItem, selectParentNodeItem, undoItem } from "prosemirror-menu";
-import { MarkType, NodeType, Schema } from "prosemirror-model";
+import {
+    MarkType as PMMarkType,
+    NodeType as PMNodeType,
+    Schema,
+} from "prosemirror-model";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock ProseMirror menu components
@@ -81,8 +86,8 @@ vi.mock("../../i18n/translations", () => ({
 
 describe("plugins/menubar/index", () => {
     let mockSchema: Schema;
-    let mockMarkType: MarkType;
-    let mockNodeType: NodeType;
+    let mockMarkType: PMMarkType;
+    let mockNodeType: PMNodeType;
 
     beforeEach(() => {
         vi.clearAllMocks();
@@ -91,14 +96,14 @@ describe("plugins/menubar/index", () => {
         mockMarkType = {
             name: "strong",
             isInSet: vi.fn().mockReturnValue(null),
-        } as unknown as MarkType;
+        } as unknown as PMMarkType;
 
         // Create mock node type
         mockNodeType = {
             name: "paragraph",
             create: vi.fn().mockReturnValue({}),
             createAndFill: vi.fn().mockReturnValue({}),
-        } as unknown as NodeType;
+        } as unknown as PMNodeType;
 
         // Create mock schema with various nodes and marks
         mockSchema = {
@@ -108,7 +113,10 @@ describe("plugins/menubar/index", () => {
                 paragraph: mockNodeType,
                 heading: { ...mockNodeType, name: "heading" },
                 blockquote: { ...mockNodeType, name: "blockquote" },
-                image: { ...mockNodeType, name: "image" },
+                [NodeType.FILER_IMAGE]: {
+                    ...mockNodeType,
+                    name: NodeType.FILER_IMAGE,
+                },
                 ordered_list: { ...mockNodeType, name: "ordered_list" },
                 bullet_list: { ...mockNodeType, name: "bullet_list" },
                 list_item: { ...mockNodeType, name: "list_item" },

@@ -23,6 +23,7 @@ import { Node } from "prosemirror-model";
 import { EditorView } from "prosemirror-view";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Signal } from "@preact/signals";
+import { NodeType } from "@/schema/types";
 
 // Setup jsdom globals
 Object.defineProperty(window, "ResizeObserver", {
@@ -73,7 +74,7 @@ describe("toolbar-plugin/components", () => {
         } as unknown as EditorView;
 
         mockTarget = {
-            type: { name: "image" },
+            type: { name: NodeType.FILER_IMAGE },
             attrs: { src: "test.jpg" },
         } as unknown as Node;
 

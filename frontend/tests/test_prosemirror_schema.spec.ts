@@ -184,7 +184,8 @@ describe("DjangoProsemirrorSchema", () => {
         it("should return correct image node spec", () => {
             settings.allowedNodes = [NodeType.PARAGRAPH, NodeType.FILER_IMAGE];
             DPMSchemaCls = new DPMSchema(settings as DPMSettings);
-            const imageSpec = DPMSchemaCls.schema.nodes.image.spec;
+            const imageSpec =
+                DPMSchemaCls.schema.nodes[NodeType.FILER_IMAGE].spec;
             expect(imageSpec.inline).toBe(true);
             expect(imageSpec.group).toBe("inline");
             expect(imageSpec.draggable).toBe(true);
@@ -839,7 +840,8 @@ describe("DjangoProsemirrorSchema", () => {
             settings.allowedNodes = [NodeType.PARAGRAPH, NodeType.FILER_IMAGE];
             settings.allowedMarks = [];
             DPMSchemaCls = new DPMSchema(settings as DPMSettings);
-            const imageSpec = DPMSchemaCls.schema.nodes.image.spec;
+            const imageSpec =
+                DPMSchemaCls.schema.nodes[NodeType.FILER_IMAGE].spec;
             const mockDOMWithMissingAttrs: Partial<HTMLElement> = {
                 getAttribute: () => null,
             };

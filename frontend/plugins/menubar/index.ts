@@ -15,6 +15,7 @@ import { canInsert, createBlockTypeMenuItem, cut, markItem } from "./utils";
 import { createLinkMenuItem } from "./link";
 import { createImageMenuItem } from "./image";
 import { createListWrapMenuItem } from "./list";
+import { NodeType } from "@/schema/types";
 /**
  * Interface defining the structure of menu items that can be built for the ProseMirror editor.
  * Each property represents a specific menu action or dropdown that can be added to the editor toolbar.
@@ -160,8 +161,10 @@ class MenuBuilder {
         const result: Partial<MenuItemResult> = {};
 
         // Image insertion
-        if (this.schema.nodes.image) {
-            result.insertImage = createImageMenuItem(this.schema.nodes.image);
+        if (this.schema.nodes[NodeType.FILER_IMAGE]) {
+            result.insertImage = createImageMenuItem(
+                this.schema.nodes[NodeType.FILER_IMAGE],
+            );
         }
 
         // Bullet list operations

@@ -8,6 +8,7 @@ import {
     type IToolbarProps,
 } from "@/plugins/toolbar-plugin";
 import { ImageDOMAttrs } from "@/schema/nodes/image";
+import { NodeType } from "@/schema/types";
 import clsx from "clsx";
 import { ComponentChildren, Fragment, RefObject } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
@@ -53,7 +54,7 @@ export const ToolbarComponent = <
         // Get target element - image or table
         if (
             selection instanceof NodeSelection &&
-            selection.node.type.name === "image" &&
+            selection.node.type.name === NodeType.FILER_IMAGE &&
             id === "image-toolbar"
         ) {
             const nodeDOM = viewState.nodeDOM(selection.from);

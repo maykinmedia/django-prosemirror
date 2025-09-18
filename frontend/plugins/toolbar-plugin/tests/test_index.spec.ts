@@ -14,6 +14,7 @@ import {
     ToolbarDropdown,
     ToolbarIcon,
 } from "@/plugins/toolbar-plugin";
+import { NodeType } from "@/schema/types";
 import { Node } from "prosemirror-model";
 import { EditorState, EditorStateConfig } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
@@ -42,7 +43,7 @@ describe("toolbar-plugin/index", () => {
                 dom: document.createElement("div"),
             } as unknown as EditorView;
 
-            const mockTarget = { type: { name: "image" } } as Node;
+            const mockTarget = { type: { name: NodeType.FILER_IMAGE } } as Node;
             const mockCreateMenuItems = vi.fn(() => [
                 { title: "Test", command: () => true },
             ]);
@@ -73,7 +74,7 @@ describe("toolbar-plugin/index", () => {
                 dom: document.createElement("div"),
             } as unknown as EditorView;
 
-            const mockTarget = { type: { name: "image" } } as Node;
+            const mockTarget = { type: { name: NodeType.FILER_IMAGE } } as Node;
             const mockCreateMenuItems = vi.fn(() => [
                 { title: "Test", command: () => true },
             ]);
@@ -107,7 +108,7 @@ describe("toolbar-plugin/index", () => {
                 dom: document.createElement("div"),
             } as unknown as EditorView;
 
-            const mockTarget = { type: { name: "image" } } as Node;
+            const mockTarget = { type: { name: NodeType.FILER_IMAGE } } as Node;
             const mockCreateMenuItems = vi.fn(() => []);
 
             const toolbar = new ToolbarInstance(
@@ -146,7 +147,7 @@ describe("toolbar-plugin/index", () => {
                 dom: document.createElement("div"),
             } as unknown as EditorView;
 
-            const mockTarget = { type: { name: "image" } } as Node;
+            const mockTarget = { type: { name: NodeType.FILER_IMAGE } } as Node;
             const mockCreateMenuItems = vi.fn(() => []);
 
             const toolbar = new ToolbarInstance(
@@ -258,7 +259,7 @@ describe("toolbar-plugin/index", () => {
             );
 
             const mockView = { state: { selection: {} } } as EditorView;
-            const mockTarget = { type: { name: "image" } } as Node;
+            const mockTarget = { type: { name: NodeType.FILER_IMAGE } } as Node;
             const mockCreateMenuItems = () => [];
 
             const toolbar = state.createToolbar(
@@ -325,7 +326,7 @@ describe("toolbar-plugin/index", () => {
             };
 
             const mockView = { state: { selection: {} } } as EditorView;
-            const mockTarget = { type: { name: "image" } } as Node;
+            const mockTarget = { type: { name: NodeType.FILER_IMAGE } } as Node;
 
             const items = createMenuItems(mockView, mockTarget);
             expect(items).toHaveLength(2);
