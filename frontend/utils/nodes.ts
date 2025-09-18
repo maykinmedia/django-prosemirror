@@ -12,6 +12,7 @@ import {
     rowIsHeader,
     selectedRect,
 } from "prosemirror-tables";
+import { NodeType } from "@/schema/types";
 
 /**
  * Check if an image node is currently selected
@@ -23,7 +24,7 @@ export function isImageSelected(view: EditorView): boolean {
     const { selection } = view.state;
     return (
         selection instanceof NodeSelection &&
-        selection.node.type.name === "image"
+        selection.node.type.name === NodeType.FILER_IMAGE
     );
 }
 
@@ -34,7 +35,7 @@ export function getSelectedImageNode(view: EditorView): Node | null {
     const { selection } = view.state;
     if (
         selection instanceof NodeSelection &&
-        selection.node.type.name === "image"
+        selection.node.type.name === NodeType.FILER_IMAGE
     ) {
         return selection.node;
     }
@@ -42,7 +43,7 @@ export function getSelectedImageNode(view: EditorView): Node | null {
 }
 
 export function insertImage(attrs: ImageNodeAttrs, view: EditorView): void {
-    const node = view.state.schema.nodes.image.create(attrs);
+    const node = view.state.schema.nodes[NodeType.FILER_IMAGE].create(attrs);
     const transaction = view.state.tr
         .replaceSelectionWith(node)
         .scrollIntoView();

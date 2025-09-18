@@ -1,5 +1,6 @@
 import { IconData } from "@/plugins/icons";
 import { ImageNodeAttrs } from "@/schema/nodes/image";
+import { NodeType } from "@/schema/types";
 import {
     getSelectedImageNode,
     getSelectedTableNode,
@@ -46,7 +47,7 @@ describe("test utils folder", () => {
         const mockState = {
             schema: {
                 nodes: {
-                    image: { create: vi.fn() },
+                    [NodeType.FILER_IMAGE]: { create: vi.fn() },
                 },
             },
             tr: {
@@ -56,7 +57,7 @@ describe("test utils folder", () => {
         };
 
         const mockSelection = {
-            node: { type: { name: "image", create: vi.fn() } },
+            node: { type: { name: NodeType.FILER_IMAGE, create: vi.fn() } },
         };
 
         Object.setPrototypeOf(mockSelection, NodeSelection.prototype);
@@ -181,7 +182,9 @@ describe("test utils folder", () => {
         describe("test isImageSelected", () => {
             it("should return true if a image is selected", () => {
                 const mockSelection = {
-                    node: { type: { name: "image", create: vi.fn() } },
+                    node: {
+                        type: { name: NodeType.FILER_IMAGE, create: vi.fn() },
+                    },
                 };
                 Object.setPrototypeOf(mockSelection, NodeSelection.prototype);
                 mockView.state.selection =
@@ -203,7 +206,9 @@ describe("test utils folder", () => {
         describe("test getSelectedImageNode", () => {
             it("should return the selected image", () => {
                 const mockSelection = {
-                    node: { type: { name: "image", create: vi.fn() } },
+                    node: {
+                        type: { name: NodeType.FILER_IMAGE, create: vi.fn() },
+                    },
                 };
                 Object.setPrototypeOf(mockSelection, NodeSelection.prototype);
                 mockView.state.selection =

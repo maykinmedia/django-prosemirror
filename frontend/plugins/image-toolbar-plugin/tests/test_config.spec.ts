@@ -1,6 +1,7 @@
 import { translate } from "@/i18n/translations";
 import { imageToolbarMenuConfig } from "@/plugins/image-toolbar-plugin/config";
 import { ImageDOMAttrs } from "@/schema/nodes/image";
+import { NodeType } from "@/schema/types";
 import { Node } from "prosemirror-model";
 import { EditorState } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
@@ -24,7 +25,7 @@ describe("image-toolbar-plugin/config", () => {
 
         // Mock target node (image)
         mockTarget = {
-            type: { name: "image" },
+            type: { name: NodeType.FILER_IMAGE },
             attrs: {
                 src: "http://example.com/image.jpg",
                 title: "Test Image",

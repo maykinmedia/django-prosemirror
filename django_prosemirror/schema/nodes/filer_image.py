@@ -5,12 +5,12 @@ from prosemirror.model.schema import NodeSpec
 from ..base import NodeDefinition
 
 
-class ImageNode(NodeDefinition):
+class FilerImageNode(NodeDefinition):
     """An inline image node. Supports src, alt, and title attributes."""
 
     @property
     def name(self) -> str:
-        return "image"
+        return "filer_image"
 
     def to_dom(self, node) -> list:
         """Convert image node to DOM representation."""
@@ -33,7 +33,7 @@ class ImageNode(NodeDefinition):
         if node.attrs.get("caption") != "":
             attrs["caption"] = node.attrs["caption"]
 
-        final_attrs = self.class_mapping.apply_to_attrs(attrs, "image")
+        final_attrs = self.class_mapping.apply_to_attrs(attrs, "filer_image")
         return ["img", final_attrs]
 
     def dom_matcher(self) -> list:

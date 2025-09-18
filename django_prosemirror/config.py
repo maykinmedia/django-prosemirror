@@ -20,10 +20,10 @@ from django_prosemirror.schema.nodes import (
     BlockquoteNode,
     BulletListNode,
     CodeBlockNode,
+    FilerImageNode,
     HardBreakNode,
     HeadingNode,
     HorizontalRuleNode,
-    ImageNode,
     ListItemNode,
     OrderedListNode,
     ParagraphNode,
@@ -113,7 +113,7 @@ class ProsemirrorConfig:
             ) from None
 
         # Validate IMAGE node type dependencies
-        if NodeType.IMAGE in self.allowed_node_types:
+        if NodeType.FILER_IMAGE in self.allowed_node_types:
             try:
                 import filer  # noqa: F401
             except ImportError as exc:
@@ -132,7 +132,7 @@ class ProsemirrorConfig:
             NodeType.HEADING: HeadingNode(class_mapping),
             NodeType.HORIZONTAL_RULE: HorizontalRuleNode(class_mapping),
             NodeType.CODE_BLOCK: CodeBlockNode(class_mapping),
-            NodeType.IMAGE: ImageNode(class_mapping),
+            NodeType.FILER_IMAGE: FilerImageNode(class_mapping),
             NodeType.HARD_BREAK: HardBreakNode(class_mapping),
             NodeType.BULLET_LIST: BulletListNode(class_mapping),
             NodeType.ORDERED_LIST: OrderedListNode(class_mapping),

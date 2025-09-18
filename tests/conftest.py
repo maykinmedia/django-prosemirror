@@ -107,7 +107,7 @@ def full_document() -> ProsemirrorDocument:
                 "content": [
                     {"type": "text", "text": "Here's an image: "},
                     {
-                        "type": "image",
+                        "type": "filer_image",
                         "attrs": {
                             "src": "https://example.com/image.jpg",
                             "alt": "Example image",

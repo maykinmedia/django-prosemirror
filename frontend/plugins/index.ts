@@ -7,6 +7,7 @@ import { buildMenuItems } from "@/plugins/menubar";
 import { tablePlugins } from "@/plugins/table-plugin";
 import { toolbarPlugin } from "@/plugins/toolbar-plugin";
 import { type DPMSettings } from "@/schema/settings";
+import { NodeType } from "@/schema/types";
 import { baseKeymap } from "prosemirror-commands";
 import { dropCursor } from "prosemirror-dropcursor";
 import { buildInputRules, buildKeymap } from "prosemirror-example-setup";
@@ -61,8 +62,8 @@ export function getDPMPlugins(
          * - Manages image node creation and attribute updates
          * - Integrates with backend upload endpoints
          */
-        ...(schema.nodes.image
-            ? imageUploadPlugin(settings, !!schema.nodes.image)
+        ...(schema.nodes[NodeType.FILER_IMAGE]
+            ? imageUploadPlugin(settings, !!schema.nodes[NodeType.FILER_IMAGE])
             : []),
         /**
          * Image-specific toolbar plugin
@@ -74,7 +75,7 @@ export function getDPMPlugins(
          * - Depends on both toolbarPlugin and imageUploadPlugin
          * - Auto-positions relative to selected image nodes
          */
-        ...(schema.nodes.image
+        ...(schema.nodes[NodeType.FILER_IMAGE]
             ? [imageToolbarPlugin(imageToolbarMenuConfig)]
             : []),
         /**

@@ -18,7 +18,7 @@ class NodeType(enum.Enum):
     BLOCKQUOTE = "blockquote"
     HORIZONTAL_RULE = "horizontal_rule"
     HEADING = "heading"
-    IMAGE = "image"
+    FILER_IMAGE = "filer_image"
     HARD_BREAK = "hard_break"
     CODE_BLOCK = "code_block"
     BULLET_LIST = "bullet_list"

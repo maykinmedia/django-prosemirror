@@ -4,6 +4,7 @@ import {
 } from "@/plugins/image-toolbar-plugin";
 import { CreateMenuItems, IToolbarInstance } from "@/plugins/toolbar-plugin";
 import { ImageDOMAttrs } from "@/schema/nodes/image";
+import { NodeType } from "@/schema/types";
 import * as utils from "@/utils";
 import { Node } from "prosemirror-model";
 import { EditorState } from "prosemirror-state";
@@ -124,7 +125,7 @@ describe("image-toolbar-plugin/plugin", () => {
 
             it("should create toolbar when image is selected", () => {
                 const mockImageNode = {
-                    type: { name: "image" },
+                    type: { name: NodeType.FILER_IMAGE },
                     attrs: { src: "test.jpg" },
                 } as unknown as Node;
 
@@ -169,7 +170,7 @@ describe("image-toolbar-plugin/plugin", () => {
 
             it("should destroy existing toolbar before creating new one", () => {
                 const mockImageNode = {
-                    type: { name: "image" },
+                    type: { name: NodeType.FILER_IMAGE },
                     attrs: { src: "test.jpg" },
                 } as unknown as Node;
 
@@ -194,7 +195,7 @@ describe("image-toolbar-plugin/plugin", () => {
 
             it("should destroy toolbar when image is deselected", () => {
                 const mockImageNode = {
-                    type: { name: "image" },
+                    type: { name: NodeType.FILER_IMAGE },
                     attrs: { src: "test.jpg" },
                 } as unknown as Node;
 
@@ -235,7 +236,7 @@ describe("image-toolbar-plugin/plugin", () => {
         describe("destroy method", () => {
             it("should destroy toolbar instance when view is destroyed", () => {
                 const mockImageNode = {
-                    type: { name: "image" },
+                    type: { name: NodeType.FILER_IMAGE },
                     attrs: { src: "test.jpg" },
                 } as unknown as Node;
 
@@ -279,7 +280,7 @@ describe("image-toolbar-plugin/plugin", () => {
             const view = plugin.spec.view!(mockView);
 
             const mockImageNode = {
-                type: { name: "image" },
+                type: { name: NodeType.FILER_IMAGE },
                 attrs: { src: "test.jpg" },
             } as unknown as Node;
             vi.mocked(utils.isImageSelected).mockReturnValue(true);
@@ -300,11 +301,11 @@ describe("image-toolbar-plugin/plugin", () => {
 
         it("should handle multiple selection changes", () => {
             const mockImageNode1 = {
-                type: { name: "image" },
+                type: { name: NodeType.FILER_IMAGE },
                 attrs: { src: "test1.jpg" },
             } as unknown as Node;
             const mockImageNode2 = {
-                type: { name: "image" },
+                type: { name: NodeType.FILER_IMAGE },
                 attrs: { src: "test2.jpg" },
             } as unknown as Node;
 

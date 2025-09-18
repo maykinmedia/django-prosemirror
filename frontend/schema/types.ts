@@ -15,7 +15,7 @@ export enum NodeType {
     BLOCKQUOTE = "blockquote",
     HORIZONTAL_RULE = "horizontal_rule",
     HEADING = "heading",
-    FILER_IMAGE = "image", // TODO: rename to `filer_image` once backend name is changed.
+    FILER_IMAGE = "filer_image",
     HARD_BREAK = "hard_break",
     CODE_BLOCK = "code_block",
     // List nodes

@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { EditorState, EditorStateConfig, Transaction } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 import { Node } from "prosemirror-model";
+import { NodeType } from "@/schema/types";
 
 describe("toolbar-plugin/plugin", () => {
     beforeEach(() => {
@@ -70,7 +71,7 @@ describe("toolbar-plugin/plugin", () => {
             );
 
             const mockView = { state: { selection: {} } } as EditorView;
-            const mockTarget = { type: { name: "image" } } as Node;
+            const mockTarget = { type: { name: NodeType.FILER_IMAGE } } as Node;
             const mockCreateMenuItems = vi.fn().mockReturnValue([]);
 
             const toolbar = state.createToolbar(
@@ -93,7 +94,7 @@ describe("toolbar-plugin/plugin", () => {
                 state: { selection: {} },
                 dom: document.createElement("div"),
             } as unknown as EditorView;
-            const mockTarget = { type: { name: "image" } } as Node;
+            const mockTarget = { type: { name: NodeType.FILER_IMAGE } } as Node;
             const mockCreateMenuItems = vi.fn().mockReturnValue([]);
 
             const toolbar = state.createToolbar(
@@ -116,7 +117,7 @@ describe("toolbar-plugin/plugin", () => {
 
             const mockView = { state: { selection: {} } } as EditorView;
             const mockTarget = {
-                type: { name: "image" },
+                type: { name: NodeType.FILER_IMAGE },
                 attrs: { src: "test.jpg" },
             } as unknown as Node;
             const mockCreateMenuItems = vi.fn().mockReturnValue([]);
@@ -139,7 +140,7 @@ describe("toolbar-plugin/plugin", () => {
             );
 
             const mockView = { state: { selection: {} } } as EditorView;
-            const mockTarget = { type: { name: "image" } } as Node;
+            const mockTarget = { type: { name: NodeType.FILER_IMAGE } } as Node;
             const mockCreateMenuItems = vi
                 .fn()
                 .mockReturnValue([
@@ -190,7 +191,10 @@ describe("toolbar-plugin/plugin", () => {
             const mockCreateMenuItems = vi.fn().mockReturnValue([]);
 
             const targets = [
-                { type: { name: "image" }, attrs: { src: "test.jpg" } },
+                {
+                    type: { name: NodeType.FILER_IMAGE },
+                    attrs: { src: "test.jpg" },
+                },
                 { type: { name: "paragraph" }, content: [] },
                 { type: { name: "heading" }, attrs: { level: 1 } },
             ];
@@ -272,7 +276,7 @@ describe("toolbar-plugin/plugin", () => {
             const mockView = { state: { selection: {} } } as EditorView;
             const mockCreateMenuItems = vi.fn().mockReturnValue([]);
 
-            const target1 = { type: { name: "image" } } as Node;
+            const target1 = { type: { name: NodeType.FILER_IMAGE } } as Node;
             const target2 = { type: { name: "paragraph" } } as Node;
 
             const toolbar1 = state.createToolbar(
@@ -301,7 +305,7 @@ describe("toolbar-plugin/plugin", () => {
             );
 
             const mockView = { state: { selection: {} } } as EditorView;
-            const mockTarget = { type: { name: "image" } } as Node;
+            const mockTarget = { type: { name: NodeType.FILER_IMAGE } } as Node;
             const complexMenuItems = [
                 {
                     icon: "edit",
@@ -344,7 +348,7 @@ describe("toolbar-plugin/plugin", () => {
             );
 
             const mockView = { state: { selection: {} } } as EditorView;
-            const mockTarget = { type: { name: "image" } } as Node;
+            const mockTarget = { type: { name: NodeType.FILER_IMAGE } } as Node;
             const mockCreateMenuItems = vi.fn().mockReturnValue([]);
 
             const toolbar = state.createToolbar(
@@ -364,7 +368,7 @@ describe("toolbar-plugin/plugin", () => {
             );
 
             const mockView = { state: { selection: {} } } as EditorView;
-            const mockTarget = { type: { name: "image" } } as Node;
+            const mockTarget = { type: { name: NodeType.FILER_IMAGE } } as Node;
             const mockCreateMenuItems = vi.fn().mockReturnValue(null);
 
             expect(() => {
@@ -384,7 +388,7 @@ describe("toolbar-plugin/plugin", () => {
             // This tests that the generic typing works correctly
             const mockView = { state: { selection: {} } } as EditorView;
             const mockImageTarget = {
-                type: { name: "image" },
+                type: { name: NodeType.FILER_IMAGE },
                 attrs: { src: "test.jpg" },
             } as unknown as Node;
             const mockCreateMenuItems = vi.fn().mockReturnValue([]);

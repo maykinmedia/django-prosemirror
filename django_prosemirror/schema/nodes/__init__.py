@@ -3,10 +3,10 @@
 from .blockquote import BlockquoteNode
 from .bullet_list import BulletListNode
 from .code_block import CodeBlockNode
+from .filer_image import FilerImageNode
 from .hard_break import HardBreakNode
 from .heading import HeadingNode
 from .horizontal_rule import HorizontalRuleNode
-from .image import ImageNode
 from .list_item import ListItemNode
 from .ordered_list import OrderedListNode
 from .paragraph import ParagraphNode
@@ -21,7 +21,7 @@ __all__ = [
     "HardBreakNode",
     "HeadingNode",
     "HorizontalRuleNode",
-    "ImageNode",
+    "FilerImageNode",
     "ListItemNode",
     "OrderedListNode",
     "ParagraphNode",
