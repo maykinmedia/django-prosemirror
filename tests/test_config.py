@@ -302,7 +302,7 @@ class TestProsemirrorConfigSchema:
             "horizontal_rule",
             "heading",
             "code_block",
-            "image",
+            "filer_image",
             "hard_break",
             "ordered_list",
             "list_item",
@@ -323,7 +323,7 @@ class TestProsemirrorConfigSchema:
             ([NodeType.HEADING], []),
             ([], [MarkType.STRONG, MarkType.ITALIC]),
             ([NodeType.BLOCKQUOTE, NodeType.CODE_BLOCK], []),
-            ([NodeType.IMAGE], [MarkType.LINK]),
+            ([NodeType.FILER_IMAGE], [MarkType.LINK]),
             ([NodeType.HORIZONTAL_RULE, NodeType.HARD_BREAK], []),
         ],
     )

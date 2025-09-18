@@ -480,9 +480,9 @@ LIST_CASES = [
 # Test cases for inline elements
 INLINE_ELEMENT_CASES = [
     SerdeTestCase(
-        name="image",
+        name="filer_image",
         description="Image node produces img tag with attributes",
-        config_node_types=[NodeType.PARAGRAPH, NodeType.IMAGE],
+        config_node_types=[NodeType.PARAGRAPH, NodeType.FILER_IMAGE],
         config_mark_types=[],
         document={
             "type": "doc",
@@ -492,7 +492,7 @@ INLINE_ELEMENT_CASES = [
                     "content": [
                         {"type": "text", "text": "Here's an image: "},
                         {
-                            "type": "image",
+                            "type": "filer_image",
                             "attrs": {
                                 "src": "https://example.com/image.jpg",
                                 "alt": "Example image",

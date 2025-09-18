@@ -32,11 +32,11 @@ _default_node_types = [
     "table_header",
 ]
 
-# Only include IMAGE if filer is available
+# Only include FILER_IMAGE if filer is available
 try:
     import filer  # noqa: F401
 
-    _default_node_types.append("image")
+    _default_node_types.append("filer_image")
 except ImportError:
     pass
 

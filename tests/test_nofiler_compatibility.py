@@ -22,7 +22,7 @@ class TestNoFilerCompatibility(TestCase):
         config = ProsemirrorConfig(
             allowed_node_types=[NodeType.PARAGRAPH, NodeType.HEADING]
         )
-        self.assertNotIn(NodeType.IMAGE, config.allowed_node_types)
+        self.assertNotIn(NodeType.FILER_IMAGE, config.allowed_node_types)
         self.assertIn(NodeType.PARAGRAPH, config.allowed_node_types)
 
     def test_form_field_works_without_image(self):
@@ -49,7 +49,7 @@ class TestNoFilerCompatibility(TestCase):
         schema = config.schema
         self.assertIn("paragraph", schema.spec["nodes"])
         self.assertIn("heading", schema.spec["nodes"])
-        self.assertNotIn("image", schema.spec["nodes"])
+        self.assertNotIn("filer_image", schema.spec["nodes"])
 
     def test_widget_context_without_image(self):
         from django_prosemirror.widgets import ProsemirrorWidget

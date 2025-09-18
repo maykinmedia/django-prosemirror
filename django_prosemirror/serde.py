@@ -35,7 +35,7 @@ def _clean_empty_attrs(doc: ProsemirrorDocument, schema: Schema) -> ProsemirrorD
                 parent_disallows_marks = True
 
         # Clean up image node attributes that match default values
-        if node_type == "image" and "attrs" in node:
+        if node_type == "filer_image" and "attrs" in node:
             node_spec = schema.nodes.get(node_type)
             if node_spec and hasattr(node_spec, "spec") and "attrs" in node_spec.spec:
                 cleaned_attrs = {}
