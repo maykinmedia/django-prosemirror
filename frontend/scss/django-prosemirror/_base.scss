@@ -17,6 +17,7 @@
     padding-block: var(--spacing-medium) var(--spacing-large);
     outline: none;
     font-size: var(--font-size-body);
+    white-space: pre-wrap;
 
     /// ===== SELECTION ===== ///
     .ProseMirror-hideselection *::selection {
@@ -45,6 +46,11 @@
     /// ===== Images ===== ///
     img {
       max-width: 100%;
+    }
+
+    /// === Code ///
+    code {
+      white-space: pre-wrap;
     }
   }
 }

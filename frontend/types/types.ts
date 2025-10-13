@@ -96,3 +96,19 @@ export interface IDPMTranslations {
     "Enter image description": string;
     "Enter image caption": string;
 }
+
+export type ProseMirrorNode = {
+    type: string;
+    attrs?: Record<string, unknown>;
+    content?: ProseMirrorNode[];
+    text?: string;
+    marks?: {
+        type: string;
+        attrs?: Record<string, unknown>;
+    }[];
+};
+
+export interface ProseMirrorDoc extends ProseMirrorNode {
+    type: string; // root must always be "doc"
+    content: ProseMirrorNode[];
+}

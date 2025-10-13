@@ -125,3 +125,6 @@ coverage/
 # Django Filer
 filer_public/
 filer_public_thumbnails/
+
+*storybook.log
+storybook-static
