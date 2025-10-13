@@ -403,9 +403,9 @@ directory to the python path (or use ``python -m django <command>``):
     :target: https://django_prosemirror.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
-.. |python-versions| image:: https://img.shields.io/pypi/pyversions/django_prosemirror.svg
+.. |python-versions| image:: https://img.shields.io/pypi/pyversions/maykin-django-prosemirror.svg
 
-.. |django-versions| image:: https://img.shields.io/pypi/djversions/django_prosemirror.svg
+.. |django-versions| image:: https://img.shields.io/pypi/djversions/maykin-django-prosemirror.svg
 
-.. |pypi-version| image:: https://img.shields.io/pypi/v/django_prosemirror.svg
-    :target: https://pypi.org/project/django_prosemirror/
+.. |pypi-version| image:: https://img.shields.io/pypi/v/maykin-django-prosemirror.svg
+    :target: https://pypi.org/project/maykin-django-prosemirror/
