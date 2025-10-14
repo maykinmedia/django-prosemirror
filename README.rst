@@ -3,7 +3,7 @@
 django-prosemirror
 ==================
 
-:Version: 0.1.0
+:Version: 0.2.0
 :Source: https://github.com/maykinmedia/django_prosemirror
 :Keywords: Django, Prosemirror, rich-text, editor, document, JSON, WYSIWYG, content editor, text editor, markdown, html
 :PythonVersion: 3.11+
@@ -12,7 +12,7 @@ django-prosemirror
 
 |python-versions| |django-versions| |pypi-version|
 
-Rich-text fields for Django using `Prosemirror <https://prosemirror.net/>`_ - 
+Rich-text fields for Django using `Prosemirror <https://prosemirror.net/>`_ -
 a powerful, schema-driven rich text editor.
 
 .. contents::
@@ -72,11 +72,11 @@ Use ``ProseMirrorModelField`` in your Django models:
 
     class BlogPost(models.Model):
         title = models.CharField(max_length=200)
-        
+
         # Full-featured rich text content (uses default configuration allowing all node
         # and mark types)
         content = ProseMirrorModelField()
-        
+
         # Limited schema - only headings and paragraphs with bold text
         summary = ProseMirrorModelField(
             allowed_node_types=[NodeType.PARAGRAPH, NodeType.HEADING],
@@ -91,7 +91,7 @@ Use ``ProseMirrorModelField`` in your Django models:
                 "type": "doc",
                 "content": [
                     {
-                        "type": "paragraph", 
+                        "type": "paragraph",
                         "content": [{"type": "text", "text": "Start writing..."}]
                     }
                 ]
@@ -106,7 +106,7 @@ The field provides both document and HTML representations:
 .. code-block:: python
 
     post = BlogPost.objects.get(pk=1)
-    
+
     # Access as ProseMirror document (dict)
     doc_content = post.content.doc
     # Output: {
@@ -125,15 +125,15 @@ The field provides both document and HTML representations:
     #         }
     #     ]
     # }
-    
+
     # Access as HTML
     html_content = post.content.html
     # Output: "<h1>Heading</h1><p>Paragraph content...</p>"
-    
+
     # Modify content from HTML, which will be converted to a Prosemirror document internally
     post.content.html = "<h2>New heading</h2><p>Updated content</p>"
     post.save()
-    
+
     # After modification, the document structure is updated
     updated_doc = post.content.doc
     # Output: {
@@ -164,10 +164,10 @@ Use ``ProsemirrorFormField`` in Django forms:
 
     class BlogPostForm(forms.Form):
         title = forms.CharField(max_length=200)
-        
+
         # Full-featured editor (uses default configuration)
         content = ProsemirrorFormField()
-        
+
         # Limited to headings and paragraphs with basic formatting
         summary = ProsemirrorFormField(
             allowed_node_types=[NodeType.PARAGRAPH, NodeType.HEADING],
@@ -181,7 +181,7 @@ Schema Configuration
 Control exactly what content types are allowed using node and mark types:
 
 .. important::
-   You must always include ``NodeType.PARAGRAPH`` in your ``allowed_node_types`` list. 
+   You must always include ``NodeType.PARAGRAPH`` in your ``allowed_node_types`` list.
    The field will raise a ``ValueError`` if omitted.
 
 .. code-block:: python
@@ -194,7 +194,7 @@ Control exactly what content types are allowed using node and mark types:
     NodeType.BLOCKQUOTE        # Quote blocks
     NodeType.HORIZONTAL_RULE   # Horizontal rules
     NodeType.CODE_BLOCK        # Code blocks
-    NodeType.IMAGE             # Images
+    NodeType.FILER_IMAGE       # Images (requires django-filer)
     NodeType.HARD_BREAK        # Line breaks
     NodeType.BULLET_LIST       # Bullet lists
     NodeType.ORDERED_LIST      # Numbered lists
@@ -211,13 +211,13 @@ Control exactly what content types are allowed using node and mark types:
     MarkType.STRIKETHROUGH     # Strikethrough text
     MarkType.CODE              # Inline code
     MarkType.LINK              # Links
-    
+
     # Custom configurations
     BASIC_FORMATTING = {
         'allowed_node_types': [NodeType.PARAGRAPH, NodeType.HEADING],
         'allowed_mark_types': [MarkType.STRONG, MarkType.ITALIC, MarkType.LINK],
     }
-    
+
     BLOG_EDITOR = {
         'allowed_node_types': [
             NodeType.PARAGRAPH,
@@ -265,7 +265,7 @@ Always use callables for default values returning valid ProseMirror documents:
         content = ProseMirrorModelField(
             default=lambda: {"type": "doc", "content": []}
         )
-        
+
         # ❌ Wrong: Static dict (validation error)
         # content = ProseMirrorModelField(
         #     default={"type": "doc", "content": []}
@@ -285,7 +285,7 @@ The field works automatically with Django admin:
     class BlogPostAdmin(admin.ModelAdmin):
         fields = ['title', 'content', 'summary']
         readonly_fields = ['summary']  # Read-only fields render as HTML
-        
+
         # Editable fields: Render the full ProseMirror rich-text editor
         # Read-only fields: Render as formatted HTML output
 
@@ -331,12 +331,12 @@ Create ProseMirror content programmatically:
                 "content": [{"type": "text", "text": "My Heading"}]
             },
             {
-                "type": "paragraph", 
+                "type": "paragraph",
                 "content": [
                     {"type": "text", "text": "Some "},
                     {
-                        "type": "text", 
-                        "marks": [{"type": "strong"}], 
+                        "type": "text",
+                        "marks": [{"type": "strong"}],
                         "text": "bold"
                     },
                     {"type": "text", "text": " text."}
@@ -344,7 +344,7 @@ Create ProseMirror content programmatically:
             }
         ]
     }
-    
+
     article = Article.objects.create(content=content)
 
 
@@ -359,15 +359,16 @@ Requirements for development:
 Setup for development:
 
 .. code-block:: bash
+
     python -mvirtualenv .venv
     source .venv/bin/activate
 
     # Install Python package in development mode
     pip install -e .[tests,coverage,docs,release]
-    
+
     # Install Node.js dependencies
     npm install
-    
+
     # Build frontend assets (when making changes to JavaScript)
     ./build.sh
 
@@ -402,9 +403,9 @@ directory to the python path (or use ``python -m django <command>``):
     :target: https://django_prosemirror.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
-.. |python-versions| image:: https://img.shields.io/pypi/pyversions/django_prosemirror.svg
+.. |python-versions| image:: https://img.shields.io/pypi/pyversions/maykin-django-prosemirror.svg
 
-.. |django-versions| image:: https://img.shields.io/pypi/djversions/django_prosemirror.svg
+.. |django-versions| image:: https://img.shields.io/pypi/djversions/maykin-django-prosemirror.svg
 
-.. |pypi-version| image:: https://img.shields.io/pypi/v/django_prosemirror.svg
-    :target: https://pypi.org/project/django_prosemirror/
+.. |pypi-version| image:: https://img.shields.io/pypi/v/maykin-django-prosemirror.svg
+    :target: https://pypi.org/project/maykin-django-prosemirror/
