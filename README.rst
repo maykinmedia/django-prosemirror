@@ -194,7 +194,7 @@ Control exactly what content types are allowed using node and mark types:
     NodeType.BLOCKQUOTE        # Quote blocks
     NodeType.HORIZONTAL_RULE   # Horizontal rules
     NodeType.CODE_BLOCK        # Code blocks
-    NodeType.IMAGE             # Images
+    NodeType.FILER_IMAGE       # Images (requires django-filer)
     NodeType.HARD_BREAK        # Line breaks
     NodeType.BULLET_LIST       # Bullet lists
     NodeType.ORDERED_LIST      # Numbered lists
