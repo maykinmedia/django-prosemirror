@@ -24,6 +24,10 @@ from .nodes import (
     ListItemNode,
     OrderedListNode,
     ParagraphNode,
+    TableCellNode,
+    TableHeaderNode,
+    TableNode,
+    TableRowNode,
 )
 from .types import MarkType, NodeType, ProsemirrorDocument
 
@@ -76,6 +80,10 @@ __all__ = [
     "BulletListNode",
     "OrderedListNode",
     "ListItemNode",
+    "TableNode",
+    "TableRowNode",
+    "TableCellNode",
+    "TableHeaderNode",
     # Mark types
     "StrongMark",
     "ItalicMark",
