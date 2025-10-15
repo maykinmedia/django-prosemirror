@@ -1,13 +1,13 @@
-import { useEffect, useRef, useCallback } from "preact/hooks";
-import { DjangoProsemirror } from "../frontend/create";
+import { DjangoProsemirror } from "@/create";
+import { MarkType, NodeType } from "@/schema/types";
+import "@/scss/index.scss";
 import type { JSX } from "preact";
-import { useState } from "preact/hooks";
-import { MarkType, NodeType } from "../frontend/schema/types";
-import "../frontend/scss/index.scss";
+import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import { defaultDoc } from "./constants";
+import { ProseMirrorDoc } from "@/types/types";
 
 export interface DjangoProsemirrorWrapperProps {
-    initialContent?: Record<string, unknown>;
+    initialContent?: ProseMirrorDoc;
     debug?: boolean;
     allowedNodes: Array<NodeType>;
     allowedMarks: Array<MarkType>;
@@ -19,31 +19,6 @@ export interface DjangoProsemirrorWrapperProps {
     storyInteractions?: string[];
     storyAttrs?: string[][];
 }
-
-// Mock Django data structure
-export const mockDocumentData = {
-    type: "doc",
-    content: [
-        {
-            type: "paragraph",
-            content: [
-                {
-                    type: "text",
-                    text: "Welcome to Django ProseMirror! This editor demonstrates the modal functionality.",
-                },
-            ],
-        },
-        {
-            type: "paragraph",
-            content: [
-                {
-                    type: "text",
-                    text: "Try using the toolbar to open modals for editing images and other content.",
-                },
-            ],
-        },
-    ],
-};
 
 export const DjangoProsemirrorWidget = ({
     initialContent = defaultDoc,
@@ -58,7 +33,7 @@ export const DjangoProsemirrorWidget = ({
     storyInteractions,
     storyAttrs,
 }: DjangoProsemirrorWrapperProps) => {
-    const [doc, setDoc] = useState<Record<string, unknown>>(initialContent);
+    const [doc, setDoc] = useState<ProseMirrorDoc>(initialContent);
     const editorRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const prosemirrorInstanceRef = useRef<DjangoProsemirror | null>(null);

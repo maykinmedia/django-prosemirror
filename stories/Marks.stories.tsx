@@ -1,6 +1,6 @@
 import { en } from "@/i18n/locales/en";
 import { MarkType } from "@/schema/types";
-import { ProseMirrorDoc } from "@/types/types";
+import { type ProseMirrorDoc } from "@/types/types";
 import { Meta, StoryObj } from "@storybook/preact-vite";
 import { expect } from "storybook/test";
 import { defaultArgs, defaultMeta, shortcuts } from "./constants";
@@ -20,11 +20,11 @@ const meta: Meta<typeof DjangoProsemirrorWidget> = {
     title: "Django ProseMirror/Marks",
     beforeEach: async () => {
         // Clean up any lingering editors from previous tests
-        const existingEditors = document.querySelectorAll('.ProseMirror');
+        const existingEditors = document.querySelectorAll(".ProseMirror");
         existingEditors.forEach((editor) => {
-            const parent = editor.closest('[data-prosemirror-id]');
+            const parent = editor.closest("[data-prosemirror-id]");
             if (parent) {
-                parent.innerHTML = '';
+                parent.innerHTML = "";
             }
         });
 
@@ -976,7 +976,10 @@ export const StrikethroughMarkStory: Story = {
                     async () => {
                         await userEvent.type(editor, notStrikethroughText);
                         await userEvent.type(editor, strikethroughText);
-                        selection = await selectBackward(editor, strikethroughText);
+                        selection = await selectBackward(
+                            editor,
+                            strikethroughText,
+                        );
                         await userEvent.click(strikethroughBtn);
                     },
                 );

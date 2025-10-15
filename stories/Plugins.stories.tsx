@@ -1,8 +1,23 @@
 import { Meta, StoryObj } from "@storybook/preact-vite";
-import { expect, within } from "storybook/test";
+import { expect } from "storybook/test";
 import { defaultArgs, defaultMeta } from "./constants";
-import { getEditorHTML, getEditorJSON, waitForEditor } from "./utils";
+import {
+    createBlockquote,
+    createBulletList,
+    createCodeBlock,
+    createHeading,
+    createHorizontalRule,
+    createListItem,
+    createOrderedList,
+    createParagraph,
+    getEditorHTML,
+    getEditorJSON,
+    verifyEditorContent,
+    waitForEditor,
+} from "./utils";
 import { DjangoProsemirrorWidget } from "./Widget";
+import { ProseMirrorDoc } from "@/types/types";
+import { en as translations } from "@/i18n/locales/en";
 const meta: Meta<typeof DjangoProsemirrorWidget> = {
     ...defaultMeta,
     title: "Django ProseMirror/Plugins",
@@ -10,6 +25,15 @@ const meta: Meta<typeof DjangoProsemirrorWidget> = {
 
 export default meta;
 type Story = StoryObj<typeof DjangoProsemirrorWidget>;
+
+const baseInputRulesJSONContent = {
+    type: "doc",
+    content: [
+        createParagraph(
+            "Try typing markdown syntax and see it transform automatically:",
+        ),
+    ],
+};
 
 /**
  * Test different markdown inputs plugin Story
@@ -21,82 +45,18 @@ export const InputRulesPlugin: Story = {
         storyDescription:
             "Test automatic markdown transformation for headings, lists, blockquotes, and code blocks. Individual input rules are tested in their respective Nodes stories.",
         storyInteractions: [
-            "Type # for H1, ## for H2, ### for H3, etc.",
-            "Type - or * for bullet lists, 1. for numbered lists",
-            "Type > for blockquotes",
-            "Type ``` for code blocks",
-            "Watch text transform automatically as you type",
-            "<b>Complete input rules reference:</b>",
-            "• '> ' - Creates blockquote",
-            "• '1. ', '55. ' - Creates ordered list",
-            "• '- ', '* ', '+ ' - Creates bullet list",
-            "• '``` ' - Creates code block",
-            "• '# ' to '###### ' - Creates headings H1-H6",
-            "• '--' - Em dash (—)",
-            "• '...' - Ellipsis (…)",
-            "• Quote transformations for smart quotes",
+            "Type <b>#</b> for H1, <b>##</b> for H2, <b>###</b> for H3, etc.",
+            "Type <b>></b> for blockquotes",
+            "Type <b>1.</b> or <b>55.</b> to create ordered list",
+            "Type <b>-</b>, <b>*</b> or <b>+</b> to create bullet list",
+            "Type <b>```</b> to create code blocks",
+            "Type <b>--</b> to create an em dash (—)",
+            "Type <b>...</b> to create ellipsis (…)",
+            "Quote transformations for smart quotes",
         ],
-        initialContent: {
-            type: "doc",
-            content: [
-                {
-                    type: "paragraph",
-                    content: [
-                        {
-                            type: "text",
-                            text: "Try typing markdown syntax and see it transform automatically:",
-                        },
-                    ],
-                },
-                {
-                    type: "paragraph",
-                    content: [
-                        {
-                            type: "text",
-                            text: "- Type # for headings",
-                        },
-                    ],
-                },
-                {
-                    type: "paragraph",
-                    content: [
-                        {
-                            type: "text",
-                            text: "- Type - or * for bullet lists",
-                        },
-                    ],
-                },
-                {
-                    type: "paragraph",
-                    content: [
-                        {
-                            type: "text",
-                            text: "- Type 1. for numbered lists (or any number)",
-                        },
-                    ],
-                },
-                {
-                    type: "paragraph",
-                    content: [
-                        {
-                            type: "text",
-                            text: "- Type > for blockquotes",
-                        },
-                    ],
-                },
-                {
-                    type: "paragraph",
-                    content: [
-                        {
-                            type: "text",
-                            text: "- Type ``` for code blocks",
-                        },
-                    ],
-                },
-            ],
-        },
+        initialContent: baseInputRulesJSONContent,
     },
-    play: async ({ canvasElement, userEvent, step }) => {
+    play: async ({ canvasElement, userEvent, step, canvas }) => {
         // This test should contain at least test for the following input rules
         /// * "> " blockquote
         /// * "1. " ol
@@ -116,187 +76,404 @@ export const InputRulesPlugin: Story = {
         /// * """  double quote “ or ”
         /// * "'"  single quote ‘ or ’
 
-        const canvas = within(canvasElement);
-        const editor = await waitForEditor(canvasElement);
+        let editor: HTMLElement,
+            expectedHTML: string,
+            expectedJSON: ProseMirrorDoc,
+            hrBtn: HTMLButtonElement;
 
-        // Test markdown heading transformation
-        await userEvent.click(editor);
-        await userEvent.keyboard("{Enter}");
+        // Setup
+        await step("Setup strong mark story", async () => {
+            expectedHTML =
+                "<p>Try typing markdown syntax and see it transform automatically:</p>";
+            expectedJSON = baseInputRulesJSONContent;
+            editor = await waitForEditor(canvasElement);
+            hrBtn = await canvas.findByTitle(
+                translations["Insert horizontal rule"],
+            );
+            await step("Verify input rules setup", async () => {
+                // Verify initial setup
+                expect(hrBtn).toBeInTheDocument();
 
-        const hrBtn = await canvas.findByTitle("Insert horizontal rule");
-        await userEvent.click(hrBtn);
-
-        // ---- START MARKDOWN HEADINGS ---- //
-        await userEvent.type(
-            editor,
-            "Test multiple heading nodes with the # markdown prefix",
-        );
-
-        await step("Type Markdown Headings", async () => {
-            for (let heading = 1; heading <= 6; ++heading) {
-                const markdownTxt = "#".repeat(heading);
-                await step(
-                    `Type ${markdownTxt} for H${heading} heading`,
-                    async () => {
-                        const hText = `Level ${heading} Heading`;
-
-                        await step(
-                            `Create H${heading} heading with markdown syntax`,
-                            async () => {
-                                await userEvent.keyboard(
-                                    `{Enter}${markdownTxt} ${hText}`,
-                                );
-                            },
-                        );
-
-                        await step(
-                            `Verify H${heading} heading created`,
-                            async () => {
-                                // Verify HTML structure contains formatting
-                                const editorHTML = getEditorHTML(canvasElement);
-
-                                expect(editorHTML).toContain(
-                                    `<h${heading}>${hText}</h${heading}>`,
-                                );
-                            },
-                        );
-                    },
-                );
-            }
+                // Verify doc
+                expect(editor).toBeDefined();
+                expect(expectedHTML).toBeDefined();
+                expect(expectedJSON).toBeDefined();
+            });
         });
-        // ---- END MARKDOWN HEADINGS ---- //
 
-        await userEvent.click(hrBtn);
+        // Start!
+        await step("Select and press enter inside the editor", async () => {
+            await userEvent.click(editor);
+        });
 
-        // ---- START MARKDOWN LISTS ---- //
-        await userEvent.keyboard("{Enter}");
-
-        // Test markdown list transformation
-        await userEvent.type(editor, "- First bullet point (creation with -)");
-
-        await userEvent.keyboard("{Enter}");
-
-        await userEvent.keyboard("Second bullet point");
-
-        // Double enter to escape list
-        await userEvent.keyboard("{Enter}");
-        await userEvent.keyboard("{Enter}");
-
-        // Test markdown list transformation
-        await userEvent.type(editor, "* First bullet point (creation with *)");
-
-        await userEvent.keyboard("{Enter}");
-
-        await userEvent.keyboard("Second bullet point");
-
-        // Double enter to escape list
-        await userEvent.keyboard("{Enter}");
-        await userEvent.keyboard("{Enter}");
-        // Test markdown list transformation
-
-        await userEvent.type(editor, "+ First bullet point (creation with +)");
-
-        await userEvent.keyboard("{Enter}");
-
-        await userEvent.keyboard("Second bullet point");
-
-        // Double enter to escape list
-        await userEvent.keyboard("{Enter}");
-        await userEvent.keyboard("{Enter}");
-
-        // Test markdown list transformation
-        await userEvent.type(
-            editor,
-            "1. First ordered point - starting from 1",
+        // Interaction 1 - Write markdown heading
+        await step(
+            "Test multiple heading nodes with the # markdown prefix",
+            async () => {
+                for (let heading = 1; heading <= 6; ++heading) {
+                    const markdownTxt = "#".repeat(heading);
+                    await step(
+                        `Type ${markdownTxt} for H${heading} heading`,
+                        async () => {
+                            const hText = `Heading level ${heading}`;
+                            await step(
+                                `Create H${heading} heading with markdown syntax`,
+                                async () => {
+                                    await userEvent.keyboard(
+                                        `{Enter}${markdownTxt} ${hText}`,
+                                    );
+                                },
+                            );
+                            await step(
+                                `Verify H${heading} heading created`,
+                                async () => {
+                                    // Verify HTML structure contains formatting
+                                    expectedHTML = `${expectedHTML}<h${heading}>${hText}</h${heading}>`;
+                                    expectedJSON = {
+                                        ...expectedJSON,
+                                        content: [
+                                            ...expectedJSON.content,
+                                            createHeading(hText, heading),
+                                        ],
+                                    };
+                                    verifyEditorContent(
+                                        canvasElement,
+                                        expectedHTML,
+                                        expectedJSON,
+                                    );
+                                },
+                            );
+                        },
+                    );
+                }
+            },
         );
 
-        await userEvent.keyboard("{Enter}");
+        // Interaction 2 - Test markdown ordered list transformation
+        await step("Test markdown ordered list transformation", async () => {
+            await step("Test ordered list with 1.", async () => {
+                await userEvent.keyboard("{Enter}");
+                await userEvent.keyboard(
+                    "1. First ordered point (creation with 1.)",
+                );
+                await userEvent.keyboard("{Enter}");
+                await userEvent.keyboard(
+                    "Second ordered point (creation with 1.)",
+                );
+                // Double enter to escape list
+                await userEvent.keyboard("{Enter}{Enter}");
 
-        await userEvent.keyboard("Second ordered point");
+                // Verify ordered list created with order = 1
+                expectedHTML = `${expectedHTML}<ol start="1"><li><p>First ordered point (creation with 1.)</p></li><li><p>Second ordered point (creation with 1.)</p></li></ol><p><br class="ProseMirror-trailingBreak"></p>`;
+                expectedJSON = {
+                    ...expectedJSON,
+                    content: [
+                        ...expectedJSON.content,
+                        createOrderedList(
+                            [
+                                createListItem(
+                                    "First ordered point (creation with 1.)",
+                                ),
+                                createListItem(
+                                    "Second ordered point (creation with 1.)",
+                                ),
+                            ],
+                            1,
+                        ),
+                        createParagraph(),
+                    ],
+                };
+                verifyEditorContent(canvasElement, expectedHTML, expectedJSON);
+            });
 
-        // Double enter to escape list
-        await userEvent.keyboard("{Enter}");
-        await userEvent.keyboard("{Enter}");
+            await step("Test ordered list with 44.", async () => {
+                await userEvent.keyboard(
+                    "44. First ordered point (creation with 44.)",
+                );
+                await userEvent.keyboard("{Enter}");
+                await userEvent.keyboard(
+                    "Second ordered point (creation with 44.)",
+                );
+                // Double enter to escape list
+                await userEvent.keyboard("{Enter}");
+                await userEvent.keyboard("{Enter}");
 
-        // Test markdown list transformation
-        await userEvent.type(
-            editor,
-            "55. First ordered point - starting from 55",
-        );
+                // Verify ordered list created with order = 44
+                expectedHTML = `${expectedHTML}<ol start="44"><li><p>First ordered point (creation with 44.)</p></li><li><p>Second ordered point (creation with 44.)</p></li></ol><p><br class="ProseMirror-trailingBreak"></p>`;
+                expectedJSON = {
+                    ...expectedJSON,
+                    content: [
+                        ...expectedJSON.content,
+                        createOrderedList(
+                            [
+                                createListItem(
+                                    "First ordered point (creation with 44.)",
+                                ),
+                                createListItem(
+                                    "Second ordered point (creation with 44.)",
+                                ),
+                            ],
+                            44,
+                        ),
+                    ],
+                };
+                verifyEditorContent(canvasElement, expectedHTML, expectedJSON);
+            });
 
-        await userEvent.keyboard("{Enter}");
+            await step("Test ordered list with 101.", async () => {
+                await userEvent.keyboard(
+                    "101. First ordered point (creation with 101.)",
+                );
+                await userEvent.keyboard("{Enter}");
+                await userEvent.keyboard(
+                    "Second ordered point (creation with 101.)",
+                );
+                // Double enter to escape list
+                await userEvent.keyboard("{Enter}");
+                await userEvent.keyboard("{Enter}");
 
-        await userEvent.keyboard("Second ordered point");
+                // Verify ordered list created with order = 101
+                expectedHTML = `${expectedHTML}<ol start="101"><li><p>First ordered point (creation with 101.)</p></li><li><p>Second ordered point (creation with 101.)</p></li></ol><p><br class="ProseMirror-trailingBreak"></p>`;
+                expectedJSON = {
+                    ...expectedJSON,
+                    content: [
+                        ...expectedJSON.content,
+                        createOrderedList(
+                            [
+                                createListItem(
+                                    "First ordered point (creation with 101.)",
+                                ),
+                                createListItem(
+                                    "Second ordered point (creation with 101.)",
+                                ),
+                            ],
+                            101,
+                        ),
+                    ],
+                };
+                verifyEditorContent(canvasElement, expectedHTML, expectedJSON);
+            });
+        });
 
-        await userEvent.keyboard("{Enter}");
-        await userEvent.keyboard("{Enter}");
+        // Interaction 3 - Test markdown bullet list transformation
+        await step("Test markdown bullet list transformation", async () => {
+            // Add horizontal rule separator
+            expectedHTML = `${expectedHTML}<hr>`;
+            expectedJSON = {
+                ...expectedJSON,
+                content: [...expectedJSON.content, createHorizontalRule()],
+            };
+            await userEvent.click(hrBtn);
 
-        await userEvent.click(hrBtn);
+            await step("Test bullet list with -", async () => {
+                await userEvent.keyboard("{Enter}");
+                await userEvent.keyboard(
+                    "- First bullet point (creation with -)",
+                );
+                await userEvent.keyboard("{Enter}");
+                await userEvent.keyboard(
+                    "Second bullet point (creation with -)",
+                );
+                // Double enter to escape list
+                await userEvent.keyboard("{Enter}");
+                await userEvent.keyboard("{Enter}");
 
-        // ---- END MARKDOWN LISTS ---- //
+                // Verify bullet list created
+                expectedHTML = `${expectedHTML}<ul><li><p>First bullet point (creation with -)</p></li><li><p>Second bullet point (creation with -)</p></li></ul>`;
+                expectedJSON = {
+                    ...expectedJSON,
+                    content: [
+                        ...expectedJSON.content,
+                        createBulletList([
+                            createListItem(
+                                "First bullet point (creation with -)",
+                            ),
+                            createListItem(
+                                "Second bullet point (creation with -)",
+                            ),
+                        ]),
+                    ],
+                };
+                verifyEditorContent(canvasElement, expectedHTML, expectedJSON);
+            });
 
-        // ---- START MARKDOWN BLOCKQUOTES ---- //
-        // Test markdown blockquote transformation
-        await userEvent.type(
-            editor,
-            "> This is a blockquote created with markdown",
-        );
+            await step("Test bullet list with *", async () => {
+                await userEvent.keyboard(
+                    "* First bullet point (creation with *)",
+                );
+                await userEvent.keyboard("{Enter}");
+                await userEvent.keyboard(
+                    "Second bullet point (creation with *)",
+                );
+                // Double enter to escape list
+                await userEvent.keyboard("{Enter}");
+                await userEvent.keyboard("{Enter}");
 
-        await userEvent.keyboard("{Enter}");
+                // Verify bullet list created
+                expectedHTML = `${expectedHTML}<ul><li><p>First bullet point (creation with *)</p></li><li><p>Second bullet point (creation with *)</p></li></ul>`;
+                expectedJSON = {
+                    ...expectedJSON,
+                    content: [
+                        ...expectedJSON.content,
+                        createBulletList([
+                            createListItem(
+                                "First bullet point (creation with *)",
+                            ),
+                            createListItem(
+                                "Second bullet point (creation with *)",
+                            ),
+                        ]),
+                    ],
+                };
+                verifyEditorContent(canvasElement, expectedHTML, expectedJSON);
+            });
 
-        // Test nested markdown blockquote transformation
-        await userEvent.keyboard(
-            "> This is a nested blockquote created with markdown",
-        );
+            await step("Test bullet list with +", async () => {
+                await userEvent.keyboard(
+                    "+ First bullet point (creation with +)",
+                );
+                await userEvent.keyboard("{Enter}");
+                await userEvent.keyboard(
+                    "Second bullet point (creation with +)",
+                );
+                // Double enter to escape list
+                await userEvent.keyboard("{Enter}");
+                await userEvent.keyboard("{Enter}");
 
-        await userEvent.keyboard("{Enter}");
-        await userEvent.keyboard("{Enter}");
-        await userEvent.keyboard("{Enter}");
+                // Verify bullet list created
+                expectedHTML = `${expectedHTML}<ul><li><p>First bullet point (creation with +)</p></li><li><p>Second bullet point (creation with +)</p></li></ul>`;
+                expectedJSON = {
+                    ...expectedJSON,
+                    content: [
+                        ...expectedJSON.content,
+                        createBulletList([
+                            createListItem(
+                                "First bullet point (creation with +)",
+                            ),
+                            createListItem(
+                                "Second bullet point (creation with +)",
+                            ),
+                        ]),
+                    ],
+                };
+                verifyEditorContent(canvasElement, expectedHTML, expectedJSON);
+            });
+        });
 
-        await userEvent.click(hrBtn);
-        // ---- END MARKDOWN BLOCKQUOTES ---- //
+        // Interaction 4 - Test markdown blockquote transformation
+        await step("Test markdown blockquote transformation", async () => {
+            // Add horizontal rule separator
+            expectedHTML = `${expectedHTML}<hr>`;
+            expectedJSON = {
+                ...expectedJSON,
+                content: [...expectedJSON.content, createHorizontalRule()],
+            };
+            await userEvent.click(hrBtn);
 
-        // ---- START MARKDOWN CODE BLOCKS ---- //
-        await userEvent.click(editor);
+            await step("Create blockquote with >", async () => {
+                await userEvent.keyboard("{Enter}");
+                await userEvent.keyboard(
+                    "> This is a blockquote created with markdown",
+                );
+                await userEvent.keyboard("{Enter}");
+                await userEvent.keyboard(
+                    "> This is a nested blockquote created with markdown",
+                );
 
-        // Test markdown blockquote transformation
-        await userEvent.type(
-            editor,
-            "```This will be written inside a code block",
-        );
+                // Exit blockquote with multiple enters
+                await userEvent.keyboard("{Enter}");
+                await userEvent.keyboard("{Enter}");
+                await userEvent.keyboard("{Enter}");
 
-        await userEvent.keyboard("{Enter}");
+                // Verify blockquote created
+                expectedHTML = `${expectedHTML}<blockquote><p>This is a blockquote created with markdown</p><p>This is a nested blockquote created with markdown</p></blockquote>`;
+                expectedJSON = {
+                    ...expectedJSON,
+                    content: [
+                        ...expectedJSON.content,
+                        createBlockquote([
+                            createParagraph(
+                                "This is a blockquote created with markdown",
+                            ),
+                            createParagraph(
+                                "This is a nested blockquote created with markdown",
+                            ),
+                        ]),
+                    ],
+                };
+                verifyEditorContent(canvasElement, expectedHTML, expectedJSON);
+            });
+        });
 
-        await userEvent.keyboard("console.log('hello world');");
-        // ---- END MARKDOWN CODE BLOCKS ---- //
+        // Interaction 5 - Test markdown code block transformation
+        await step("Test markdown code block transformation", async () => {
+            // Add horizontal rule separator
+            expectedHTML = `${expectedHTML}<hr>`;
+            expectedJSON = {
+                ...expectedJSON,
+                content: [...expectedJSON.content, createHorizontalRule()],
+            };
+            await userEvent.click(hrBtn);
 
-        // Verify markdown transformations worked
-        const htmlContent = getEditorHTML(canvasElement);
-        const jsonContent = getEditorJSON(canvasElement);
+            await step("Create code block with ```", async () => {
+                await userEvent.keyboard("{Enter}");
+                await userEvent.keyboard(
+                    "```This will be written inside a code block",
+                );
+                await userEvent.keyboard("{Enter}");
+                await userEvent.keyboard("console.log('hello world');");
 
-        expect(htmlContent).toContain("<h1");
-        expect(htmlContent).toContain("<ul");
-        expect(htmlContent).toContain("<blockquote");
+                // Verify code block created
+                expectedHTML = `${expectedHTML}<pre><code>This will be written inside a code block\nconsole.log('hello world');</code></pre>`;
+                expectedJSON = {
+                    ...expectedJSON,
+                    content: [
+                        ...expectedJSON.content,
+                        createCodeBlock(
+                            "This will be written inside a code block\nconsole.log('hello world');",
+                        ),
+                    ],
+                };
+                verifyEditorContent(canvasElement, expectedHTML, expectedJSON);
+            });
+        });
 
-        expect(jsonContent).toEqual(
-            expect.objectContaining({
-                type: "doc",
-                content: expect.arrayContaining([
-                    expect.objectContaining({
-                        type: "heading",
-                        attrs: expect.objectContaining({
-                            level: 1,
+        // Final verification - ensure all input rules worked
+        await step("Final verification of all input rules", async () => {
+            const htmlContent = getEditorHTML(canvasElement);
+            const jsonContent = getEditorJSON(canvasElement);
+
+            // Verify all major node types are present
+            expect(htmlContent).toContain("<h1");
+            expect(htmlContent).toContain("<h6");
+            expect(htmlContent).toContain("<ol");
+            expect(htmlContent).toContain("<ul");
+            expect(htmlContent).toContain("<blockquote");
+            expect(htmlContent).toContain("<pre><code>");
+            expect(htmlContent).toContain("<hr>");
+
+            // Verify JSON structure contains all expected node types
+            expect(jsonContent).toEqual(
+                expect.objectContaining({
+                    type: "doc",
+                    content: expect.arrayContaining([
+                        expect.objectContaining({
+                            type: "heading",
+                            attrs: expect.objectContaining({ level: 1 }),
                         }),
-                    }),
-                    expect.objectContaining({
-                        type: "bullet_list",
-                    }),
-                    expect.objectContaining({
-                        type: "blockquote",
-                    }),
-                ]),
-            }),
-        );
+                        expect.objectContaining({
+                            type: "heading",
+                            attrs: expect.objectContaining({ level: 6 }),
+                        }),
+                        expect.objectContaining({ type: "horizontal_rule" }),
+                        expect.objectContaining({ type: "ordered_list" }),
+                        expect.objectContaining({ type: "bullet_list" }),
+                        expect.objectContaining({ type: "blockquote" }),
+                        expect.objectContaining({ type: "code_block" }),
+                    ]),
+                }),
+            );
+        });
     },
 };
 

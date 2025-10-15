@@ -1,4 +1,5 @@
 import { NodeType, MarkType } from "../frontend/schema/types";
+import { createParagraph } from "./utils";
 import {
     DjangoProsemirrorWidget,
     DjangoProsemirrorWrapperProps,
@@ -9,24 +10,12 @@ import { Meta } from "@storybook/preact-vite";
 export const defaultDoc = {
     type: "doc",
     content: [
-        {
-            type: "paragraph",
-            content: [
-                {
-                    type: "text",
-                    text: "Welcome to Django ProseMirror! This editor demonstrates the modal functionality.",
-                },
-            ],
-        },
-        {
-            type: "paragraph",
-            content: [
-                {
-                    type: "text",
-                    text: "Try using the toolbar to open modals for editing images and other content.",
-                },
-            ],
-        },
+        createParagraph(
+            "Welcome to Django ProseMirror! This editor demonstrates the modal functionality.",
+        ),
+        createParagraph(
+            "Try using the toolbar to open modals for editing images and other content.",
+        ),
     ],
 };
 
@@ -35,14 +24,7 @@ export const defaultArgs: DjangoProsemirrorWrapperProps = {
     allowedMarks: Object.values(MarkType),
     allowedNodes: Object.values(NodeType),
     resize: "none",
-    initialContent: {
-        type: "doc",
-        content: [
-            {
-                type: "paragraph",
-            },
-        ],
-    },
+    initialContent: defaultDoc,
 };
 
 export const defaultMeta: Meta<typeof DjangoProsemirrorWidget> = {
@@ -53,14 +35,12 @@ export const defaultMeta: Meta<typeof DjangoProsemirrorWidget> = {
             control: "object",
             description: "Initial document content in ProseMirror JSON format",
         },
-
         allowedNodes: { control: false, table: { disable: true } },
         allowedMarks: { control: false, table: { disable: true } },
         storyTitle: { control: false, table: { disable: true } },
         storyDescription: { control: false, table: { disable: true } },
         storyInteractions: { control: false, table: { disable: true } },
         classes: { control: false, table: { disable: true } },
-
         history: { control: "boolean" },
         resize: {
             control: "radio",

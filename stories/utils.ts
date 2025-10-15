@@ -1,8 +1,7 @@
-import { expect, UserEventObject } from "storybook/test";
-import { NodeType, MarkType } from "@/schema/types";
-import { ProseMirrorDoc, ProseMirrorNode } from "@/types/types";
+import { MarkType, NodeType } from "@/schema/types";
+import type { ProseMirrorDoc, ProseMirrorNode } from "@/types/types";
 import { Attrs } from "prosemirror-model";
-import { shortcuts } from "./constants";
+import { expect } from "storybook/test";
 
 // Helper functions for interaction tests
 export const waitForEditor = async (canvasElement: HTMLElement) => {
@@ -45,7 +44,10 @@ export const getEditorJSON = (canvasElement: HTMLElement) => {
  * @param element - The element or text node where the cursor is.
  * @param text - Number of characters to extend the selection backward.
  */
-export async function selectBackward(element: HTMLElement | Text, text: string) {
+export async function selectBackward(
+    element: HTMLElement | Text,
+    text: string,
+) {
     const length = text.length;
     if (!element) throw new Error("Element is required");
 
@@ -119,7 +121,9 @@ export async function verifyMenuButtonState(
     const maxAttempts = 20; // 1 second with 50ms intervals
 
     while (attempts < maxAttempts) {
-        const hasActiveClass = button.classList.contains("ProseMirror-menu-active");
+        const hasActiveClass = button.classList.contains(
+            "ProseMirror-menu-active",
+        );
 
         if (hasActiveClass === shouldBeActive) {
             // State matches expectation
@@ -137,22 +141,6 @@ export async function verifyMenuButtonState(
     } else {
         expect(button).not.toHaveClass("ProseMirror-menu-active");
     }
-}
-
-/**
- * Utility function for deactivating a mark via keyboard shortcut.
- * Common pattern in mark testing.
- *
- * @param editor - The editor element
- * @param markKey - The key for the mark shortcut
- * @param button - The mark button for state verification
- */
-export async function deactivateMarkViaKeyboard(
-    userEvent: UserEventObject,
-    button: HTMLElement,
-) {
-    await userEvent.keyboard(shortcuts.bold);
-    await verifyMenuButtonState(button, false);
 }
 
 /**
