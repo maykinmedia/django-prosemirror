@@ -3,11 +3,40 @@
 import json
 from collections.abc import Mapping
 
+import django
 from django.forms.widgets import Widget
+from django.templatetags.static import static
 from django.urls import reverse
+from django.utils.safestring import mark_safe
 
 from django_prosemirror.config import ProsemirrorConfig
 from django_prosemirror.schema import MarkType, NodeType
+
+
+# Before Django 5.2, the `Script` class (which supports script attributes like `defer`)
+# is not available, so we implement it ourselves.
+class DeferredScript:
+    """Custom script class with defer attribute for Django < 5.2."""
+
+    def __init__(self, path):
+        self.path = path
+
+    def __html__(self):
+        return mark_safe(f'<script src="{static(self.path)}" defer></script>')
+
+
+def get_deferred_script(path):
+    """Return appropriate script object with defer attribute.
+
+    Uses Django's built-in Script class (Django 5.2+) when available,
+    otherwise returns DeferredScript implementation.
+    """
+    if django.VERSION >= (5, 2):
+        from django.forms.widgets import Script  # type: ignore
+
+        return Script(path, defer=True)
+
+    return DeferredScript(path)
 
 
 class ProsemirrorWidget(Widget):
@@ -59,7 +88,7 @@ class ProsemirrorWidget(Widget):
         return attrs
 
     class Media:
-        js = ("js/django-prosemirror.js",)
+        js = (get_deferred_script("js/django-prosemirror.js"),)
         css = {
             "all": ("css/django-prosemirror.css",),
         }
