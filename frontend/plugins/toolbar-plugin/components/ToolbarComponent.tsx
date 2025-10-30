@@ -73,7 +73,7 @@ export const ToolbarComponent = <
                 }
             }
 
-            if (!tablePos) return { top: -9999, left: -9999 };
+            if (!tablePos || !viewState) return { top: -9999, left: -9999 };
 
             const tableDOM = viewState.nodeDOM(tablePos) as HTMLElement;
             const wrapper = tableDOM.parentElement;

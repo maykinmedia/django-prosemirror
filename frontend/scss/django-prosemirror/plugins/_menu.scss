@@ -13,7 +13,7 @@
     min-height: unset !important;
     gap: 4px 0;
     position: relative;
-    color: var(--color-body);
+    color: #222;
 
     border-top-left-radius: var(--border-radius);
     border-top-right-radius: var(--border-radius);
@@ -178,7 +178,14 @@
     }
   }
 
+  &-menu-dropdown-item:has(&-menu-disabled),
+  &-menu-dropdown-item &-menu-disabled {
+    background-color: var(--color-gray);
+    opacity: 1;
+  }
+
   &-menu-disabled {
+    cursor: default;
     opacity: 0.4;
   }
 

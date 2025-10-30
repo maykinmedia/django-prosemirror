@@ -25,7 +25,9 @@ export default defineConfig({
         preact(),
         {
             name: "copy-to-django",
-            writeBundle() {
+            writeBundle(options) {
+                if (options.dir.includes("storybook")) return;
+
                 const targets = ["django_prosemirror", "testapp"];
                 try {
                     for (const target of targets) {

@@ -47,6 +47,9 @@
         "frontend/**/*.tsx",
         "frontend/**/*.spec.ts",
         "frontend/**/*.js",
+        "stories/",
+        "stories/**.stories.ts",
+        "stories/**.stories.tsx",
         "vite.config.js",
         "vite-env.d.ts"
     ],
