@@ -108,8 +108,7 @@ export function getDPMPlugins(
          * The menubar plugin
          */
         menuBar({
-            // floating: false,
-            // floating: settings?.floatingMenu !== false,
+            floating: settings?.floatingMenu !== false,
             content: buildMenuItems(schema, settings?.history).fullMenu,
         }),
         /**
