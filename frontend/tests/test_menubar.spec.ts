@@ -1,4 +1,5 @@
 import { buildMenuItems } from "@/plugins/menubar/index";
+import { DPMSettings } from "@/schema/settings";
 import { NodeType } from "@/schema/types";
 import { redoItem, selectParentNodeItem, undoItem } from "prosemirror-menu";
 import {
@@ -88,6 +89,11 @@ describe("plugins/menubar/index", () => {
     let mockSchema: Schema;
     let mockMarkType: PMMarkType;
     let mockNodeType: PMNodeType;
+    const settings = {
+        minHeadingLevel: 1,
+        maxHeadingLevel: 6,
+        history: true,
+    } as DPMSettings;
 
     beforeEach(() => {
         vi.clearAllMocks();
@@ -137,7 +143,7 @@ describe("plugins/menubar/index", () => {
 
     describe("buildMenuItems", () => {
         it("should return MenuItemResult with all components", () => {
-            const result = buildMenuItems(mockSchema);
+            const result = buildMenuItems(mockSchema, settings);
 
             expect(result).toHaveProperty("fullMenu");
             expect(result).toHaveProperty("inlineMenu");
@@ -148,7 +154,7 @@ describe("plugins/menubar/index", () => {
         });
 
         it("should create mark menu items for available marks", () => {
-            const result = buildMenuItems(mockSchema);
+            const result = buildMenuItems(mockSchema, settings);
 
             expect(result.toggleStrong).toBeDefined();
             expect(result.toggleEm).toBeDefined();
@@ -159,7 +165,7 @@ describe("plugins/menubar/index", () => {
         });
 
         it("should create node menu items for available nodes", () => {
-            const result = buildMenuItems(mockSchema);
+            const result = buildMenuItems(mockSchema, settings);
 
             expect(result.insertImage).toBeDefined();
             expect(result.wrapBulletList).toBeDefined();
@@ -171,7 +177,7 @@ describe("plugins/menubar/index", () => {
         });
 
         it("should create heading menu items for all levels", () => {
-            const result = buildMenuItems(mockSchema);
+            const result = buildMenuItems(mockSchema, settings);
 
             expect(result.makeHead1).toBeDefined();
             expect(result.makeHead2).toBeDefined();
@@ -182,7 +188,7 @@ describe("plugins/menubar/index", () => {
         });
 
         it("should include history items when history is enabled", () => {
-            const result = buildMenuItems(mockSchema, true);
+            const result = buildMenuItems(mockSchema, settings);
 
             expect(result.fullMenu).toBeDefined();
             // History items should be in the last group
@@ -191,7 +197,10 @@ describe("plugins/menubar/index", () => {
         });
 
         it("should not include history items when history is disabled", () => {
-            const result = buildMenuItems(mockSchema, false);
+            const result = buildMenuItems(mockSchema, {
+                ...settings,
+                history: false,
+            } as DPMSettings);
 
             expect(result.fullMenu).toBeDefined();
             // Last group should be empty when history is disabled
@@ -206,7 +215,7 @@ describe("plugins/menubar/index", () => {
             } as Schema;
 
             expect(() => {
-                buildMenuItems(schemaWithoutMarks);
+                buildMenuItems(schemaWithoutMarks, settings);
             }).not.toThrow();
         });
 
@@ -221,41 +230,41 @@ describe("plugins/menubar/index", () => {
             } as unknown as Schema;
 
             expect(() => {
-                buildMenuItems(schemaWithMinimalNodes);
+                buildMenuItems(schemaWithMinimalNodes, settings);
             }).not.toThrow();
         });
 
         it("should create dropdown menus with proper structure", () => {
-            const result = buildMenuItems(mockSchema);
+            const result = buildMenuItems(mockSchema, settings);
 
             expect(result.typeMenu).toBeDefined();
             expect(result.typeMenu.type).toBe("Dropdown");
         });
 
         it("should organize inline menu correctly", () => {
-            const result = buildMenuItems(mockSchema);
+            const result = buildMenuItems(mockSchema, settings);
 
             expect(Array.isArray(result.inlineMenu)).toBe(true);
             expect(result.inlineMenu.length).toBeGreaterThan(0);
         });
 
         it("should organize block menu correctly", () => {
-            const result = buildMenuItems(mockSchema);
+            const result = buildMenuItems(mockSchema, settings);
 
             expect(Array.isArray(result.blockMenu)).toBe(true);
             expect(result.blockMenu.length).toBeGreaterThan(0);
         });
 
         it("should organize full menu correctly", () => {
-            const result = buildMenuItems(mockSchema);
+            const result = buildMenuItems(mockSchema, settings);
 
             expect(Array.isArray(result.fullMenu)).toBe(true);
             expect(result.fullMenu.length).toBeGreaterThan(0);
         });
 
         it("should pass language parameter correctly", () => {
-            buildMenuItems(mockSchema, true);
-            buildMenuItems(mockSchema, true);
+            buildMenuItems(mockSchema, settings);
+            buildMenuItems(mockSchema, settings);
 
             // Both should work without throwing
             expect(true).toBe(true);
@@ -263,14 +272,14 @@ describe("plugins/menubar/index", () => {
 
         it("should use default language when not specified", () => {
             expect(() => {
-                buildMenuItems(mockSchema, true);
+                buildMenuItems(mockSchema, settings);
             }).not.toThrow();
         });
     });
 
     describe("Menu item creation", () => {
         it("should create menu items with proper icons", () => {
-            const result = buildMenuItems(mockSchema);
+            const result = buildMenuItems(mockSchema, settings);
 
             // Check that menu items have proper structure
             expect(result.toggleStrong).toBeDefined();
@@ -278,21 +287,21 @@ describe("plugins/menubar/index", () => {
         });
 
         it("should create menu items with proper titles", () => {
-            const result = buildMenuItems(mockSchema);
+            const result = buildMenuItems(mockSchema, settings);
 
             expect(result.toggleStrong).toBeDefined();
             expect(result.toggleStrong?.spec.title).toBeDefined();
         });
 
         it("should create menu items with run functions", () => {
-            const result = buildMenuItems(mockSchema);
+            const result = buildMenuItems(mockSchema, settings);
 
             expect(result.toggleStrong).toBeDefined();
             expect(typeof result.toggleStrong?.spec.run).toBe("function");
         });
 
         it("should create menu items with enable/select functions", () => {
-            const result = buildMenuItems(mockSchema);
+            const result = buildMenuItems(mockSchema, settings);
 
             expect(result.toggleStrong).toBeDefined();
             expect(
@@ -313,7 +322,10 @@ describe("plugins/menubar/index", () => {
                 },
             } as unknown as Schema;
 
-            const result = buildMenuItems(schemaWithUnsupportedNodesAndMarks);
+            const result = buildMenuItems(
+                schemaWithUnsupportedNodesAndMarks,
+                settings,
+            );
 
             // Check that menu items have proper structure
             expect(
@@ -333,7 +345,7 @@ describe("plugins/menubar/index", () => {
                     blockquote: undefined,
                 },
             } as unknown as Schema;
-            const result = buildMenuItems(a);
+            const result = buildMenuItems(a, settings);
 
             expect(result.liftItem).toBeUndefined();
             expect(result.joinUpItem).toBeUndefined();
@@ -349,7 +361,7 @@ describe("plugins/menubar/index", () => {
                     blockquote: undefined,
                 },
             } as unknown as Schema;
-            const resultOl = buildMenuItems(schemaOl);
+            const resultOl = buildMenuItems(schemaOl, settings);
             expect(resultOl.liftItem).toBeDefined();
             expect(resultOl.joinUpItem).toBeDefined();
         });
@@ -364,7 +376,7 @@ describe("plugins/menubar/index", () => {
                     blockquote: undefined,
                 },
             } as unknown as Schema;
-            const resultUl = buildMenuItems(schemaUl);
+            const resultUl = buildMenuItems(schemaUl, settings);
             expect(resultUl.liftItem).toBeDefined();
             expect(resultUl.joinUpItem).toBeDefined();
         });
@@ -379,7 +391,7 @@ describe("plugins/menubar/index", () => {
                     blockquote: {},
                 },
             } as unknown as Schema;
-            const resultBq = buildMenuItems(schemaBq);
+            const resultBq = buildMenuItems(schemaBq, settings);
             expect(resultBq.liftItem).toBeDefined();
             expect(resultBq.joinUpItem).toBeUndefined();
         });
@@ -387,7 +399,7 @@ describe("plugins/menubar/index", () => {
 
     describe("Icon assignment", () => {
         it("should assign icons to built-in menu items when history is enabled", () => {
-            buildMenuItems(mockSchema, true);
+            buildMenuItems(mockSchema, settings);
 
             expect(undoItem.spec.icon).toBeDefined();
             expect(redoItem.spec.icon).toBeDefined();
@@ -395,7 +407,7 @@ describe("plugins/menubar/index", () => {
         });
 
         it("should assign icons to list manipulation items", () => {
-            const result = buildMenuItems(mockSchema);
+            const result = buildMenuItems(mockSchema, settings);
 
             if (result.liftItem) {
                 expect(result.liftItem.spec.icon).toBeDefined();
@@ -414,9 +426,9 @@ describe("plugins/menubar/index", () => {
             } as unknown as Schema;
 
             expect(() => {
-                buildMenuItems(emptySchema);
+                buildMenuItems(emptySchema, settings);
             }).not.toThrow();
-            const result = buildMenuItems(emptySchema);
+            const result = buildMenuItems(emptySchema, settings);
 
             expect(result.makeParagraph).toBeUndefined();
             expect(result.makeHead1).toBeUndefined();
@@ -437,10 +449,10 @@ describe("plugins/menubar/index", () => {
             } as unknown as Schema;
 
             expect(() => {
-                buildMenuItems(schemaWithUndefined);
+                buildMenuItems(schemaWithUndefined, settings);
             }).not.toThrow();
 
-            const result = buildMenuItems(schemaWithUndefined);
+            const result = buildMenuItems(schemaWithUndefined, settings);
 
             expect(result.makeParagraph).toBeUndefined();
             expect(result.makeHead1).toBeDefined();

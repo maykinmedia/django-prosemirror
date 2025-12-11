@@ -81,12 +81,9 @@ describe("plugins/index", () => {
 
         it("should include input rules plugin", () => {
             const plugins = getDPMPlugins(mockSchema, mockSettings);
-            const inputRulesPlugin = plugins.find(
-                (p) => p.type === "inputRules",
-            );
+            const inputRulesPlugin = plugins.find((p) => p?.spec?.isInputRules);
 
             expect(inputRulesPlugin).toMatchSnapshot();
-            expect(inputRulesPlugin?.schema).toBe(mockSchema);
         });
 
         it("should include keymap plugins", () => {
@@ -222,7 +219,10 @@ describe("plugins/index", () => {
         it("should maintain plugin order", () => {
             const plugins = getDPMPlugins(mockSchema, mockSettings);
 
-            const pluginTypes = plugins.map((p) => p.type);
+            const pluginTypes = plugins.map((p) => {
+                if (p?.spec?.isInputRules) return "inputRules";
+                return p.type;
+            });
 
             expect(pluginTypes).toEqual([
                 undefined, // toolbarPlugin
@@ -240,7 +240,10 @@ describe("plugins/index", () => {
             const plugins = getDPMPlugins(mockSchema, mockSettings);
 
             // Verify that all expected plugin types are present
-            const pluginTypes = plugins.map((p) => p.type);
+            const pluginTypes = plugins.map((p) => {
+                if (p?.spec?.isInputRules) return "inputRules";
+                return p.type;
+            });
             expect(pluginTypes).toContain("inputRules");
             expect(pluginTypes).toContain("keymap");
             expect(pluginTypes).toContain("dropCursor");

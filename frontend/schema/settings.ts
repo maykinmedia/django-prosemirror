@@ -14,7 +14,7 @@ export class DPMSettings implements IDPMSettings {
      */
     private getSetting<T>(key: string, def?: T) {
         try {
-            return this.parse(key, this.node.dataset[key]);
+            return this.parse(key, this.node.dataset[key]) || def;
         } catch {
             return this.node.dataset[key] || def;
         }
@@ -120,6 +120,22 @@ export class DPMSettings implements IDPMSettings {
      */
     get language(): string {
         return document?.documentElement?.lang || LanguageCodeEnum.EN;
+    }
+
+    /**
+     * Setting that defines the max level of a Heading
+     * @default 6
+     */
+    get maxHeadingLevel(): number {
+        return this.getSetting("prosemirrorMaxHeadingLevel", 6);
+    }
+
+    /**
+     * Setting that defines the min level of a Heading
+     * @default 1
+     */
+    get minHeadingLevel(): number {
+        return this.getSetting("prosemirrorMinHeadingLevel", 1);
     }
 
     /**

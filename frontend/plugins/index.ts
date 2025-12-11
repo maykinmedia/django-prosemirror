@@ -10,7 +10,8 @@ import { type DPMSettings } from "@/schema/settings";
 import { NodeType } from "@/schema/types";
 import { baseKeymap } from "prosemirror-commands";
 import { dropCursor } from "prosemirror-dropcursor";
-import { buildInputRules, buildKeymap } from "prosemirror-example-setup";
+import { buildKeymap } from "prosemirror-example-setup";
+import { buildInputRules } from "@/plugins/input-rules";
 import { gapCursor } from "prosemirror-gapcursor";
 import { history } from "prosemirror-history";
 import { keymap } from "prosemirror-keymap";
@@ -86,7 +87,7 @@ export function getDPMPlugins(
          * Input rules for smart quotes and creating the block types in the schema
          * using markdown conventions.
          */
-        buildInputRules(schema),
+        buildInputRules(schema, settings),
         /**
          * A keymap that defines keys to create and manipulate the nodes in the schema
          */
@@ -110,7 +111,7 @@ export function getDPMPlugins(
         menuBar({
             // floating: false,
             // floating: settings?.floatingMenu !== false,
-            content: buildMenuItems(schema, settings?.history).fullMenu,
+            content: buildMenuItems(schema, settings).fullMenu,
         }),
         /**
          * The undo history plugin

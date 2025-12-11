@@ -16,6 +16,7 @@ import { createLinkMenuItem } from "./link";
 import { createImageMenuItem } from "./image";
 import { createListWrapMenuItem } from "./list";
 import { NodeType } from "@/schema/types";
+import { DPMSettings } from "@/schema/settings";
 /**
  * Interface defining the structure of menu items that can be built for the ProseMirror editor.
  * Each property represents a specific menu action or dropdown that can be added to the editor toolbar.
@@ -84,13 +85,16 @@ export interface MenuItemResult {
 class MenuBuilder {
     /** The ProseMirror schema defining available nodes and marks */
     private schema: Schema;
+    private settings: DPMSettings;
 
     /**
      * Initialize the menu builder with schema and language settings.
      * @param schema - ProseMirror schema defining editor capabilities
+     * @param settings - The object containing the settings
      */
-    constructor(schema: Schema) {
+    constructor(schema: Schema, settings: DPMSettings) {
         this.schema = schema;
+        this.settings = settings;
     }
 
     /**
@@ -228,7 +232,11 @@ class MenuBuilder {
 
         // Heading levels 1-6
         if (this.schema.nodes.heading) {
-            for (let i = 1; i <= 6; i++) {
+            for (
+                let i = this.settings.minHeadingLevel;
+                i <= this.settings.maxHeadingLevel;
+                i++
+            ) {
                 (result as Record<string, MenuItem>)[`makeHead${i}`] =
                     createBlockTypeMenuItem(this.schema.nodes.heading, {
                         title: `Change to heading ${i}`,
@@ -276,12 +284,10 @@ class MenuBuilder {
      * Organize menu items into the final menu structure with dropdowns and groupings.
      * Creates the typeMenu dropdown and organizes items into inline, block, and full menus.
      * @param menuItems - All available menu items
-     * @param history - Whether to include undo/redo functionality
      * @returns Complete MenuItemResult with organized menu structure
      */
     private buildMenuStructure(
         menuItems: Partial<MenuItemResult>,
-        history: boolean,
     ): MenuItemResult {
         const result = menuItems as MenuItemResult;
 
@@ -321,7 +327,7 @@ class MenuBuilder {
         ];
 
         // Add undo/redo if history is enabled
-        const undoMenu = history ? [undoItem, redoItem] : [];
+        const undoMenu = this.settings.history ? [undoItem, redoItem] : [];
 
         // Organize block-level menu items
         result.blockMenu = [
@@ -340,7 +346,7 @@ class MenuBuilder {
             undoMenu,
         ]);
 
-        this.setupMenuIcons(result, history);
+        this.setupMenuIcons(result);
 
         return result;
     }
@@ -349,14 +355,10 @@ class MenuBuilder {
      * Configure icons for built-in ProseMirror menu items.
      * Sets up icons for undo, redo, and structural manipulation items.
      * @param menuItems - Menu items to configure
-     * @param history - Whether history (undo/redo) is enabled
      */
-    private setupMenuIcons(
-        menuItems: Partial<MenuItemResult>,
-        history: boolean,
-    ): void {
+    private setupMenuIcons(menuItems: Partial<MenuItemResult>): void {
         // Set up undo/redo icons if history is enabled
-        if (history) {
+        if (this.settings.history) {
             undoItem.spec.icon = icons.undo;
             redoItem.spec.icon = icons.redo;
         }
@@ -377,15 +379,14 @@ class MenuBuilder {
     /**
      * Build the complete menu structure by combining marks, nodes, and organization.
      * This is the main public method that orchestrates the entire menu building process.
-     * @param history - Whether to include undo/redo functionality
      * @returns Complete MenuItemResult with all menu items and structure
      */
-    public build(history = false): MenuItemResult {
+    public build(): MenuItemResult {
         const markItems = this.buildMarkMenuItems();
         const nodeItems = this.buildNodeMenuItems();
         const allItems = { ...markItems, ...nodeItems };
 
-        return this.buildMenuStructure(allItems, history);
+        return this.buildMenuStructure(allItems);
     }
 }
 
@@ -393,11 +394,13 @@ class MenuBuilder {
  * Factory function to create a complete set of ProseMirror menu items.
  * This is the main public API for creating editor menus.
  * @param schema - ProseMirror schema defining available nodes and marks
- * @param history - Whether to include undo/redo functionality (default: false)
- * @param language - Language code for internationalization (default: Dutch)
+ * @param settings - The object containing the settings
  * @returns Complete MenuItemResult with all menu items organized and ready to use
  */
-export function buildMenuItems(schema: Schema, history = true): MenuItemResult {
-    const builder = new MenuBuilder(schema);
-    return builder.build(history);
+export function buildMenuItems(
+    schema: Schema,
+    settings: DPMSettings,
+): MenuItemResult {
+    const builder = new MenuBuilder(schema, settings);
+    return builder.build();
 }

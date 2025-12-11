@@ -60,29 +60,27 @@ exports[`plugins/index > getDjangoProsemirrorPlugins > should include history pl
 `;
 
 exports[`plugins/index > getDjangoProsemirrorPlugins > should include input rules plugin 1`] = `
-{
-  "schema": {
-    "marks": {
-      "em": {
-        "name": "em",
-      },
-      "strong": {
-        "name": "strong",
-      },
+Plugin {
+  "key": "plugin$1",
+  "props": {
+    "handleDOMEvents": {
+      "compositionend": [Function],
     },
-    "nodes": {
-      "doc": {
-        "name": "doc",
+    "handleTextInput": [Function],
+  },
+  "spec": {
+    "isInputRules": true,
+    "props": {
+      "handleDOMEvents": {
+        "compositionend": [Function],
       },
-      "paragraph": {
-        "name": "paragraph",
-      },
-      "text": {
-        "name": "text",
-      },
+      "handleTextInput": [Function],
+    },
+    "state": {
+      "apply": [Function],
+      "init": [Function],
     },
   },
-  "type": "inputRules",
 }
 `;
 
@@ -208,29 +206,27 @@ exports[`plugins/index > getDjangoProsemirrorPlugins > should pass default histo
       },
     },
   },
-  {
-    "schema": {
-      "marks": {
-        "em": {
-          "name": "em",
-        },
-        "strong": {
-          "name": "strong",
-        },
+  Plugin {
+    "key": "plugin$9",
+    "props": {
+      "handleDOMEvents": {
+        "compositionend": [Function],
       },
-      "nodes": {
-        "doc": {
-          "name": "doc",
+      "handleTextInput": [Function],
+    },
+    "spec": {
+      "isInputRules": true,
+      "props": {
+        "handleDOMEvents": {
+          "compositionend": [Function],
         },
-        "paragraph": {
-          "name": "paragraph",
-        },
-        "text": {
-          "name": "text",
-        },
+        "handleTextInput": [Function],
+      },
+      "state": {
+        "apply": [Function],
+        "init": [Function],
       },
     },
-    "type": "inputRules",
   },
   {
     "keymap": {
@@ -313,29 +309,27 @@ exports[`plugins/index > getDjangoProsemirrorPlugins > should pass settings to b
       },
     },
   },
-  {
-    "schema": {
-      "marks": {
-        "em": {
-          "name": "em",
-        },
-        "strong": {
-          "name": "strong",
-        },
+  Plugin {
+    "key": "plugin$8",
+    "props": {
+      "handleDOMEvents": {
+        "compositionend": [Function],
       },
-      "nodes": {
-        "doc": {
-          "name": "doc",
+      "handleTextInput": [Function],
+    },
+    "spec": {
+      "isInputRules": true,
+      "props": {
+        "handleDOMEvents": {
+          "compositionend": [Function],
         },
-        "paragraph": {
-          "name": "paragraph",
-        },
-        "text": {
-          "name": "text",
-        },
+        "handleTextInput": [Function],
+      },
+      "state": {
+        "apply": [Function],
+        "init": [Function],
       },
     },
-    "type": "inputRules",
   },
   {
     "keymap": {
@@ -418,29 +412,27 @@ exports[`plugins/index > getDjangoProsemirrorPlugins > should return array of pl
       },
     },
   },
-  {
-    "schema": {
-      "marks": {
-        "em": {
-          "name": "em",
-        },
-        "strong": {
-          "name": "strong",
-        },
+  Plugin {
+    "key": "plugin$",
+    "props": {
+      "handleDOMEvents": {
+        "compositionend": [Function],
       },
-      "nodes": {
-        "doc": {
-          "name": "doc",
+      "handleTextInput": [Function],
+    },
+    "spec": {
+      "isInputRules": true,
+      "props": {
+        "handleDOMEvents": {
+          "compositionend": [Function],
         },
-        "paragraph": {
-          "name": "paragraph",
-        },
-        "text": {
-          "name": "text",
-        },
+        "handleTextInput": [Function],
+      },
+      "state": {
+        "apply": [Function],
+        "init": [Function],
       },
     },
-    "type": "inputRules",
   },
   {
     "keymap": {
