@@ -49,7 +49,10 @@ class DMPSchema {
             [NodeType.PARAGRAPH]: new ParagraphNode(this.classMapping!),
 
             // Default
-            [NodeType.HEADING]: new HeadingNode(this.classMapping!),
+            [NodeType.HEADING]: new HeadingNode(
+                this.classMapping!,
+                this.settings,
+            ),
             [NodeType.BLOCKQUOTE]: new BlockQuoteNode(this.classMapping!),
             [NodeType.FILER_IMAGE]: new FilerImageNode(this.classMapping!),
             [NodeType.HORIZONTAL_RULE]: new HorizontalRuleNode(

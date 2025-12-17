@@ -1,6 +1,7 @@
 import { DOMOutputSpec, Node } from "prosemirror-model";
 import { type ClassMapping, NodeDefinition } from "@/schema/abstract";
 import { NodeType } from "@/schema/types";
+import { DPMSettings } from "../settings";
 
 /**
  * Class that returns the spec of a heading node.
@@ -8,8 +9,8 @@ import { NodeType } from "@/schema/types";
  */
 export class HeadingNode extends NodeDefinition {
     /** Heading node. */
-    constructor(classes: ClassMapping) {
-        super(classes);
+    constructor(classes: ClassMapping, settings?: DPMSettings) {
+        super(classes, settings);
     }
     override name = NodeType.HEADING;
     override attrs = {
@@ -26,9 +27,17 @@ export class HeadingNode extends NodeDefinition {
         { tag: "h5", attrs: { level: 5 } },
         { tag: "h6", attrs: { level: 6 } },
     ];
+
     override toDOM(node: Node): DOMOutputSpec {
         const attrs = this.classMapping.apply_to_attrs({}, this.name);
-        // const level = node?.attrs?.level ?? 1;
+
+        const minLevel = this.settings?.minHeadingLevel ?? 1;
+        const maxLevel = this.settings?.maxHeadingLevel ?? 6;
+
+        // Prevent smaller/larger heading generation than settings
+        if (node.attrs.level < minLevel || node.attrs.level > maxLevel)
+            return ["h" + minLevel, attrs, 0];
+
         return ["h" + (node?.attrs?.level ?? 1), attrs, 0];
     }
 }

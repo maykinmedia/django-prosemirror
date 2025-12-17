@@ -10,6 +10,7 @@ import {
 } from "prosemirror-model";
 import { MarkType, NodeType } from "./types";
 import { MutableAttrs, TableRole } from "prosemirror-tables";
+import { DPMSettings } from "./settings";
 
 export class ClassMapping {
     /** Encapsulates CSS class configuration with defaults and fallbacks. */
@@ -33,6 +34,8 @@ export class ClassMapping {
 
 export abstract class NodeDefinition implements NodeSpec {
     classMapping: ClassMapping;
+    settings?: DPMSettings;
+
     name?: NodeType;
 
     // Node spec props.
@@ -49,8 +52,9 @@ export abstract class NodeDefinition implements NodeSpec {
     isolating?: boolean;
     tableRole?: TableRole;
 
-    constructor(classMapping: ClassMapping) {
+    constructor(classMapping: ClassMapping, settings?: DPMSettings) {
         this.classMapping = classMapping;
+        this.settings = settings;
     }
 
     abstract toDOM(node: Node): DOMOutputSpec;
