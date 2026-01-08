@@ -2,10 +2,10 @@ import { defineConfig } from "vite";
 import { copyFileSync, mkdirSync } from "fs";
 import path from "path";
 import preact from "@preact/preset-vite";
-
 export default defineConfig({
     build: {
         sourcemap: true,
+        cssCodeSplit: false,
         rollupOptions: {
             input: "./frontend/index.ts",
             output: {
@@ -13,6 +13,8 @@ export default defineConfig({
                 assetFileNames: (assetInfo) => {
                     return "bundle[extname]";
                 },
+                format: "iife",
+                name: "DjangoProseMirror",
             },
         },
     },
