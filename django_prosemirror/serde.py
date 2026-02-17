@@ -7,10 +7,12 @@ from prosemirror.model import DOMSerializer, Node
 from prosemirror.model.from_dom import from_html
 
 from django_prosemirror.constants import EMPTY_DOC
-from django_prosemirror.schema import ProsemirrorDocument
+from django_prosemirror.schema import ProsemirrorDocumentDict
 
 
-def _clean_empty_attrs(doc: ProsemirrorDocument, schema: Schema) -> ProsemirrorDocument:
+def _clean_empty_attrs(
+    doc: ProsemirrorDocumentDict, schema: Schema
+) -> ProsemirrorDocumentDict:
     """Remove empty attrs from marks that don't have attributes defined in the schema.
 
     The prosemirror library automatically adds empty attrs: {} to all marks during
@@ -21,7 +23,7 @@ def _clean_empty_attrs(doc: ProsemirrorDocument, schema: Schema) -> ProsemirrorD
     block). Additionally, removes node attributes that match their default values.
     """
 
-    def clean_node(node: dict, parent_node_type=None):
+    def clean_node(node: dict, parent_node_type=None) -> dict:
         if not isinstance(node, dict):
             raise ValueError(f"{node} is not a dict")
 
@@ -95,16 +97,34 @@ def _clean_empty_attrs(doc: ProsemirrorDocument, schema: Schema) -> ProsemirrorD
     return clean_node(cast(dict, doc))
 
 
-def doc_to_html(value: ProsemirrorDocument, *, schema: Schema) -> str:
+def doc_to_html(value: ProsemirrorDocumentDict | None, *, schema: Schema) -> str:
     """Convert a Prosemirror document to HTML.
 
     Args:
-        value: object containing the Prosemirror document
+        value: object containing the Prosemirror document (must be dict or None)
         schema: Prosemirror schema defining document structure
 
     Returns:
         str: HTML representation of the document
+
+    Raises:
+        ValueError: If value is not a dict or None
+
+    Note:
+        We require dict specifically (not Mapping) because all documents come from
+        Django's JSONField which always produces dict objects.
     """
+    # Handle None/empty values
+    if value is None:
+        return ""
+
+    # Validate that value is a dict (required by Django field API constraints)
+    if not isinstance(value, dict):
+        raise ValueError(
+            f"Prosemirror document must be a dict, got {type(value).__name__}"
+        )
+
+    # Empty dict should also return empty string
     if not value:
         return ""
 
@@ -113,7 +133,7 @@ def doc_to_html(value: ProsemirrorDocument, *, schema: Schema) -> str:
     return str(serializer.serialize_fragment(content))
 
 
-def html_to_doc(value: str, *, schema: Schema) -> ProsemirrorDocument:
+def html_to_doc(value: str, *, schema: Schema) -> ProsemirrorDocumentDict:
     """Convert HTML to a Prosemirror document.
 
     Args:
@@ -121,11 +141,15 @@ def html_to_doc(value: str, *, schema: Schema) -> ProsemirrorDocument:
         schema: Prosemirror schema defining document structure
 
     Returns:
-        ProsemirrorDocument: Document as dict/JSON structure
+        ProsemirrorDocumentDict: Document as dict structure
     """
     if not value.strip():
         # Return empty document for empty/whitespace-only strings
         return EMPTY_DOC
 
     doc = from_html(schema, value)
+    # from_html returns JSONDict (Mapping), but we know it's actually a dict
+    # Validate and cast to ensure type safety
+    if not isinstance(doc, dict):
+        raise ValueError(f"Expected from_html to return dict, got {type(doc).__name__}")
     return _clean_empty_attrs(doc, schema)
