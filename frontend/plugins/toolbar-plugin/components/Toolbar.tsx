@@ -11,9 +11,10 @@ import { isImageSelected } from "@/utils";
  * Preact-first base toolbar instance that uses dynamic components
  * Refactored to mount once and update via signals instead of full re-renders
  */
-export class ToolbarInstance<T extends Node, D extends Record<string, unknown>>
-    implements IToolbarInstance
-{
+export class ToolbarInstance<
+    T extends Node,
+    D extends Record<string, unknown>,
+> implements IToolbarInstance {
     public view: EditorView;
     protected target: T;
     protected createMenuItems: CreateMenuItems<T, D>;

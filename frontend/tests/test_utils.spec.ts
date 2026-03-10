@@ -11,10 +11,21 @@ import {
     isInsideTable,
 } from "@/utils";
 import { createSVG } from "@/utils/svg";
-import { FindResult } from "node_modules/prosemirror-utils/dist/types";
 import { NodeSelection } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { Node as PMNode } from "prosemirror-model";
+
+export type NodeWithPos = {
+    pos: number;
+    node: PMNode;
+};
+export type ContentNodeWithPos = {
+    start: number;
+    depth: number;
+} & NodeWithPos;
+
+export type FindResult = ContentNodeWithPos | undefined;
 
 // Mock prosemirror-tables functions
 vi.mock("prosemirror-tables", () => ({
