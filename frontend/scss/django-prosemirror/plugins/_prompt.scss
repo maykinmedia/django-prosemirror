@@ -1,8 +1,8 @@
 .prompt {
-  background-color: var(--color-white);
+  background-color: var(--color-bg);
   padding: var(--spacing-large);
   border-radius: var(--border-radius);
-  border: 1px solid var(--color-gray-lighter);
+  border: 1px solid var(--color-border);
   position: absolute;
   z-index: 1000;
 
@@ -25,22 +25,23 @@
 
   input[type="text"] {
     padding: var(--spacing-large) var(--spacing-large);
-    border: 1px solid var(--color-gray-light);
+    border: 1px solid var(--color-border);
     border-radius: var(--border-radius);
     outline: none;
     font-size: var(--font-size-body-small);
-    color: var(--color-black);
+    color: var(--color-text);
     transition: all 200ms ease;
     font-family: inherit;
     min-height: unset !important;
+    background-color: var(--color-bg);
 
     &:focus {
-      background-color: var(--color-white);
-      border-color: var(--color-gray-lighter);
+      background-color: var(--color-bg);
+      border-color: var(--color-border-focus);
     }
 
     &::placeholder {
-      color: rgba(0, 0, 0, 0.6);
+      color: var(--color-placeholder);
       font-weight: 400;
     }
   }
@@ -66,8 +67,8 @@
   }
 
   &-submit {
-    background-color: var(--color-black);
-    color: var(--color-white);
+    background-color: var(--color-bg);
+    color: var(--color-text);
 
     &:hover {
       transform: translateY(-1px);
@@ -79,11 +80,11 @@
   }
 
   &-cancel {
-    background-color: var(--color-white);
-    color: var(--color-black);
+    background-color: var(--color-text);
+    color: var(--color-bg);
 
     &:hover {
-      background-color: var(--color-gray-light);
+      background-color: var(--color-border-light);
       transform: translateY(-1px);
     }
 

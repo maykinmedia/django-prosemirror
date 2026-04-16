@@ -1,11 +1,12 @@
 .editor {
   min-height: 100px;
-  background: var(--color-white);
-  color: var(--color-black);
+  background: var(--color-bg);
+  color: var(--color-text);
   border-radius: var(--border-radius);
-  border: 1px solid var(--color-gray-light);
+  border: 1px solid var(--color-border);
   box-sizing: border-box;
   position: relative;
+  width: 100%; // FIX width in the admin
 
   .ProseMirror {
     position: relative;
@@ -44,7 +45,12 @@
 
     /// ===== Images ===== ///
     img {
-      max-width: 100%;
+      max-width: 380px; // Add max-wdith so that we restrict the editor image to take the full-width
+      width: 100%;
+    }
+
+    a {
+      color: var(--color-link);
     }
   }
 }
