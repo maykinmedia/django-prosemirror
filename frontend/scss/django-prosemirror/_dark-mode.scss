@@ -1,0 +1,64 @@
+/// Django Prosemirror Light/Dark mode implementation
+/// Last update: 19-02-2026 - Stefan R.
+
+/// Mixin for light color scheme.
+@mixin light-scheme() {
+  --color-bg: white;
+
+  // Text colors
+  --color-text: black;
+  --color-placeholder: rgba(0, 0, 0, 0.6);
+
+  // Borders
+  --color-border: #d2d2d2;
+  --color-border-light: var(--color-surface-subtle);
+  --color-surface-subtle: #f3f3f3;
+  --color-link: #04a5bb;
+}
+/// Mixin for light color scheme.
+@mixin dark-scheme {
+  --color-bg: #121212;
+  --color-white: #1e1e1e; // dropdown/panel surfaces
+
+  --color-text: #f0f0f0;
+  --color-body: #c8c8c8;
+  --color-placeholder: rgba(240, 240, 240, 0.5);
+
+  --color-surface-subtle: #2a2a2a; // table headers, hover backgrounds
+  --color-border: #3e3e3e;
+  --color-border-light: #565656;
+  --color-border-focus: #888888; // input focus
+
+  --color-accent-l: 65%;
+
+  --color-link: #04a5bb;
+}
+
+/// Use Dark color scheme
+/// We use these colors
+:root {
+  [data-color-scheme="dark"],
+  &[data-theme="dark"] {
+    @include dark-scheme;
+  }
+}
+// Light color-scheme (default)
+:root {
+  [data-color-scheme="light"],
+  &[data-theme="light"],
+  & {
+    @include light-scheme;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  [data-theme="auto"] {
+    @include light-scheme;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-theme="auto"] {
+    @include dark-scheme;
+  }
+}

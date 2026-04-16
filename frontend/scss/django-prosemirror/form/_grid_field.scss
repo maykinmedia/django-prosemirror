@@ -3,23 +3,22 @@
   grid-template-columns: repeat(8, 20px);
   gap: 2px;
   padding: 10px;
-  border: 1px solid #ccc;
-  background-color: #f9f9f9;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface-subtle);
 
   & &__cell {
     width: 20px;
     height: 20px;
     display: block;
-    border: 1px solid #ddd;
-    background-color: white;
+    border: 1px solid var(--color-border);
+    background-color: var(--color-bg);
     cursor: pointer;
     font-size: 10px;
-    padding: 0px;
-    transition: background-color 0.1s ease;
     padding: 0;
+    transition: background-color 0.1s ease;
 
     &.highlight {
-      background-color: #e3f2fd;
+      background-color: var(--color-info-lighter);
     }
   }
 }

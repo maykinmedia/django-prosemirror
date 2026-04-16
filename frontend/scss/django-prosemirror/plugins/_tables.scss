@@ -15,16 +15,16 @@
   box-sizing: border-box;
   position: relative;
   min-width: 1em;
-  border: var(--border-width-thin) solid var(--color-gray-light);
+  border: var(--border-width-thin) solid var(--color-border);
   padding: var(--spacing-tiny) var(--spacing-small);
 }
 .ProseMirror th {
   font-weight: bold;
   text-align: left;
-  background-color: var(--color-gray-lightest);
+  background-color: var(--color-surface-subtle);
 }
 .ProseMirror td {
-  background-color: var(--color-white);
+  background-color: var(--color-bg);
 }
 
 .ProseMirror td:not([data-colwidth]):not(.column-resize-dragging),

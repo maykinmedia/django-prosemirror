@@ -303,7 +303,7 @@ class MenuBuilder {
         // Organize inline formatting menu items
         result.inlineMenu = [
             this.schema.nodes.heading || this.schema.nodes.code_block
-                ? (cut([result.typeMenu]) as MenuItem[])
+                ? (cut([result.typeMenu]) as unknown as MenuItem[])
                 : [],
             cut([
                 result.toggleStrong,
