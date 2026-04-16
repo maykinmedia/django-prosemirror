@@ -11,7 +11,6 @@ import {
     isInsideTable,
 } from "@/utils";
 import { createSVG } from "@/utils/svg";
-import { FindResult } from "node_modules/prosemirror-utils/dist/types";
 import { NodeSelection } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -311,7 +310,9 @@ describe("test utils folder", () => {
                     () =>
                         ({
                             node: { type: { name: "table" } },
-                        }) as FindResult,
+                        }) as ReturnType<
+                            ReturnType<typeof findParentNodeOfType>
+                        >,
                 );
 
                 const result = getSelectedTableNode(mockView);
