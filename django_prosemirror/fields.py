@@ -69,6 +69,13 @@ class ProsemirrorFieldDocument:
         self._sync_callback = sync_to_field_callback
         self.schema = schema
 
+    def __bool__(self):
+        """Return True if the document has content, False if None or empty."""
+        if self._raw_data is None:
+            return False
+
+        return bool(self._raw_data.get("content"))
+
     def __str__(self):
         """Return the HTML representation of the document."""
         return self.html
@@ -283,7 +290,7 @@ class ProsemirrorFieldDescriptor:
                 self._unsaved_instance_cache.pop(old_unsaved_key, None)
 
         # If we have a cache hit, sync raw data and return it
-        if cached_doc:
+        if cached_doc is not None:
             if cached_doc._raw_data != current_raw_value:
                 cached_doc._raw_data = current_raw_value
 
