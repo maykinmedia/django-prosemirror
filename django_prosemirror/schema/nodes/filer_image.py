@@ -44,9 +44,9 @@ class FilerImageNode(NodeDefinition):
                 "getAttrs": lambda attrs: {
                     "src": attrs.get("src"),
                     "title": attrs.get("title"),
-                    "alt": attrs.get("alt"),
+                    "alt": attrs.get("alt", ""),
                     "imageId": attrs.get("imageId"),
-                    "caption": attrs.get("caption"),
+                    "caption": attrs.get("caption", ""),
                 },
             },
         ]
