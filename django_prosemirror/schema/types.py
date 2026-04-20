@@ -1,11 +1,21 @@
 """Type definitions for the schema module."""
 
 import enum
-from typing import TypeAlias
+from typing import Any, TypeAlias
 
 from prosemirror.utils import JSONDict
 
 ProsemirrorDocument: TypeAlias = JSONDict
+
+# Type alias for a ProseMirror document dict
+# Runtime-validated to be dict, not just Mapping
+#
+# While the prosemirror library accepts Mapping[str, JSON], we require concrete dict
+# objects due to Django field API constraints:
+# - Django's JSONField always returns dict (not arbitrary Mappings)
+# - json.dumps() only serializes dict objects
+# - All data from database/forms comes back as dict
+ProsemirrorDocumentDict = dict[str, Any]
 
 
 class NodeType(enum.Enum):

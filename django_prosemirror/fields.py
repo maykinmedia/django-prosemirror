@@ -15,9 +15,11 @@ from django_prosemirror.config import ProsemirrorConfig
 from django_prosemirror.schema import (
     MarkType,
     NodeType,
+    ProsemirrorDocument,
+    ProsemirrorDocumentDict,
     validate_doc,
 )
-from django_prosemirror.serde import ProsemirrorDocument, doc_to_html, html_to_doc
+from django_prosemirror.serde import doc_to_html, html_to_doc
 from django_prosemirror.widgets import ProsemirrorWidget
 
 
@@ -33,16 +35,36 @@ class ProsemirrorFieldDocument:
     """
 
     schema: Schema
-    _raw_data: ProsemirrorDocument
+    _raw_data: ProsemirrorDocumentDict | None
 
     def __init__(
         self,
-        raw_data: ProsemirrorDocument,
+        raw_data: ProsemirrorDocumentDict | None,
         *,
         sync_to_field_callback: Callable | None = None,
         schema: Schema,
     ):
-        """Initialize a Prosemirror document wrapper."""
+        """Initialize a Prosemirror document wrapper.
+
+        Args:
+            raw_data: ProseMirror document as a dict, or None
+            sync_to_field_callback: Optional callback to sync changes to the model
+            schema: Prosemirror schema for validation
+
+        Raises:
+            ValidationError: If raw_data is not a dict or None
+
+        Note:
+            We require dict specifically (not just Mapping) due to Django's field
+            API constraints - JSONField always produces dict objects.
+        """
+        # Validate that raw_data is a dict or None
+        if raw_data is not None and not isinstance(raw_data, dict):
+            raise ValidationError(
+                f"Prosemirror document must be a dict or None, "
+                f"got {type(raw_data).__name__}"
+            )
+
         self._raw_data = raw_data
         self._sync_callback = sync_to_field_callback
         self.schema = schema
@@ -52,17 +74,29 @@ class ProsemirrorFieldDocument:
         return self.html
 
     @property
-    def raw_data(self) -> ProsemirrorDocument:
+    def raw_data(self) -> ProsemirrorDocumentDict | None:
         """Get the raw document data."""
         return self._raw_data
 
     @raw_data.setter
-    def raw_data(self, value: ProsemirrorDocument) -> ProsemirrorDocument:
+    def raw_data(
+        self, value: ProsemirrorDocumentDict | None
+    ) -> ProsemirrorDocumentDict | None:
         """Set the raw document data and sync to model.
 
         Args:
-            value: New document data as dict/JSON
+            value: New document data as dict or None
+
+        Raises:
+            ValidationError: If value is not a dict or None
         """
+        # Validate that value is a dict or None
+        if value is not None and not isinstance(value, dict):
+            raise ValidationError(
+                f"Prosemirror document must be a dict or None, "
+                f"got {type(value).__name__}"
+            )
+
         self._raw_data = value
         self._sync_to_model()
         return self._raw_data
@@ -90,13 +124,26 @@ class ProsemirrorFieldDocument:
     html.fset.alters_data = True  # type: ignore[attr-defined]
 
     @property
-    def doc(self) -> ProsemirrorDocument:
+    def doc(self) -> ProsemirrorDocumentDict | None:
         """Get the document data (alias for raw_data)."""
         return self._raw_data
 
     @doc.setter
-    def doc(self, value: ProsemirrorDocument) -> ProsemirrorDocument:
-        """Set the document data and sync to model."""
+    def doc(
+        self, value: ProsemirrorDocumentDict | None
+    ) -> ProsemirrorDocumentDict | None:
+        """Set the document data and sync to model.
+
+        Raises:
+            ValidationError: If value is not a dict or None
+        """
+        # Validate that value is a dict or None
+        if value is not None and not isinstance(value, dict):
+            raise ValidationError(
+                f"Prosemirror document must be a dict or None, "
+                f"got {type(value).__name__}"
+            )
+
         self._raw_data = value
         self._sync_to_model()
         return self._raw_data
@@ -198,9 +245,16 @@ class ProsemirrorFieldDescriptor:
         if instance is None:
             return self
 
-        current_raw_value = cast(
-            ProsemirrorDocument, instance.__dict__.get(self.field.attname)
+        current_raw_value: ProsemirrorDocumentDict | None = instance.__dict__.get(
+            self.field.attname
         )
+
+        # Validate that the raw value is a dict or None
+        if current_raw_value is not None and not isinstance(current_raw_value, dict):
+            raise ValidationError(
+                f"Prosemirror document must be a dict or None, "
+                f"got {type(current_raw_value).__name__}"
+            )
 
         cached_doc: None | ProsemirrorFieldDocument = None
         cache_key = self._get_cache_key(instance)
@@ -281,9 +335,19 @@ class ProsemirrorFieldDescriptor:
         Args:
             instance: Django model instance
             value: New value (can be ProsemirrorFieldDocument or raw data)
+
+        Raises:
+            ValidationError: If value is not a dict, None, or ProsemirrorFieldDocument
         """
         if isinstance(value, ProsemirrorFieldDocument):
             value = value.raw_data
+
+        # Validate that value is a dict or None
+        if value is not None and not isinstance(value, dict):
+            raise ValidationError(
+                f"Prosemirror document must be a dict or None, "
+                f"got {type(value).__name__}"
+            )
 
         instance.__dict__[self.field.attname] = value
 

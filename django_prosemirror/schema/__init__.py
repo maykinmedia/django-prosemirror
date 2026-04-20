@@ -29,7 +29,7 @@ from .nodes import (
     TableNode,
     TableRowNode,
 )
-from .types import MarkType, NodeType, ProsemirrorDocument
+from .types import MarkType, NodeType, ProsemirrorDocument, ProsemirrorDocumentDict
 
 
 def validate_doc(doc: ProsemirrorDocument, *, schema: Schema):
@@ -65,6 +65,7 @@ __all__ = [
     "NodeType",
     "MarkType",
     "ProsemirrorDocument",
+    "ProsemirrorDocumentDict",
     # Base classes
     "ClassMapping",
     "NodeDefinition",
