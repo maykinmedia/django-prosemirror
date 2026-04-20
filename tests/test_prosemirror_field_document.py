@@ -329,6 +329,68 @@ class TestProsemirrorFieldDocument:
         assert doc.raw_data == new_data, "Raw data should be consistent"
         assert doc.html == "<h1>Updated Title</h1>", "HTML should reflect the changes"
 
+    def test_bool_is_false_when_raw_data_is_none(self):
+        config = ProsemirrorConfig(
+            allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[]
+        )
+        doc = ProsemirrorFieldDocument(None, schema=config.schema)
+
+        assert bool(doc) is False
+
+    def test_bool_is_false_for_empty_doc(self):
+        config = ProsemirrorConfig(
+            allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[]
+        )
+        doc = ProsemirrorFieldDocument(EMPTY_DOC, schema=config.schema)
+
+        assert bool(doc) is False
+
+    def test_bool_is_true_when_doc_has_content(self):
+        config = ProsemirrorConfig(
+            allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[]
+        )
+        doc_data = {
+            "type": "doc",
+            "content": [
+                {
+                    "type": "paragraph",
+                    "content": [{"type": "text", "text": "Hello"}],
+                }
+            ],
+        }
+        doc = ProsemirrorFieldDocument(doc_data, schema=config.schema)
+
+        assert bool(doc) is True
+
+    def test_bool_is_true_for_empty_paragraph_node(self):
+        """A paragraph node with no text is still a content node — truthy."""
+        config = ProsemirrorConfig(
+            allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[]
+        )
+        doc_data = {"type": "doc", "content": [{"type": "paragraph"}]}
+        doc = ProsemirrorFieldDocument(doc_data, schema=config.schema)
+
+        assert bool(doc) is True
+
+    def test_bool_is_true_for_heading_node(self):
+        config = ProsemirrorConfig(
+            allowed_node_types=[NodeType.PARAGRAPH, NodeType.HEADING],
+            allowed_mark_types=[],
+        )
+        doc_data = {
+            "type": "doc",
+            "content": [
+                {
+                    "type": "heading",
+                    "attrs": {"level": 1},
+                    "content": [{"type": "text", "text": "Title"}],
+                }
+            ],
+        }
+        doc = ProsemirrorFieldDocument(doc_data, schema=config.schema)
+
+        assert bool(doc) is True
+
     def test_sync_callback_not_called_when_none(self):
         """Test that no error occurs when sync callback is None."""
         config = ProsemirrorConfig(
