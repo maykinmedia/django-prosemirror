@@ -32,7 +32,6 @@
         "noUncheckedIndexedAccess": false,
 
         /* Module resolution */
-        "baseUrl": ".",
         "paths": {
             "@/*": ["./frontend/*"]
         },
