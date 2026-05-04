@@ -1,3 +1,5 @@
+@use "../django-prosemirror/nodes/" as nodes;
+
 .form-row {
   overflow: visible;
 
@@ -20,9 +22,10 @@
 }
 
 .module .editor,
-.readonly {
+.module .readonly {
+  @include nodes.list-styling;
+
   p,
-  ul,
   h3,
   h4,
   dl {
