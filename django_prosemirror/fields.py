@@ -341,20 +341,23 @@ class ProsemirrorFieldDescriptor:
 
         Args:
             instance: Django model instance
-            value: New value (can be ProsemirrorFieldDocument or raw data)
+            value: New value (dict, str/HTML, None, or ProsemirrorFieldDocument)
 
         Raises:
-            ValidationError: If value is not a dict, None, or ProsemirrorFieldDocument
+            ValidationError: If value is not a supported type
         """
-        if isinstance(value, ProsemirrorFieldDocument):
-            value = value.raw_data
-
-        # Validate that value is a dict or None
-        if value is not None and not isinstance(value, dict):
-            raise ValidationError(
-                f"Prosemirror document must be a dict or None, "
-                f"got {type(value).__name__}"
-            )
+        match value:
+            case ProsemirrorFieldDocument():
+                value = value.raw_data
+            case str():
+                value = html_to_doc(value, schema=self.schema)
+            case dict() | None:
+                pass
+            case _:
+                raise ValidationError(
+                    f"Prosemirror document must be a dict, str, None, or "
+                    f"ProsemirrorFieldDocument, got {type(value).__name__}"
+                )
 
         instance.__dict__[self.field.attname] = value
 
