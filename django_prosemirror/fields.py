@@ -8,6 +8,7 @@ from typing import Any, Self, cast
 from django import forms
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils.safestring import SafeString, mark_safe
 
 from prosemirror import Schema
 
@@ -116,6 +117,11 @@ class ProsemirrorFieldDocument:
     def html(self) -> str:
         """Get the HTML representation of the document."""
         return doc_to_html(self._raw_data, schema=self.schema)
+
+    @property
+    def safe_html(self) -> SafeString:
+        """Get the HTML representation marked safe for Django templates."""
+        return mark_safe(self.html)
 
     @html.setter
     def html(self, value: str) -> str:

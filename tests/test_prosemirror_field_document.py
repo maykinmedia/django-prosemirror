@@ -1,5 +1,7 @@
 from unittest.mock import Mock
 
+from django.utils.safestring import SafeString
+
 from django_prosemirror.config import ProsemirrorConfig
 from django_prosemirror.constants import get_empty_doc
 from django_prosemirror.fields import ProsemirrorFieldDocument
@@ -196,6 +198,24 @@ class TestProsemirrorFieldDocument:
         doc = ProsemirrorFieldDocument(doc_data, schema=schema)
 
         assert doc.html == "<p>Hello world</p>"
+
+    def test_safe_html_returns_html_as_safe_string(self):
+        config = ProsemirrorConfig(
+            allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[]
+        )
+        doc_data = {
+            "type": "doc",
+            "content": [
+                {
+                    "type": "paragraph",
+                    "content": [{"type": "text", "text": "Hello world"}],
+                }
+            ],
+        }
+        doc = ProsemirrorFieldDocument(doc_data, schema=config.schema)
+
+        assert doc.safe_html == "<p>Hello world</p>"
+        assert isinstance(doc.safe_html, SafeString)
 
     def test_html_property_setter_updates_document_from_html(self):
         config = ProsemirrorConfig(
