@@ -16,7 +16,6 @@ def get_empty_doc() -> dict:
     """Return a fresh empty ProseMirror document dict."""
     return {"type": "doc", "content": []}
 
-
 SETTINGS_KEY = "DJANGO_PROSEMIRROR"
 
 _default_node_types = [
