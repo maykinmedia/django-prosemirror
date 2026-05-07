@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Any
 
-from django_prosemirror.constants import EMPTY_DOC
+from django_prosemirror.constants import get_empty_doc
 from django_prosemirror.schema import MarkType, NodeType
 
 
@@ -1034,7 +1034,7 @@ HTML_TO_DOC_EDGE_CASES = [
         description="Empty HTML string produces empty document",
         config_node_types=[NodeType.PARAGRAPH],
         config_mark_types=[],
-        document=EMPTY_DOC,
+        document=get_empty_doc(),
         expected_html="",
         round_trip_compatible=False,  # Empty HTML doesn't round-trip to empty string
     ),
@@ -1043,7 +1043,7 @@ HTML_TO_DOC_EDGE_CASES = [
         description="Whitespace-only HTML produces empty document",
         config_node_types=[NodeType.PARAGRAPH],
         config_mark_types=[],
-        document=EMPTY_DOC,
+        document=get_empty_doc(),
         expected_html="   \n\t  ",
         round_trip_compatible=False,  # Whitespace doesn't round-trip
     ),

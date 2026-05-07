@@ -9,7 +9,7 @@ from django.db import models
 
 from prosemirror import Schema
 
-from django_prosemirror.constants import EMPTY_DOC
+from django_prosemirror.constants import get_empty_doc
 from django_prosemirror.schema import ProsemirrorDocumentDict, validate_doc
 from django_prosemirror.serde import html_to_doc
 
@@ -174,11 +174,12 @@ def clear_corrupt_prosemirror_rows(
     """
     # .values() and .update() bypass the descriptor for both reads and writes
     corrupt_rows = list(iter_corrupt_prosemirror_rows(model, field_name))
+    empty_doc = get_empty_doc()
     if corrupt_rows:
         pks = [pk for pk, _ in corrupt_rows]
-        model.objects.filter(pk__in=pks).update(**{field_name: EMPTY_DOC})
+        model.objects.filter(pk__in=pks).update(**{field_name: empty_doc})
     records = [
-        RepairRecord(pk=pk, original=raw_value, repaired=EMPTY_DOC)
+        RepairRecord(pk=pk, original=raw_value, repaired=empty_doc)
         for pk, raw_value in corrupt_rows
     ]
 

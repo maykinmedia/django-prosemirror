@@ -1,7 +1,7 @@
 from unittest.mock import Mock
 
 from django_prosemirror.config import ProsemirrorConfig
-from django_prosemirror.constants import EMPTY_DOC
+from django_prosemirror.constants import get_empty_doc
 from django_prosemirror.fields import ProsemirrorFieldDocument
 from django_prosemirror.schema import NodeType
 
@@ -143,11 +143,11 @@ class TestProsemirrorFieldDocument:
         )
         schema = config.schema
 
-        doc = ProsemirrorFieldDocument(EMPTY_DOC, schema=schema)
+        doc = ProsemirrorFieldDocument(get_empty_doc(), schema=schema)
 
-        assert doc.doc == EMPTY_DOC
+        assert doc.doc == get_empty_doc()
         assert doc.html == ""
-        assert doc.raw_data == EMPTY_DOC
+        assert doc.raw_data == get_empty_doc()
 
     def test_sync_to_model_called_when_callback_exists(self):
         config = ProsemirrorConfig(
@@ -341,7 +341,7 @@ class TestProsemirrorFieldDocument:
         config = ProsemirrorConfig(
             allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[]
         )
-        doc = ProsemirrorFieldDocument(EMPTY_DOC, schema=config.schema)
+        doc = ProsemirrorFieldDocument(get_empty_doc(), schema=config.schema)
 
         assert bool(doc) is False
 
