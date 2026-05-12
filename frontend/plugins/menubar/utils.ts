@@ -51,10 +51,8 @@ export function createCommandMenuItem(
         ...options,
     };
 
-    // Set up enable/select logic if not provided
     if (!options.enable && !options.select) {
-        passedOptions[options.enable ? "enable" : "select"] = (state) =>
-            cmd(state);
+        passedOptions.select = cmd;
     }
 
     return new MenuItem(passedOptions);

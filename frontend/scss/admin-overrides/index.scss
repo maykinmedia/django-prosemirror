@@ -24,6 +24,7 @@
 .module .editor,
 .module .readonly {
   @include nodes.list-styling;
+  @include nodes.blockquote-styling;
 
   p,
   h3,
