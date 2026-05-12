@@ -9,7 +9,7 @@ from django.core.exceptions import ValidationError
 import pytest
 
 from django_prosemirror.config import ProsemirrorConfig
-from django_prosemirror.constants import EMPTY_DOC
+from django_prosemirror.constants import get_empty_doc
 from django_prosemirror.fields import ProsemirrorFieldDocument, ProsemirrorFormField
 from django_prosemirror.schema import MarkType, NodeType
 from django_prosemirror.widgets import ProsemirrorWidget
@@ -217,7 +217,7 @@ def test_validate_with_empty_document():
     )
     schema = field.config.schema
 
-    doc = ProsemirrorFieldDocument(EMPTY_DOC, schema=schema)
+    doc = ProsemirrorFieldDocument(get_empty_doc(), schema=schema)
 
     # Should not raise any exception for valid empty document
     field.validate(doc)

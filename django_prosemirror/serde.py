@@ -6,7 +6,7 @@ from prosemirror import Schema
 from prosemirror.model import DOMSerializer, Node
 from prosemirror.model.from_dom import from_html
 
-from django_prosemirror.constants import EMPTY_DOC
+from django_prosemirror.constants import get_empty_doc
 from django_prosemirror.schema import ProsemirrorDocumentDict
 
 
@@ -145,7 +145,7 @@ def html_to_doc(value: str, *, schema: Schema) -> ProsemirrorDocumentDict:
     """
     if not value.strip():
         # Return empty document for empty/whitespace-only strings
-        return EMPTY_DOC
+        return get_empty_doc()
 
     doc = from_html(schema, value)
     # from_html returns JSONDict (Mapping), but we know it's actually a dict

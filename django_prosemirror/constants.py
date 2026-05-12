@@ -12,7 +12,10 @@ class ProseMirrorConfig(TypedDict):
     history: bool
 
 
-EMPTY_DOC = {"type": "doc", "content": []}
+def get_empty_doc() -> dict:
+    """Return a fresh empty ProseMirror document dict."""
+    return {"type": "doc", "content": []}
+
 
 SETTINGS_KEY = "DJANGO_PROSEMIRROR"
 

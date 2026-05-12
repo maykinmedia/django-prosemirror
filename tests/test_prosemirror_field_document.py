@@ -1,7 +1,9 @@
 from unittest.mock import Mock
 
+from django.utils.safestring import SafeString
+
 from django_prosemirror.config import ProsemirrorConfig
-from django_prosemirror.constants import EMPTY_DOC
+from django_prosemirror.constants import get_empty_doc
 from django_prosemirror.fields import ProsemirrorFieldDocument
 from django_prosemirror.schema import NodeType
 
@@ -137,17 +139,17 @@ class TestProsemirrorFieldDocument:
         assert restored_doc.doc == doc_data, "Reconstructed doc should match original"
         assert restored_doc._sync_callback is None, "Callback should not be preserved"
 
-    def test_empty_document_handling(self):
+    def test_clear_document_handling(self):
         config = ProsemirrorConfig(
             allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[]
         )
         schema = config.schema
 
-        doc = ProsemirrorFieldDocument(EMPTY_DOC, schema=schema)
+        doc = ProsemirrorFieldDocument(get_empty_doc(), schema=schema)
 
-        assert doc.doc == EMPTY_DOC
+        assert doc.doc == get_empty_doc()
         assert doc.html == ""
-        assert doc.raw_data == EMPTY_DOC
+        assert doc.raw_data == get_empty_doc()
 
     def test_sync_to_model_called_when_callback_exists(self):
         config = ProsemirrorConfig(
@@ -196,6 +198,24 @@ class TestProsemirrorFieldDocument:
         doc = ProsemirrorFieldDocument(doc_data, schema=schema)
 
         assert doc.html == "<p>Hello world</p>"
+
+    def test_safe_html_returns_html_as_safe_string(self):
+        config = ProsemirrorConfig(
+            allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[]
+        )
+        doc_data = {
+            "type": "doc",
+            "content": [
+                {
+                    "type": "paragraph",
+                    "content": [{"type": "text", "text": "Hello world"}],
+                }
+            ],
+        }
+        doc = ProsemirrorFieldDocument(doc_data, schema=config.schema)
+
+        assert doc.safe_html == "<p>Hello world</p>"
+        assert isinstance(doc.safe_html, SafeString)
 
     def test_html_property_setter_updates_document_from_html(self):
         config = ProsemirrorConfig(
@@ -341,7 +361,7 @@ class TestProsemirrorFieldDocument:
         config = ProsemirrorConfig(
             allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[]
         )
-        doc = ProsemirrorFieldDocument(EMPTY_DOC, schema=config.schema)
+        doc = ProsemirrorFieldDocument(get_empty_doc(), schema=config.schema)
 
         assert bool(doc) is False
 
@@ -390,6 +410,86 @@ class TestProsemirrorFieldDocument:
         doc = ProsemirrorFieldDocument(doc_data, schema=config.schema)
 
         assert bool(doc) is True
+
+    def test_clear_resets_document_to_empty_doc(self):
+        config = ProsemirrorConfig(
+            allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[]
+        )
+        doc_data = {
+            "type": "doc",
+            "content": [
+                {"type": "paragraph", "content": [{"type": "text", "text": "Hello"}]}
+            ],
+        }
+        doc = ProsemirrorFieldDocument(doc_data, schema=config.schema)
+
+        doc.clear()
+
+        assert doc.doc == {"type": "doc", "content": []}
+        assert not doc
+
+    def test_clear_syncs_to_model(self):
+        config = ProsemirrorConfig(
+            allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[]
+        )
+        synced = []
+        doc = ProsemirrorFieldDocument(
+            {"type": "doc", "content": []},
+            schema=config.schema,
+            sync_to_field_callback=synced.append,
+        )
+
+        doc.clear()
+
+        assert synced == [{"type": "doc", "content": []}]
+
+    def test_clear_does_not_mutate_empty_doc_constant(self):
+        config = ProsemirrorConfig(
+            allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[]
+        )
+        doc = ProsemirrorFieldDocument(
+            {"type": "doc", "content": []}, schema=config.schema
+        )
+        doc.clear()
+        doc.doc["content"].append({"type": "paragraph"})
+
+        doc2 = ProsemirrorFieldDocument(
+            {"type": "doc", "content": []}, schema=config.schema
+        )
+        doc2.clear()
+        assert doc2.doc == {"type": "doc", "content": []}
+
+    def test_nullify_sets_raw_data_to_none(self):
+        config = ProsemirrorConfig(
+            allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[]
+        )
+        doc_data = {
+            "type": "doc",
+            "content": [
+                {"type": "paragraph", "content": [{"type": "text", "text": "Hello"}]}
+            ],
+        }
+        doc = ProsemirrorFieldDocument(doc_data, schema=config.schema)
+
+        doc.nullify()
+
+        assert doc.doc is None
+        assert not doc
+
+    def test_nullify_syncs_to_model(self):
+        config = ProsemirrorConfig(
+            allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[]
+        )
+        synced = []
+        doc = ProsemirrorFieldDocument(
+            {"type": "doc", "content": []},
+            schema=config.schema,
+            sync_to_field_callback=synced.append,
+        )
+
+        doc.nullify()
+
+        assert synced == [None]
 
     def test_sync_callback_not_called_when_none(self):
         """Test that no error occurs when sync callback is None."""

@@ -3,7 +3,7 @@
 import pytest
 
 from django_prosemirror.config import ProsemirrorConfig
-from django_prosemirror.constants import EMPTY_DOC
+from django_prosemirror.constants import get_empty_doc
 from django_prosemirror.schema import MarkType, NodeType
 from django_prosemirror.serde import doc_to_html, html_to_doc
 
@@ -176,4 +176,4 @@ def test_empty_or_whitespace_string_produces_empty_document(input_html):
 
     doc = html_to_doc(input_html, schema=schema)
 
-    assert doc == EMPTY_DOC
+    assert doc == get_empty_doc()

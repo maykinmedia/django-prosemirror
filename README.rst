@@ -101,55 +101,111 @@ Use ``ProseMirrorModelField`` in your Django models:
 Accessing Content
 -----------------
 
-The field provides both document and HTML representations:
+Accessing a field returns a ``ProsemirrorFieldDocument``. It holds the raw
+ProseMirror document structure and lets you read the content as HTML or as the
+underlying document dict:
 
 .. code-block:: python
 
     post = BlogPost.objects.get(pk=1)
 
-    # Access as ProseMirror document (dict)
-    doc_content = post.content.doc
-    # Output: {
-    #     "type": "doc",
-    #     "content": [
-    #         {
-    #             "type": "heading",
-    #             "attrs": {"level": 1},
-    #             "content": [{"type": "text", "text": "Heading"}]
-    #         },
-    #         {
-    #             "type": "paragraph",
-    #             "content": [
-    #                 {"type": "text", "text": "Paragraph content..."}
-    #             ]
-    #         }
-    #     ]
-    # }
+    post.content.html  # "<h1>Heading</h1><p>Paragraph content...</p>"
+    post.content.doc   # {"type": "doc", "content": [...]}
 
-    # Access as HTML
-    html_content = post.content.html
-    # Output: "<h1>Heading</h1><p>Paragraph content...</p>"
+Use ``safe_html`` to render content in templates — Django's auto-escaping
+means ``html`` would print the tags as literal text:
 
-    # Modify content from HTML, which will be converted to a Prosemirror document internally
-    post.content.html = "<h2>New heading</h2><p>Updated content</p>"
+.. code-block:: html
+
+    {{ post.content.safe_html }}
+
+Setting field values
+--------------------
+
+Fields accept a ProseMirror document dict, an HTML string, ``None`` (nullable
+fields only), or a ``ProsemirrorFieldDocument``. Any other type raises a
+``ValidationError``.
+
+.. code-block:: python
+
+    # Dict — the native ProseMirror document format
+    Article.objects.create(content={
+        "type": "doc",
+        "content": [
+            {
+                "type": "heading",
+                "attrs": {"level": 1},
+                "content": [{"type": "text", "text": "My Heading"}]
+            },
+            {
+                "type": "paragraph",
+                "content": [
+                    {"type": "text", "text": "Some "},
+                    {"type": "text", "marks": [{"type": "strong"}], "text": "bold"},
+                    {"type": "text", "text": " text."}
+                ]
+            }
+        ]
+    })
+
+    # HTML string — converted to a doc automatically using the field's schema
+    Article.objects.create(content="<h1>My Heading</h1><p>Some <strong>bold</strong> text.</p>")
+
+    # Plain text (no tags) is also accepted — wrapped in a paragraph
+    Article.objects.create(content="Just plain text")
+
+    # Direct assignment on an existing instance works the same way
+    article = Article.objects.get(pk=1)
+    article.content = "<p>Replaced via HTML</p>"
+    article.save()
+
+    # Unsupported types raise ValidationError
+    article.content = ["not", "valid"]  # raises ValidationError
+
+Regardless of input type, reading the field always returns a
+``ProsemirrorFieldDocument``:
+
+.. code-block:: python
+
+    article = Article.objects.get(pk=1)
+    article.content.html  # "<h1>My Heading</h1><p>Some <strong>bold</strong> text.</p>"
+    article.content.doc   # {"type": "doc", "content": [...]}
+
+If you already hold a reference to the ``ProsemirrorFieldDocument`` object
+(e.g. it was passed into a function), you can mutate it in place via the
+``.html`` or ``.doc`` setters — the change is synced back to the model
+automatically:
+
+.. code-block:: python
+
+    def update_content(doc, new_html):
+        doc.html = new_html  # syncs back to the model instance
+
+    update_content(post.content, "<p>Updated</p>")
     post.save()
 
-    # After modification, the document structure is updated
-    updated_doc = post.content.doc
-    # Output: {
-    #     "type": "doc",
-    #     "content": [
-    #         {
-    #             "type": "heading",
-    #             "attrs": {"level": 2},
-    #             "content": [{"type": "text", "text": "New heading"}]
-    #         },
-    #         {
-    #             "type": "paragraph",
-    #             "content": [{"type": "text", "text": "Updated content"}]
-    #         }
-    #     ]
-    # }
+``ProsemirrorFieldDocument`` is falsy when the document is ``None`` or its
+``content`` list is empty, and truthy otherwise:
+
+.. code-block:: python
+
+    if post.content:
+        render(post.content.safe_html)
+
+.. note::
+   An empty paragraph (``<p></p>``) is truthy — it is a content node even
+   though it contains no text. Only a completely empty document
+   (``{"type": "doc", "content": []}``) is falsy.
+
+Two convenience methods are also available for clearing the content:
+
+.. code-block:: python
+
+    post.content.clear()    # reset to an empty document
+    post.content.nullify()  # set to None (field must allow null)
+
+Both update the in-memory model instance only — you must call ``post.save()``
+to persist the change to the database.
 
 Form Field
 ----------
@@ -260,11 +316,11 @@ Always use callables for default values returning valid ProseMirror documents:
 
 .. code-block:: python
 
+    from django_prosemirror.constants import get_empty_doc
+
     class Article(models.Model):
         # ✅ Correct: Using a callable
-        content = ProseMirrorModelField(
-            default=lambda: {"type": "doc", "content": []}
-        )
+        content = ProseMirrorModelField(default=get_empty_doc)
 
         # ❌ Wrong: Static dict (validation error)
         # content = ProseMirrorModelField(
@@ -311,41 +367,132 @@ Frontend Integration
 
 **Note**: These assets are only required for form rendering (editing). Displaying saved content using ``{{ post.content.html }}`` in templates does not require these assets.
 
-Advanced Usage
-==============
+Data migrations
+===============
 
-Programmatic Content Creation
------------------------------
+Corrupt ProseMirror field data can end up in the database whenever code
+bypasses the field's validation — for example, a ``bulk_create`` or
+``update()`` call that writes raw values directly, a third-party library
+that writes to the column without going through the descriptor, or a data
+import that predates the field being introduced. ``django_prosemirror``
+provides helpers in :mod:`django_prosemirror.migration_utils` to audit and
+repair affected rows safely. All helpers bypass the field descriptor via
+``.values()`` and ``.update()``, so they work even when corrupt rows would
+otherwise raise ``ValidationError`` on normal access.
 
-Create ProseMirror content programmatically:
+Auditing
+--------
+
+Use the ``iter_*`` functions to inspect data without modifying it:
 
 .. code-block:: python
 
-    # Create a document with heading and paragraph
-    content = {
-        "type": "doc",
-        "content": [
-            {
-                "type": "heading",
-                "attrs": {"level": 1},
-                "content": [{"type": "text", "text": "My Heading"}]
-            },
-            {
-                "type": "paragraph",
-                "content": [
-                    {"type": "text", "text": "Some "},
-                    {
-                        "type": "text",
-                        "marks": [{"type": "strong"}],
-                        "text": "bold"
-                    },
-                    {"type": "text", "text": " text."}
-                ]
-            }
-        ]
-    }
+    from django_prosemirror.migration_utils import (
+        iter_corrupt_prosemirror_rows,
+        iter_schema_invalid_prosemirror_rows,
+    )
 
-    article = Article.objects.create(content=content)
+    # Wrong type or shape (strings, lists, numbers, malformed dicts)
+    for pk, raw in iter_corrupt_prosemirror_rows(MyModel, "body"):
+        print(f"pk={pk}: corrupt value {raw!r}")
+
+    # Correct shape but fails schema validation for that field
+    for pk, raw in iter_schema_invalid_prosemirror_rows(MyModel, "body"):
+        print(f"pk={pk}: schema-invalid doc {raw!r}")
+
+These two functions cover disjoint sets: a row will appear in at most one of
+them.
+
+Repairing
+---------
+
+Three repair functions are available, each returning a ``list[RepairRecord]``
+for logging:
+
+.. code-block:: python
+
+    from django_prosemirror.migration_utils import (
+        repair_prosemirror_html_strings,
+        nullify_corrupt_prosemirror_rows,
+        clear_corrupt_prosemirror_rows,
+    )
+
+    # Convert corrupt HTML strings to proper doc dicts
+    records = repair_prosemirror_html_strings(MyModel, "body")
+
+    # Set corrupt values to NULL (nullable fields only — raises ValueError otherwise)
+    records = nullify_corrupt_prosemirror_rows(MyModel, "body")
+
+    # Set corrupt values to an empty doc (works on any field)
+    records = clear_corrupt_prosemirror_rows(MyModel, "body")
+
+    for r in records:
+        print(f"pk={r.pk}: {r.original!r} → {r.repaired!r}")
+
+Example data migration
+----------------------
+
+A common case is a field that previously stored raw HTML strings. Use
+``repair_prosemirror_html_strings`` to convert them in place:
+
+.. code-block:: python
+
+    from django_prosemirror.migration_utils import repair_prosemirror_html_strings
+
+    def migrate(apps, schema_editor):
+        MyModel = apps.get_model("myapp", "MyModel")
+        records = repair_prosemirror_html_strings(MyModel, "body")
+        for r in records:
+            print(f"Repaired pk={r.pk}")
+        print(f"{len(records)} row(s) repaired")
+
+    class Migration(migrations.Migration):
+        dependencies = [("myapp", "0001_initial")]
+        operations = [migrations.RunPython(migrate, migrations.RunPython.noop)]
+
+The schema used for conversion is derived automatically from the field
+definition on the historical model, so no manual schema configuration is
+needed.
+
+For non-string corrupt values (integers, lists, malformed dicts) there is no
+automatic conversion. If you know what shape the corrupt data takes you can
+fix it yourself using ``iter_corrupt_prosemirror_rows``:
+
+.. code-block:: python
+
+    from django_prosemirror.migration_utils import iter_corrupt_prosemirror_rows
+
+    def migrate(apps, schema_editor):
+        MyModel = apps.get_model("myapp", "MyModel")
+        for pk, raw in iter_corrupt_prosemirror_rows(MyModel, "body"):
+            fixed = my_conversion(raw)  # your own logic here
+            MyModel.objects.filter(pk=pk).update(body=fixed)
+
+    class Migration(migrations.Migration):
+        dependencies = [("myapp", "0001_initial")]
+        operations = [migrations.RunPython(migrate, migrations.RunPython.noop)]
+
+If the values are genuinely unrecoverable, fall back to
+``clear_corrupt_prosemirror_rows`` to reset them to an empty document, or
+``nullify_corrupt_prosemirror_rows`` if the field allows null:
+
+.. code-block:: python
+
+    from django_prosemirror.migration_utils import (
+        clear_corrupt_prosemirror_rows,
+        nullify_corrupt_prosemirror_rows,
+    )
+
+    def migrate(apps, schema_editor):
+        MyModel = apps.get_model("myapp", "MyModel")
+        # For non-nullable fields
+        clear_corrupt_prosemirror_rows(MyModel, "body")
+        # For nullable fields
+        nullify_corrupt_prosemirror_rows(MyModel, "summary")
+
+    class Migration(migrations.Migration):
+        dependencies = [("myapp", "0001_initial")]
+        operations = [migrations.RunPython(migrate, migrations.RunPython.noop)]
 
 
 Local development

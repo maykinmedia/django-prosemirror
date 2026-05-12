@@ -8,10 +8,12 @@ from typing import Any, Self, cast
 from django import forms
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils.safestring import SafeString, mark_safe
 
 from prosemirror import Schema
 
 from django_prosemirror.config import ProsemirrorConfig
+from django_prosemirror.constants import get_empty_doc
 from django_prosemirror.schema import (
     MarkType,
     NodeType,
@@ -116,6 +118,11 @@ class ProsemirrorFieldDocument:
         """Get the HTML representation of the document."""
         return doc_to_html(self._raw_data, schema=self.schema)
 
+    @property
+    def safe_html(self) -> SafeString:
+        """Get the HTML representation marked safe for Django templates."""
+        return mark_safe(self.html)
+
     @html.setter
     def html(self, value: str) -> str:
         """Set the document content from HTML and sync to model.
@@ -157,6 +164,24 @@ class ProsemirrorFieldDocument:
 
     # Mark the setter as altering data
     doc.fset.alters_data = True  # type: ignore[attr-defined]
+
+    def clear(self) -> None:
+        """Clear all content, resetting to an empty ProseMirror document."""
+        self._raw_data = get_empty_doc()
+        self._sync_to_model()
+
+    clear.alters_data = True  # type: ignore[attr-defined]
+
+    def nullify(self) -> None:
+        """Set the document to None.
+
+        The underlying field must allow null values, otherwise saving the model
+        instance will raise a database error.
+        """
+        self._raw_data = None
+        self._sync_to_model()
+
+    nullify.alters_data = True  # type: ignore[attr-defined]
 
     def _sync_to_model(self):
         """Sync changes back to the model instance"""
@@ -341,20 +366,23 @@ class ProsemirrorFieldDescriptor:
 
         Args:
             instance: Django model instance
-            value: New value (can be ProsemirrorFieldDocument or raw data)
+            value: New value (dict, str/HTML, None, or ProsemirrorFieldDocument)
 
         Raises:
-            ValidationError: If value is not a dict, None, or ProsemirrorFieldDocument
+            ValidationError: If value is not a supported type
         """
-        if isinstance(value, ProsemirrorFieldDocument):
-            value = value.raw_data
-
-        # Validate that value is a dict or None
-        if value is not None and not isinstance(value, dict):
-            raise ValidationError(
-                f"Prosemirror document must be a dict or None, "
-                f"got {type(value).__name__}"
-            )
+        match value:
+            case ProsemirrorFieldDocument():
+                value = value.raw_data
+            case str():
+                value = html_to_doc(value, schema=self.schema)
+            case dict() | None:
+                pass
+            case _:
+                raise ValidationError(
+                    f"Prosemirror document must be a dict, str, None, or "
+                    f"ProsemirrorFieldDocument, got {type(value).__name__}"
+                )
 
         instance.__dict__[self.field.attname] = value
 
