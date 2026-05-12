@@ -8,6 +8,7 @@ import {
     redoItem,
     MenuItem,
 } from "prosemirror-menu";
+import { createLiftMenuItem } from "./list";
 import { Schema } from "prosemirror-model";
 import { icons } from "../icons";
 import { buildTableMenuItem } from "./table";
@@ -176,8 +177,11 @@ class MenuBuilder {
                     icon: icons.bulletList,
                 },
             );
-            // Add lift up and join up if bullet_list is added to the schema.
-            result.liftItem = liftItem;
+            result.liftItem = this.schema.nodes.list_item
+                ? createLiftMenuItem(this.schema.nodes.list_item, {
+                      title: liftItem.spec.title,
+                  })
+                : liftItem;
             result.joinUpItem = joinUpItem;
         }
 
@@ -190,8 +194,11 @@ class MenuBuilder {
                     icon: icons.orderedList,
                 },
             );
-            // Add lift up and join up if ordered_list is added to the schema.
-            result.liftItem = liftItem;
+            result.liftItem = this.schema.nodes.list_item
+                ? createLiftMenuItem(this.schema.nodes.list_item, {
+                      title: liftItem.spec.title,
+                  })
+                : liftItem;
             result.joinUpItem = joinUpItem;
         }
 
@@ -201,7 +208,8 @@ class MenuBuilder {
                 title: "Change to block quote",
                 icon: icons.blockquote,
             });
-            result.liftItem = liftItem;
+            // Only set liftItem from blockquote if no list type already set it.
+            if (!result.liftItem) result.liftItem = liftItem;
         }
 
         // Paragraph block type
