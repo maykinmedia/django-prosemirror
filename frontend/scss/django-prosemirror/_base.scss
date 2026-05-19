@@ -52,5 +52,8 @@
 
     /// ===== Lists ===== ///
     @include nodes.list-styling;
+
+    /// ===== Blockquote ===== ///
+    @include nodes.blockquote-styling;
   }
 }

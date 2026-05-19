@@ -8,6 +8,7 @@ import {
     redoItem,
     MenuItem,
 } from "prosemirror-menu";
+import { createLiftMenuItem } from "./list";
 import { Schema } from "prosemirror-model";
 import { icons } from "../icons";
 import { buildTableMenuItem } from "./table";
@@ -16,6 +17,7 @@ import { createLinkMenuItem } from "./link";
 import { createImageMenuItem } from "./image";
 import { createListWrapMenuItem } from "./list";
 import { NodeType } from "@/schema/types";
+
 /**
  * Interface defining the structure of menu items that can be built for the ProseMirror editor.
  * Each property represents a specific menu action or dropdown that can be added to the editor toolbar.
@@ -176,9 +178,6 @@ class MenuBuilder {
                     icon: icons.bulletList,
                 },
             );
-            // Add lift up and join up if bullet_list is added to the schema.
-            result.liftItem = liftItem;
-            result.joinUpItem = joinUpItem;
         }
 
         // Ordered list operations
@@ -190,18 +189,28 @@ class MenuBuilder {
                     icon: icons.orderedList,
                 },
             );
-            // Add lift up and join up if ordered_list is added to the schema.
-            result.liftItem = liftItem;
-            result.joinUpItem = joinUpItem;
         }
 
-        // Blockquote wrapping
+        // lift menu item
+        if (
+            this.schema.nodes.blockquote ||
+            this.schema.nodes.ordered_list ||
+            this.schema.nodes.bullet_list
+        )
+            result.liftItem = createLiftMenuItem({
+                title: liftItem.spec.title,
+            });
+
+        // join-up menu item
+        if (this.schema.nodes.ordered_list || this.schema.nodes.bullet_list)
+            result.joinUpItem = joinUpItem;
+
         if (this.schema.nodes.blockquote) {
+            // Blockquote wrapping
             result.wrapBlockQuote = wrapItem(this.schema.nodes.blockquote, {
                 title: "Change to block quote",
                 icon: icons.blockquote,
             });
-            result.liftItem = liftItem;
         }
 
         // Paragraph block type

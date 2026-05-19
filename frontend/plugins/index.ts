@@ -14,6 +14,7 @@ import { buildInputRules, buildKeymap } from "prosemirror-example-setup";
 import { gapCursor } from "prosemirror-gapcursor";
 import { history } from "prosemirror-history";
 import { keymap } from "prosemirror-keymap";
+import { liftListItem, sinkListItem } from "prosemirror-schema-list";
 import { menuBar } from "prosemirror-menu";
 import { Schema } from "prosemirror-model";
 import { Plugin } from "prosemirror-state";
@@ -91,6 +92,18 @@ export function getDPMPlugins(
          * A keymap that defines keys to create and manipulate the nodes in the schema
          */
         keymap(buildKeymap(schema)),
+        /**
+         * Tab / Shift-Tab to indent / dedent list items.
+         */
+        ...(schema.nodes.list_item &&
+        (schema.nodes.bullet_list || schema.nodes.ordered_list)
+            ? [
+                  keymap({
+                      "Tab": sinkListItem(schema.nodes.list_item),
+                      "Shift-Tab": liftListItem(schema.nodes.list_item),
+                  }),
+              ]
+            : []),
         /**
          * A keymap binding the default keys provided by the
          * prosemirror-commands module
