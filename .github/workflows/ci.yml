@@ -6,27 +6,33 @@ on:
     branches:
       - main
     tags:
-      - '*'
+      - "*"
   pull_request:
   workflow_dispatch:
+
+permissions: {}
 
 jobs:
   tests:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       matrix:
-        python: ['3.12', '3.13']
-        django: ['4.2', '5.2']
-        browser: ['chromium', 'firefox', 'webkit']
+        python: ["3.12", "3.13"]
+        django: ["4.2", "5.2"]
+        browser: ["chromium", "firefox", "webkit"]
         exclude:
-          - python: '3.13'
-            django: '4.2'
+          - python: "3.13"
+            django: "4.2"
 
     name: Run the test suite (Python ${{ matrix.python }}, Django ${{ matrix.django }}, ${{ matrix.browser }})
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: ${{ matrix.python }}
 
@@ -50,32 +56,36 @@ jobs:
 
       - name: Upload Playwright videos
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: playwright-videos-py${{ matrix.python }}-django${{ matrix.django }}-${{ matrix.browser }}
           path: playwright-videos/
           if-no-files-found: ignore
 
       - name: Publish coverage report
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
   nofiler-tests:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       matrix:
-        python: ['3.12', '3.13']
-        django: ['4.2', '5.2']
+        python: ["3.12", "3.13"]
+        django: ["4.2", "5.2"]
         exclude:
-          - python: '3.13'
-            django: '4.2'
+          - python: "3.13"
+            django: "4.2"
 
     name: Run nofiler tests (Python ${{ matrix.python }}, Django ${{ matrix.django }})
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: ${{ matrix.python }}
 
@@ -93,7 +103,7 @@ jobs:
           VARIANT: nofiler
 
       - name: Publish coverage report
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
@@ -103,15 +113,18 @@ jobs:
     needs: [tests, nofiler-tests]
     environment: release
     permissions:
+      contents: read
       id-token: write
 
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          python-version: '3.12'
+          persist-credentials: false
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.12"
 
       - name: Build sdist and wheel
         run: |
@@ -119,5 +132,5 @@ jobs:
           python -m build
 
       - name: Publish a Python distribution to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
 
