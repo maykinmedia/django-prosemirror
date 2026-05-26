@@ -375,7 +375,7 @@ bypasses the field's validation — for example, a ``bulk_create`` or
 ``update()`` call that writes raw values directly, a third-party library
 that writes to the column without going through the descriptor, or a data
 import that predates the field being introduced. ``django_prosemirror``
-provides helpers in :mod:`django_prosemirror.migration_utils` to audit and
+provides helpers in ``django_prosemirror.migration_utils`` to audit and
 repair affected rows safely. All helpers bypass the field descriptor via
 ``.values()`` and ``.update()``, so they work even when corrupt rows would
 otherwise raise ``ValidationError`` on normal access.
