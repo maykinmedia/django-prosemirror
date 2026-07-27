@@ -177,3 +177,44 @@ def test_empty_or_whitespace_string_produces_empty_document(input_html):
     doc = html_to_doc(input_html, schema=schema)
 
     assert doc == get_empty_doc()
+
+
+@pytest.mark.parametrize(
+    "href",
+    [
+        "javascript:alert(1)",
+        "JaVaScRiPt:alert(1)",
+        "data:text/html;base64,PHNjcmlwdD48L3NjcmlwdD4=",
+    ],
+)
+def test_html_to_document_drops_link_with_unsafe_href(href):
+    config = ProsemirrorConfig(
+        allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[MarkType.LINK]
+    )
+    schema = config.schema
+
+    doc = html_to_doc(f'<p><a href="{href}">click me</a></p>', schema=schema)
+
+    # The text survives; only the link mark is discarded.
+    assert doc == {
+        "type": "doc",
+        "content": [
+            {"type": "paragraph", "content": [{"type": "text", "text": "click me"}]}
+        ],
+    }
+
+
+def test_html_to_document_keeps_link_with_safe_href():
+    config = ProsemirrorConfig(
+        allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[MarkType.LINK]
+    )
+    schema = config.schema
+
+    doc = html_to_doc(
+        '<p><a href="https://example.com">click me</a></p>', schema=schema
+    )
+
+    marks = doc["content"][0]["content"][0]["marks"]
+    assert marks == [
+        {"type": "link", "attrs": {"href": "https://example.com", "title": None}}
+    ]

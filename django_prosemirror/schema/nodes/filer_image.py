@@ -2,6 +2,7 @@
 
 from prosemirror.model.schema import NodeSpec
 
+from ...sanitize import is_safe_url
 from ..base import NodeDefinition
 
 
@@ -16,8 +17,9 @@ class FilerImageNode(NodeDefinition):
         """Convert image node to DOM representation."""
         attrs = {}
 
-        # Always include src (required attribute)
-        if "src" in node.attrs:
+        # Always include src (required attribute), unless it is a URL a browser
+        # would treat as executable — an image without src renders inert.
+        if "src" in node.attrs and is_safe_url(node.attrs["src"]):
             attrs["src"] = node.attrs["src"]
 
         # Only include optional attributes if they don't match defaults
@@ -41,13 +43,19 @@ class FilerImageNode(NodeDefinition):
         return [
             {
                 "tag": "img",
-                "getAttrs": lambda attrs: {
-                    "src": attrs.get("src"),
-                    "title": attrs.get("title"),
-                    "alt": attrs.get("alt", ""),
-                    "imageId": attrs.get("imageId"),
-                    "caption": attrs.get("caption", ""),
-                },
+                # Returning False drops the image entirely; without a usable
+                # src there is nothing left to render.
+                "getAttrs": lambda attrs: (
+                    {
+                        "src": attrs.get("src"),
+                        "title": attrs.get("title"),
+                        "alt": attrs.get("alt", ""),
+                        "imageId": attrs.get("imageId"),
+                        "caption": attrs.get("caption", ""),
+                    }
+                    if is_safe_url(attrs.get("src"))
+                    else False
+                ),
             },
         ]
 
