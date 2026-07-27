@@ -244,6 +244,38 @@ MARK_CASES = [
         ),
     ),
     SerdeTestCase(
+        name="link_mark_with_unsafe_href",
+        description="Executable href is replaced with an inert placeholder",
+        config_node_types=[NodeType.PARAGRAPH],
+        config_mark_types=[MarkType.LINK],
+        document={
+            "type": "doc",
+            "content": [
+                {
+                    "type": "paragraph",
+                    "content": [
+                        {
+                            "type": "text",
+                            "marks": [
+                                {
+                                    "type": "link",
+                                    "attrs": {
+                                        "href": "javascript:alert(1)",
+                                        "title": None,
+                                    },
+                                }
+                            ],
+                            "text": "click me",
+                        },
+                    ],
+                }
+            ],
+        },
+        expected_html='<p><a href="#">click me</a></p>',
+        # The unsafe href is deliberately not preserved.
+        round_trip_compatible=False,
+    ),
+    SerdeTestCase(
         name="multiple_marks",
         description="Multiple marks on different text segments",
         config_node_types=[NodeType.PARAGRAPH],
@@ -507,6 +539,33 @@ INLINE_ELEMENT_CASES = [
             '<p>Here&#x27;s an image: <img src="https://example.com/image.jpg" alt='
             '"Example image" title="An example image"></p>'
         ),
+    ),
+    SerdeTestCase(
+        name="filer_image_with_unsafe_src",
+        description="Executable image src is dropped, leaving an inert img tag",
+        config_node_types=[NodeType.PARAGRAPH, NodeType.FILER_IMAGE],
+        config_mark_types=[],
+        document={
+            "type": "doc",
+            "content": [
+                {
+                    "type": "paragraph",
+                    "content": [
+                        {
+                            "type": "filer_image",
+                            "attrs": {
+                                "src": "javascript:alert(1)",
+                                "alt": "Example image",
+                                "title": None,
+                            },
+                        },
+                    ],
+                }
+            ],
+        },
+        expected_html='<p><img alt="Example image"></p>',
+        # The unsafe src is deliberately not preserved.
+        round_trip_compatible=False,
     ),
     SerdeTestCase(
         name="hard_break",
