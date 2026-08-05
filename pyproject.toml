@@ -56,7 +56,7 @@ tests = [
     "pytest-django",
     "pytest-cov",
     "tox",
-    "ruff",
+    "ruff==0.15.0",
     # "pyright",
     # "django-stubs",
 ]
