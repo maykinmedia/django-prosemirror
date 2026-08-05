@@ -6,6 +6,7 @@ import {
 } from "prosemirror-model";
 import { type ClassMapping, MarkDefinition } from "@/schema/abstract";
 import { MarkType } from "@/schema/types";
+import { isSafeUrl, sanitizeUrl } from "@/utils/sanitize";
 
 /**
  * Class that returns the spec of a code mark.
@@ -27,8 +28,11 @@ export class LinkMark extends MarkDefinition {
         {
             tag: "a[href]",
             getAttrs(dom) {
+                const href = dom.getAttribute("href");
+                // Returning false drops the mark, keeping the text unlinked.
+                if (!isSafeUrl(href)) return false;
                 return {
-                    href: dom.getAttribute("href"),
+                    href,
                     title: dom.getAttribute("title"),
                 };
             },
@@ -37,7 +41,10 @@ export class LinkMark extends MarkDefinition {
     override toDOM(mark: Mark): DOMOutputSpec {
         const attrs = this.classMapping.apply_to_attrs(
             {
-                href: mark?.attrs.href,
+                // Documents stored before href validation existed may still
+                // hold an executable URL, so neutralise rather than throw
+                // while rendering.
+                href: sanitizeUrl(mark?.attrs.href),
                 title: mark?.attrs.title,
             },
             this.name,

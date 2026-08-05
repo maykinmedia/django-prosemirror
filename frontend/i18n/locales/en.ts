@@ -14,6 +14,8 @@ export const en: IDPMTranslations = {
     "Add or remove link": "Add or remove link",
     "Create a link": "Create a link",
     "Link target": "Link target",
+    "Only http, https, mailto and tel links are allowed":
+        "Only http, https, mailto and tel links are allowed",
     "Toggle strong style": "Toggle strong style",
     "Toggle emphasis": "Toggle emphasis",
     "Toggle underline": "Toggle underline",
