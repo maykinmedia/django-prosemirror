@@ -68,4 +68,10 @@ TEMPLATES = [
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "static"
 
+# NOTE: these must be set explicitly. Django resolves an unset MEDIA_URL to the
+# script prefix ("/"), which turns the `static(settings.MEDIA_URL, ...)` pattern
+# in testapp.urls into a catch-all serving the working directory.
+MEDIA_URL = "media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
 ROOT_URLCONF = "testapp.urls"
