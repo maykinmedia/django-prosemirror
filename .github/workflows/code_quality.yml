@@ -20,10 +20,13 @@ jobs:
       contents: read
 
     strategy:
+      # A failing link check should not cancel the other checks.
+      fail-fast: false
       matrix:
         toxenv:
           - ruff
-          # - docs
+          - docs
+          - docs-linkcheck
           # - typecheck
 
     steps:

@@ -22,6 +22,7 @@ Features
    :caption: Contents:
 
    quickstart
+   changelog
 
 
 
@@ -33,29 +34,29 @@ Indices and tables
 * :ref:`search`
 
 
-.. |build-status| image:: https://github.com/maykinmedia/django_prosemirror/workflows/Run%20CI/badge.svg
+.. |build-status| image:: https://github.com/maykinmedia/django-prosemirror/workflows/Run%20CI/badge.svg
     :alt: Build status
-    :target: https://github.com/maykinmedia/django_prosemirror/actions?query=workflow%3A%22Run+CI%22
+    :target: https://github.com/maykinmedia/django-prosemirror/actions?query=workflow%3A%22Run+CI%22
 
-.. |code-quality| image:: https://github.com/maykinmedia/django_prosemirror/workflows/Code%20quality%20checks/badge.svg
+.. |code-quality| image:: https://github.com/maykinmedia/django-prosemirror/workflows/Code%20quality%20checks/badge.svg
      :alt: Code quality checks
-     :target: https://github.com/maykinmedia/django_prosemirror/actions?query=workflow%3A%22Code+quality+checks%22
+     :target: https://github.com/maykinmedia/django-prosemirror/actions?query=workflow%3A%22Code+quality+checks%22
 
 .. |ruff| image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json
     :target: https://github.com/astral-sh/ruff
     :alt: Ruff
 
-.. |coverage| image:: https://codecov.io/gh/maykinmedia/django_prosemirror/branch/master/graph/badge.svg
-    :target: https://codecov.io/gh/maykinmedia/django_prosemirror
+.. |coverage| image:: https://codecov.io/gh/maykinmedia/django-prosemirror/branch/main/graph/badge.svg
+    :target: https://codecov.io/gh/maykinmedia/django-prosemirror
     :alt: Coverage status
 
-.. |docs| image:: https://readthedocs.org/projects/django_prosemirror/badge/?version=latest
-    :target: https://django_prosemirror.readthedocs.io/en/latest/?badge=latest
+.. |docs| image:: https://readthedocs.org/projects/django-prosemirror/badge/?version=latest
+    :target: https://django-prosemirror.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
-.. |python-versions| image:: https://img.shields.io/pypi/pyversions/django_prosemirror.svg
+.. |python-versions| image:: https://img.shields.io/pypi/pyversions/maykin-django-prosemirror.svg
 
-.. |django-versions| image:: https://img.shields.io/pypi/djversions/django_prosemirror.svg
+.. |django-versions| image:: https://img.shields.io/pypi/djversions/maykin-django-prosemirror.svg
 
-.. |pypi-version| image:: https://img.shields.io/pypi/v/django_prosemirror.svg
-    :target: https://pypi.org/project/django_prosemirror/
+.. |pypi-version| image:: https://img.shields.io/pypi/v/maykin-django-prosemirror.svg
+    :target: https://pypi.org/project/maykin-django-prosemirror/

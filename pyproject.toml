@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "maykin-django-prosemirror"
-version = "0.8.0"
+version = "0.9.0"
 description = "Rich-text fields for Django using Prosemirror - a powerful, schema-driven rich text editor."
 authors = [
     {name = "Maykin Media", email = "support@maykinmedia.nl"}
@@ -34,13 +34,12 @@ classifiers = [
     "Operating System :: Unix",
     "Operating System :: MacOS",
     "Operating System :: Microsoft :: Windows",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
     "django>=5.2",
     "prosemirror>=0.5.2"

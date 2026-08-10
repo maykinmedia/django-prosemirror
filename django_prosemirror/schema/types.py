@@ -1,11 +1,11 @@
 """Type definitions for the schema module."""
 
 import enum
-from typing import Any, TypeAlias
+from typing import Any
 
 from prosemirror.utils import JSONDict
 
-ProsemirrorDocument: TypeAlias = JSONDict
+type ProsemirrorDocument = JSONDict
 
 # Type alias for a ProseMirror document dict
 # Runtime-validated to be dict, not just Mapping

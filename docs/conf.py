@@ -26,7 +26,7 @@ copyright = "2025, Maykin Media"
 author = "Maykin Media"
 
 # The full version, including alpha/beta/rc tags
-release = "0.8.0"
+release = "0.9.0"
 
 
 # -- General configuration ---------------------------------------------------
@@ -46,6 +46,20 @@ templates_path = ["_templates"]
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+
+
+# -- Options for the linkcheck builder ---------------------------------------
+
+# The badge services are rate limited, so give them a couple of attempts before
+# failing the build.
+linkcheck_retries = 2
+linkcheck_timeout = 15
+
+# The Read the Docs project has not been created yet, so the URL the docs badge
+# points at 404s. Drop this entry once the documentation is published.
+linkcheck_ignore = [
+    r"https://django-prosemirror\.readthedocs\.io/.*",
+]
 
 
 # -- Options for HTML output -------------------------------------------------
