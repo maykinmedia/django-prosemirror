@@ -48,6 +48,14 @@ templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 
+# -- Options for the linkcheck builder ---------------------------------------
+
+# The badge services are rate limited, so give them a couple of attempts before
+# failing the build.
+linkcheck_retries = 2
+linkcheck_timeout = 15
+
+
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for

@@ -24,6 +24,7 @@ jobs:
         toxenv:
           - ruff
           - docs
+          - docs-linkcheck
           # - typecheck
 
     steps:
