@@ -6,7 +6,7 @@ django-prosemirror
 :Version: 0.8.0
 :Source: https://github.com/maykinmedia/django-prosemirror
 :Keywords: Django, Prosemirror, rich-text, editor, document, JSON, WYSIWYG, content editor, text editor, markdown, html
-:PythonVersion: 3.11+
+:PythonVersion: 3.12+
 
 |build-status| |code-quality| |ruff| |coverage| |docs|
 
@@ -37,7 +37,7 @@ Installation
 Requirements
 ------------
 
-* Python 3.11 or above
+* Python 3.12 or above
 * Django 5.2 or newer
 
 Install
