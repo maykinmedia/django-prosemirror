@@ -22,6 +22,7 @@ Features
    :caption: Contents:
 
    quickstart
+   changelog
 
 
 
