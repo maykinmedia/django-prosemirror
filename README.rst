@@ -38,7 +38,7 @@ Requirements
 ------------
 
 * Python 3.11 or above
-* Django 4.2 or newer
+* Django 5.2 or newer
 
 Install
 -------
