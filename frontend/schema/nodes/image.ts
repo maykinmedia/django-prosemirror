@@ -1,6 +1,7 @@
 import { DOMOutputSpec, Node, TagParseRule } from "prosemirror-model";
 import { type ClassMapping, NodeDefinition } from "@/schema/abstract";
 import { NodeType } from "@/schema/types";
+import { isSafeUrl } from "@/utils/sanitize";
 
 export type ImageNodeAttrs = {
     alt: string;
@@ -14,7 +15,7 @@ export interface ImageDOMAttrs extends Record<string, unknown> {
     alt: string;
     caption: string | null;
     id: string;
-    src: string;
+    src?: string;
     title: string | null;
 }
 
@@ -43,8 +44,12 @@ export class FilerImageNode extends NodeDefinition {
         {
             tag: "img[src]",
             getAttrs(dom) {
+                const src = dom.getAttribute("src");
+                // Returning false drops the image entirely; without a usable
+                // src there is nothing left to render.
+                if (!isSafeUrl(src)) return false;
                 return {
-                    src: dom.getAttribute("src"),
+                    src,
                     title: dom.getAttribute("title"),
                     alt: dom.getAttribute("alt"),
                     imageId: dom.getAttribute("id"),
@@ -55,12 +60,14 @@ export class FilerImageNode extends NodeDefinition {
     ];
     override toDOM(node: Node): DOMOutputSpec {
         const nodeAttrs = {
-            src: node.attrs.src,
             title: node.attrs.title,
             alt: node.attrs.alt,
             id: node.attrs.imageId,
             // caption: node.attrs.caption,
         } as ImageDOMAttrs;
+        // Emit src only when safe — an <img> without src renders inert
+        // rather than executing a stored javascript: or data: URL.
+        if (isSafeUrl(node.attrs.src)) nodeAttrs.src = node.attrs.src;
 
         let attrs = this.classMapping.apply_to_attrs(nodeAttrs, this.name);
 

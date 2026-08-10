@@ -105,6 +105,9 @@ venv.bak/
 
 # Testapp specific
 testapp/static
+testapp/media
+# filer private media: a sibling of MEDIA_ROOT, not a child
+testapp/smedia
 django_prosemirror.db
 
 # node
@@ -121,7 +124,3 @@ playwright-videos/
 # CI Coverage
 coverage/
 
-
-# Django Filer
-filer_public/
-filer_public_thumbnails/

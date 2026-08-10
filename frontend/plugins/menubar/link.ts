@@ -5,6 +5,7 @@ import { toggleMark } from "prosemirror-commands";
 import { isMarkActive } from "./utils";
 import { openPrompt, TextField } from "./prompt";
 import { translate } from "@/i18n/translations";
+import { isSafeUrl } from "@/utils/sanitize";
 
 /**
  * Create a link menu item that can add or remove links from selected text.
@@ -31,6 +32,16 @@ export function createLinkMenuItem(markType: MarkType): MenuItem {
                     href: new TextField({
                         label: translate("Link target"),
                         required: true,
+                        // Reject here rather than leaning on toDOM: that only
+                        // neutralises the URL while rendering, so an unsafe
+                        // href would still sit in the document, in the form
+                        // input, and in whatever gets stored.
+                        validate: (value) =>
+                            isSafeUrl(value)
+                                ? null
+                                : translate(
+                                      "Only http, https, mailto and tel links are allowed",
+                                  ),
                     }),
                     title: new TextField({ label: translate("Title") }),
                 },

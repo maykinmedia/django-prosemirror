@@ -35,6 +35,7 @@ export interface IDPMTranslations {
     "Add or remove link": string;
     "Create a link": string;
     "Link target": string;
+    "Only http, https, mailto and tel links are allowed": string;
     "Toggle strong style": string;
     "Toggle emphasis": string;
     "Toggle code font": string;

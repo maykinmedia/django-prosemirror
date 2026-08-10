@@ -10,7 +10,7 @@ pytestmark = [pytest.mark.browser_context_args(record_video_dir="playwright-vide
 
 
 def test_entered_text_is_maintained(live_server, page: Page):
-    page.goto(f"{live_server.url}/form")
+    page.goto(f"{live_server.url}/form/")
 
     editor = page.locator("[data-prosemirror-id=id_heading_only]")
     editor.click()
