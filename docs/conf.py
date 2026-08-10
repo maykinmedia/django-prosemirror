@@ -55,6 +55,12 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 linkcheck_retries = 2
 linkcheck_timeout = 15
 
+# The Read the Docs project has not been created yet, so the URL the docs badge
+# points at 404s. Drop this entry once the documentation is published.
+linkcheck_ignore = [
+    r"https://django-prosemirror\.readthedocs\.io/.*",
+]
+
 
 # -- Options for HTML output -------------------------------------------------
 
