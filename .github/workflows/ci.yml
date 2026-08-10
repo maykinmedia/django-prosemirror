@@ -19,12 +19,9 @@ jobs:
       contents: read
     strategy:
       matrix:
-        python: ["3.12", "3.13"]
-        django: ["4.2", "5.2"]
+        python: ["3.12", "3.13", "3.14"]
+        django: ["5.2", "6.0", "6.1"]
         browser: ["chromium", "firefox", "webkit"]
-        exclude:
-          - python: "3.13"
-            django: "4.2"
 
     name: Run the test suite (Python ${{ matrix.python }}, Django ${{ matrix.django }}, ${{ matrix.browser }})
 
@@ -73,11 +70,8 @@ jobs:
       contents: read
     strategy:
       matrix:
-        python: ["3.12", "3.13"]
-        django: ["4.2", "5.2"]
-        exclude:
-          - python: "3.13"
-            django: "4.2"
+        python: ["3.12", "3.13", "3.14"]
+        django: ["5.2", "6.0", "6.1"]
 
     name: Run nofiler tests (Python ${{ matrix.python }}, Django ${{ matrix.django }})
 
