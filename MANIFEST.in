@@ -4,6 +4,7 @@ include django_prosemirror/py.typed
 recursive-include django_prosemirror *.html
 recursive-include django_prosemirror *.js
 recursive-include django_prosemirror *.css
+recursive-include django_prosemirror *.map
 recursive-include django_prosemirror *.txt
 recursive-include django_prosemirror *.po
 global-exclude __pycache__
