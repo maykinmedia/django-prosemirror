@@ -9,9 +9,9 @@ export default defineConfig({
         rollupOptions: {
             input: "./frontend/index.ts",
             output: {
-                entryFileNames: "bundle.js",
+                entryFileNames: "django-prosemirror.js",
                 assetFileNames: (assetInfo) => {
-                    return "bundle[extname]";
+                    return "django-prosemirror[extname]";
                 },
                 format: "iife",
                 name: "DjangoProseMirror",
@@ -36,9 +36,9 @@ export default defineConfig({
                         mkdirSync(`${target}/static/css`, { recursive: true });
 
                         const copyDict = {
-                            "dist/bundle.js": `${target}/static/js/django-prosemirror.js`,
-                            "dist/bundle.js.map": `${target}/static/js/bundle.js.map`,
-                            "dist/bundle.css": `${target}/static/css/django-prosemirror.css`,
+                            "dist/django-prosemirror.js": `${target}/static/js/django-prosemirror.js`,
+                            "dist/django-prosemirror.js.map": `${target}/static/js/django-prosemirror.js.map`,
+                            "dist/django-prosemirror.css": `${target}/static/css/django-prosemirror.css`,
                         };
 
                         // Copy files.
