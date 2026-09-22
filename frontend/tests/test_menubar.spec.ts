@@ -12,6 +12,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { en } from "../i18n/locales/en";
 import { openPrompt } from "../plugins/menubar/prompt";
 import { LanguageCodeEnum } from "../types/types";
+import { SAFE_URLS, UNSAFE_URLS } from "./test_sanitize.spec";
 
 // Mock ProseMirror menu components
 vi.mock("prosemirror-menu", () => ({
@@ -298,24 +299,13 @@ describe("plugins/menubar/index", () => {
             return options.fields.href.options.validate!;
         };
 
-        it.each([
-            "https://example.com",
-            "mailto:someone@example.com",
-            "/relative/path",
-            "#fragment",
-        ])("should accept %s", (href) => {
+        it.each(SAFE_URLS)("should accept %j", (href) => {
             expect(getHrefValidator()(href)).toBeNull();
         });
 
         // A javascript: href only got neutralised by toDOM, so it stayed in the
         // document JSON and reached the form input verbatim.
-        it.each([
-            "javascript:alert(0)",
-            "JavaScript:alert(0)",
-            " javascript:alert(0)",
-            "java\tscript:alert(0)",
-            "data:text/html;base64,PHNjcmlwdD48L3NjcmlwdD4=",
-        ])("should reject %s", (href) => {
+        it.each(UNSAFE_URLS)("should reject %j", (href) => {
             expect(getHrefValidator()(href)).toBe(
                 en["Only http, https, mailto and tel links are allowed"],
             );
