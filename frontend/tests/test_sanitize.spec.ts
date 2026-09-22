@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { isSafeUrl, sanitizeUrl } from "@/utils/sanitize";
 
-const SAFE_URLS = [
+export const SAFE_URLS = [
     "https://example.com",
     "http://example.com/path?q=1#frag",
     "HTTPS://EXAMPLE.COM",
@@ -16,7 +16,7 @@ const SAFE_URLS = [
     "",
 ];
 
-const UNSAFE_URLS = [
+export const UNSAFE_URLS = [
     "javascript:alert(1)",
     "JAVASCRIPT:alert(1)",
     "JaVaScRiPt:alert(1)",
