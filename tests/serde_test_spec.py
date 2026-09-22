@@ -41,6 +41,16 @@ BASIC_DOCUMENT_CASES = [
         round_trip_compatible=False,  # None doesn't round-trip
     ),
     SerdeTestCase(
+        name="empty_paragraph_document",
+        description="A lone empty paragraph has no visible content and produces "
+        "an empty string, same as an empty document",
+        config_node_types=[NodeType.PARAGRAPH],
+        config_mark_types=[],
+        document={"type": "doc", "content": [{"type": "paragraph"}]},
+        expected_html="",
+        round_trip_compatible=False,  # round-trips to get_empty_doc(), not the original
+    ),
+    SerdeTestCase(
         name="minimal_paragraph",
         description="Simple paragraph with text",
         config_node_types=[NodeType.PARAGRAPH],

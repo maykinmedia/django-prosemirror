@@ -21,7 +21,7 @@ from django_prosemirror.schema import (
     ProsemirrorDocumentDict,
     validate_doc,
 )
-from django_prosemirror.serde import doc_to_html, html_to_doc
+from django_prosemirror.serde import doc_to_html, html_to_doc, is_doc_empty
 from django_prosemirror.widgets import ProsemirrorWidget
 
 
@@ -72,11 +72,8 @@ class ProsemirrorFieldDocument:
         self.schema = schema
 
     def __bool__(self):
-        """Return True if the document has content, False if None or empty."""
-        if self._raw_data is None:
-            return False
-
-        return bool(self._raw_data.get("content"))
+        """Return True if the document has visible content, False if None or empty."""
+        return not is_doc_empty(self._raw_data, schema=self.schema)
 
     def __str__(self):
         """Return the HTML representation of the document."""
