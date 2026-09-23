@@ -38,7 +38,8 @@ TAB_AND_NEWLINE = "\t\r\n"
 
 
 def is_safe_url(url: object) -> bool:
-    """Check whether a URL is safe to emit into an href/src attribute.
+    """
+    Check whether a URL is safe to emit into an href/src attribute.
 
     Relative URLs (no scheme) are safe. Absolute URLs are safe only when their
     scheme is in :data:`ALLOWED_URL_SCHEMES`.
@@ -66,7 +67,8 @@ def is_safe_url(url: object) -> bool:
 
 
 def sanitize_url(url: object, fallback: str = SAFE_FALLBACK_URL) -> str:
-    """Return ``url`` when safe, otherwise an inert placeholder.
+    """
+    Return ``url`` when safe, otherwise an inert placeholder.
 
     Used at render time, where raising would break pages that display documents
     stored before this validation existed.

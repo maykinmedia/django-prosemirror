@@ -1,5 +1,6 @@
 """Utilities for working with ProseMirror fields in data migrations."""
 
+import logging
 from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import Any
@@ -10,8 +11,12 @@ from django.db import models
 from prosemirror import Schema
 
 from django_prosemirror.constants import get_empty_doc
+from django_prosemirror.sanitize import URL_MARK_ATTRS, URL_NODE_ATTRS, is_safe_url
 from django_prosemirror.schema import ProsemirrorDocumentDict, validate_doc
 from django_prosemirror.serde import html_to_doc
+from django_prosemirror.utils import DocumentItemKind, process_document
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -182,5 +187,93 @@ def clear_corrupt_prosemirror_rows(
         RepairRecord(pk=pk, original=raw_value, repaired=empty_doc)
         for pk, raw_value in corrupt_rows
     ]
+
+    return records
+
+
+def sanitize_document(doc: dict[str, Any]) -> tuple[dict[str, Any], bool]:
+    """
+    Strip nodes and marks carrying an unsafe URL from a document dict.
+
+    For repairing documents stored before URL scheme validation existed:
+    without this, a stored unsafe URL renders inertly (see
+    ``sanitize_url``/``is_safe_url`` usage in ``to_dom``) but makes the
+    document fail :func:`django_prosemirror.schema.validate_doc` the next
+    time it is saved, even via an edit to an unrelated field.
+
+    Checks the same attributes :func:`django_prosemirror.schema.validate_doc`
+    checks (:data:`django_prosemirror.sanitize.URL_MARK_ATTRS`,
+    :data:`django_prosemirror.sanitize.URL_NODE_ATTRS`), via
+    :func:`django_prosemirror.sanitize.is_safe_url`. Neither ``href`` (on
+    ``link``) nor ``src`` (on ``filer_image``) has a schema default, so an
+    unsafe value drops the whole mark or whole node - nulling just the
+    attribute would leave a dict that fails to reload.
+
+    Args:
+        doc: A ProseMirror document dict. Falsy values (``None``, ``{}``) are
+            returned unchanged.
+
+    Returns:
+        ``(new_doc, changed)``, matching
+        :func:`django_prosemirror.utils.process_document`.
+    """
+    if not doc:
+        return doc, False
+
+    def strip_unsafe(
+        item: dict[str, Any], kind: DocumentItemKind
+    ) -> dict[str, Any] | None:
+        url_attrs = URL_NODE_ATTRS if kind == "node" else URL_MARK_ATTRS
+        attrs = item.get("attrs") or {}
+        for attr in url_attrs.get(item.get("type"), ()):
+            if not is_safe_url(attrs.get(attr)):
+                logger.warning(
+                    "Stripping %s %r with unsafe URL in %r: %r",
+                    kind,
+                    item.get("type"),
+                    attr,
+                    attrs.get(attr),
+                )
+                return None
+        return item
+
+    return process_document(doc, strip_unsafe)
+
+
+def strip_unsafe_prosemirror_urls(
+    model: type[models.Model],
+    field_name: str,
+) -> list[RepairRecord]:
+    """
+    Strip nodes/marks carrying an unsafe URL from a ProseMirror field.
+
+    Repairs rows stored before URL scheme validation existed - see
+    :func:`sanitize_document`. Only rows with the correct
+    ``{"type": "doc", "content": [...]}`` shape are considered;
+    corrupt rows are left untouched (see :func:`iter_corrupt_prosemirror_rows`
+    and the other repair helpers for those).
+
+    Args:
+        model: Django model class (real or historical from ``apps.get_model()``).
+        field_name: Name of the ProsemirrorModelField to repair.
+
+    Returns:
+        list[RepairRecord]: One record per repaired row, for logging or display.
+    """
+    records: list[RepairRecord] = []
+    # .values() and .update() bypass the descriptor for both reads and writes
+    for row in model.objects.values("pk", field_name):
+        value = row[field_name]
+        if not isinstance(value, dict):
+            continue
+        if value.get("type") != "doc":
+            continue
+        if not isinstance(value.get("content"), list):
+            continue
+
+        fixed, changed = sanitize_document(value)
+        if changed:
+            model.objects.filter(pk=row["pk"]).update(**{field_name: fixed})
+            records.append(RepairRecord(pk=row["pk"], original=value, repaired=fixed))
 
     return records
