@@ -33,6 +33,9 @@ export const UNSAFE_URLS = [
     "vbscript:msgbox(1)",
     "file:///etc/passwd",
     "blob:https://example.com/uuid",
+    "about:blank",
+    "chrome://settings",
+    "view-source:https://example.com",
     // Not in the allow-list.
     "ftp://example.com/file",
     // Parsed as scheme "example.com" by browsers, not as a host.

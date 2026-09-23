@@ -9,7 +9,7 @@ Mirrored in ``frontend/utils/sanitize.ts``; keep both in sync.
 """
 
 import logging
-import re
+from urllib.parse import urlsplit
 
 logger = logging.getLogger(__name__)
 
@@ -25,23 +25,18 @@ URL_NODE_ATTRS: dict[str, tuple[str, ...]] = {"filer_image": ("src",)}
 SAFE_FALLBACK_URL = "#"
 """Inert replacement used when rendering a URL that failed validation."""
 
-# A scheme is an ASCII letter followed by letters, digits, "+", "-" or "."
-# terminated by a colon (RFC 3986 section 3.1).
-_SCHEME_RE = re.compile(r"^[a-zA-Z][a-zA-Z0-9+.\-]*:")
-
-# The WHATWG URL parser ignores leading and trailing "C0 control or space"
-# characters and removes tabs and newlines from anywhere in the URL. Both
-# tricks hide the scheme from _SCHEME_RE while a browser still executes it, so
-# a URL has to be normalised the same way before its scheme is read.
-C0_CONTROL_OR_SPACE = "".join(chr(code) for code in range(0x00, 0x20 + 1))
-TAB_AND_NEWLINE = "\t\r\n"
-
 
 def is_safe_url(url: object) -> bool:
-    """Check whether a URL is safe to emit into an href/src attribute.
+    """
+    Check whether a URL is safe to emit into an href/src attribute.
 
     Relative URLs (no scheme) are safe. Absolute URLs are safe only when their
     scheme is in :data:`ALLOWED_URL_SCHEMES`.
+
+    ``urlsplit`` strips leading C0 control/space and removes tabs and
+    newlines per the WHATWG URL spec before parsing, which is what keeps a
+    URL like ``" javascript:alert(1)"`` or ``"java\\tscript:alert(1)"`` from
+    hiding its scheme from a browser - and from us.
 
     Args:
         url: The value to check. Non-string values are never safe.
@@ -52,21 +47,18 @@ def is_safe_url(url: object) -> bool:
     if not isinstance(url, str):
         return False
 
-    candidate = url.strip(C0_CONTROL_OR_SPACE)
-    for char in TAB_AND_NEWLINE:
-        candidate = candidate.replace(char, "")
+    try:
+        scheme = urlsplit(url).scheme
+    except ValueError:  # malformed URL
+        return False
 
-    match = _SCHEME_RE.match(candidate)
-    if match is None:
-        # No scheme: a relative URL, fragment or query. Nothing to execute.
-        return True
-
-    scheme = match.group(0).removesuffix(":").lower()
-    return scheme in ALLOWED_URL_SCHEMES
+    # No scheme: a relative URL, fragment or query. Nothing to execute.
+    return scheme == "" or scheme in ALLOWED_URL_SCHEMES
 
 
 def sanitize_url(url: object, fallback: str = SAFE_FALLBACK_URL) -> str:
-    """Return ``url`` when safe, otherwise an inert placeholder.
+    """
+    Return ``url`` when safe, otherwise an inert placeholder.
 
     Used at render time, where raising would break pages that display documents
     stored before this validation existed.
