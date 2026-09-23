@@ -382,12 +382,42 @@ class TestProsemirrorFieldDocument:
 
         assert bool(doc) is True
 
-    def test_bool_is_true_for_empty_paragraph_node(self):
-        """A paragraph node with no text is still a content node — truthy."""
+    def test_bool_is_false_for_empty_paragraph_node(self):
+        """
+        A lone empty paragraph has no visible content — falsy.
+
+        The schema requires the doc to contain at least one block, so an editor
+        can't avoid emitting an empty paragraph once all text is deleted. That
+        shouldn't make the document look non-empty.
+        """
         config = ProsemirrorConfig(
             allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[]
         )
         doc_data = {"type": "doc", "content": [{"type": "paragraph"}]}
+        doc = ProsemirrorFieldDocument(doc_data, schema=config.schema)
+
+        assert bool(doc) is False
+
+    def test_bool_is_false_for_multiple_empty_paragraphs(self):
+        """Several empty paragraphs (e.g. from pressing Enter) are still falsy."""
+        config = ProsemirrorConfig(
+            allowed_node_types=[NodeType.PARAGRAPH], allowed_mark_types=[]
+        )
+        doc_data = {
+            "type": "doc",
+            "content": [{"type": "paragraph"}, {"type": "paragraph"}],
+        }
+        doc = ProsemirrorFieldDocument(doc_data, schema=config.schema)
+
+        assert bool(doc) is False
+
+    def test_bool_is_true_for_horizontal_rule_node(self):
+        """An atom/leaf node with no text is still visible content — truthy."""
+        config = ProsemirrorConfig(
+            allowed_node_types=[NodeType.PARAGRAPH, NodeType.HORIZONTAL_RULE],
+            allowed_mark_types=[],
+        )
+        doc_data = {"type": "doc", "content": [{"type": "horizontal_rule"}]}
         doc = ProsemirrorFieldDocument(doc_data, schema=config.schema)
 
         assert bool(doc) is True

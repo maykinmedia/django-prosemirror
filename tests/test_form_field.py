@@ -119,6 +119,23 @@ def test_to_python_with_dict():
     assert result.doc == doc_data
 
 
+def test_to_python_with_empty_paragraph_is_falsy():
+    """
+    A doc with only a lone empty paragraph (what the editor submits after the
+    user deletes all text, since the schema requires at least one block) should
+    be recognized as empty.
+    """
+    field = ProsemirrorFormField(allowed_node_types=[NodeType.PARAGRAPH])
+    doc_data = {"type": "doc", "content": [{"type": "paragraph"}]}
+    json_string = json.dumps(doc_data)
+
+    result = field.to_python(json_string)
+
+    assert isinstance(result, ProsemirrorFieldDocument)
+    assert bool(result) is False
+    assert result.html == ""
+
+
 def test_to_python_with_none():
     field = ProsemirrorFormField(
         allowed_node_types=[NodeType.PARAGRAPH, NodeType.HEADING]

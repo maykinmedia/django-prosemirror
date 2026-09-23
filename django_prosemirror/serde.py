@@ -10,6 +10,42 @@ from django_prosemirror.constants import get_empty_doc
 from django_prosemirror.schema import ProsemirrorDocumentDict
 
 
+class _VisibleContentFound(Exception):
+    """Raised by `_node_has_visible_content` to abort traversal early."""
+
+
+def _node_has_visible_content(node: Node) -> bool:
+    """
+    Return True if a parsed Prosemirror node has visible content.
+
+    A node is considered visually empty when it has no text anywhere and no
+    atom/leaf descendants (e.g. images, horizontal rules) — i.e. it consists only
+    of empty block containers like a lone empty paragraph, which an editor cannot
+    avoid emitting once all text is deleted (schemas require `doc: "block+"`).
+    """
+    if node.text_content.strip():
+        return True
+
+    def check(child: Node, pos: int, parent: Node | None, index: int) -> None:
+        if (child.is_leaf or child.is_atom) and not child.is_text:
+            raise _VisibleContentFound
+
+    try:
+        node.descendants(check)
+    except _VisibleContentFound:
+        return True
+
+    return False
+
+
+def is_doc_empty(value: ProsemirrorDocumentDict | None, *, schema: Schema) -> bool:
+    """Return True if the Prosemirror document has no visible content."""
+    if not value or not value.get("content"):
+        return True
+
+    return not _node_has_visible_content(Node.from_json(schema, value))
+
+
 def _clean_empty_attrs(
     doc: ProsemirrorDocumentDict, schema: Schema
 ) -> ProsemirrorDocumentDict:
@@ -129,6 +165,9 @@ def doc_to_html(value: ProsemirrorDocumentDict | None, *, schema: Schema) -> str
         return ""
 
     content = Node.from_json(schema, value)
+    if not _node_has_visible_content(content):
+        return ""
+
     serializer = DOMSerializer.from_schema(schema)
     return str(serializer.serialize_fragment(content))
 
