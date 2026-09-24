@@ -30,11 +30,11 @@ INDEX_HTML = """<!DOCTYPE html>
     
     <ul class="demo-links">
         <li>
-            <a href="/form">Regular Form Demo</a>
+            <a href="/form/">Regular Form Demo</a>
             <span class="description">Test ProseMirror with Django forms</span>
         </li>
         <li>
-            <a href="/model-form">Model Form Demo</a>
+            <a href="/model-form/">Model Form Demo</a>
             <span class="description">Test ProseMirror with Django model forms</span>
         </li>
         <li>

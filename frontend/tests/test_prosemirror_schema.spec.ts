@@ -836,7 +836,7 @@ describe("DjangoProsemirrorSchema", () => {
     });
 
     describe("Edge Cases and Error Handling", () => {
-        it("should handle missing attributes gracefully in image parseDOM", () => {
+        it("should drop image parseDOM when src is missing (unsafe)", () => {
             settings.allowedNodes = [NodeType.PARAGRAPH, NodeType.FILER_IMAGE];
             settings.allowedMarks = [];
             DPMSchemaCls = new DPMSchema(settings as DPMSettings);
@@ -850,13 +850,9 @@ describe("DjangoProsemirrorSchema", () => {
             const attrs = parseDOMRule?.getAttrs?.(
                 mockDOMWithMissingAttrs as HTMLElement,
             );
-            expect(attrs).toEqual({
-                src: null,
-                alt: null,
-                title: null,
-                caption: null,
-                imageId: null,
-            });
+            // A null src is not a safe URL, so the parse rule bails out and
+            // the image is dropped rather than rendered without a source.
+            expect(attrs).toBe(false);
         });
 
         it("should handle missing attributes gracefully in link parseDOM", () => {
@@ -904,6 +900,77 @@ describe("DjangoProsemirrorSchema", () => {
                     mockNodeUndefined as HTMLElement & string,
                 ),
             ).toBeUndefined();
+        });
+    });
+
+    describe("URL sanitization", () => {
+        it("drops link parseDOM when href scheme is unsafe", () => {
+            settings.allowedNodes = [NodeType.PARAGRAPH];
+            settings.allowedMarks = [MarkType.LINK];
+            DPMSchemaCls = new DPMSchema(settings as DPMSettings);
+
+            const linkSpec = DPMSchemaCls.schema.marks.link.spec;
+            const mockDOM: Partial<HTMLElement> = {
+                getAttribute: (attr) =>
+                    attr === "href" ? "javascript:alert(1)" : null,
+            };
+            const parseDOMRule = linkSpec.parseDOM?.[0];
+            const attrs = parseDOMRule?.getAttrs?.(
+                mockDOM as HTMLElement & string,
+            );
+            expect(attrs).toBe(false);
+        });
+
+        it("neutralises link toDOM href when scheme is unsafe", () => {
+            settings.allowedMarks = [MarkType.LINK];
+            DPMSchemaCls = new DPMSchema(settings as DPMSettings);
+            const linkSpec = DPMSchemaCls.schema.marks.link.spec;
+
+            const mockMarkUnsafe: Partial<Mark> = {
+                attrs: { href: "javascript:alert(1)", title: null },
+            };
+            expect(linkSpec.toDOM?.(mockMarkUnsafe as Mark, true)).toEqual([
+                "a",
+                { href: "#", title: null },
+                0,
+            ]);
+        });
+
+        it("drops image parseDOM when src scheme is unsafe", () => {
+            settings.allowedNodes = [NodeType.PARAGRAPH, NodeType.FILER_IMAGE];
+            settings.allowedMarks = [];
+            DPMSchemaCls = new DPMSchema(settings as DPMSettings);
+            const imageSpec =
+                DPMSchemaCls.schema.nodes[NodeType.FILER_IMAGE].spec;
+
+            const mockDOM: Partial<HTMLElement> = {
+                getAttribute: (attr) =>
+                    attr === "src" ? "javascript:alert(1)" : null,
+                dataset: {},
+            };
+            const parseDOMRule = imageSpec.parseDOM?.[0];
+            expect(parseDOMRule?.getAttrs?.(mockDOM as HTMLElement)).toBe(
+                false,
+            );
+        });
+
+        it("drops the src from image toDOM when scheme is unsafe", () => {
+            settings.allowedNodes = [NodeType.PARAGRAPH, NodeType.FILER_IMAGE];
+            DPMSchemaCls = new DPMSchema(settings as DPMSettings);
+            const imageSpec =
+                DPMSchemaCls.schema.nodes[NodeType.FILER_IMAGE].spec;
+
+            const output = imageSpec.toDOM?.({
+                attrs: {
+                    src: "javascript:alert(1)",
+                    alt: "",
+                    title: null,
+                    imageId: null,
+                    caption: "",
+                },
+            } as unknown as Node) as [string, Record<string, unknown>];
+            expect(output[0]).toBe("img");
+            expect(output[1]).not.toHaveProperty("src");
         });
     });
 });

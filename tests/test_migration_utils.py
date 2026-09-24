@@ -2,6 +2,7 @@
 
 import pytest
 
+from django_prosemirror.config import ProsemirrorConfig
 from django_prosemirror.fields import ProsemirrorFieldDocument
 from django_prosemirror.migration_utils import (
     RepairRecord,
@@ -10,7 +11,10 @@ from django_prosemirror.migration_utils import (
     iter_schema_invalid_prosemirror_rows,
     nullify_corrupt_prosemirror_rows,
     repair_prosemirror_html_strings,
+    sanitize_document,
+    strip_unsafe_prosemirror_urls,
 )
+from django_prosemirror.schema import MarkType, NodeType, validate_doc
 from testapp.models import TestModel
 
 pytestmark = [pytest.mark.django_db]
@@ -380,3 +384,232 @@ class TestClearCorruptProsemirrorRows:
 
         assert records[0].original == [{"type": "doc"}]
         assert records[0].repaired == {"type": "doc", "content": []}
+
+
+class TestSanitizeDocument:
+    """Tests for stripping unsafe URLs from a raw document dict."""
+
+    @staticmethod
+    def _link_doc(href: str) -> dict:
+        return {
+            "type": "doc",
+            "content": [
+                {
+                    "type": "paragraph",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "click me",
+                            "marks": [{"type": "link", "attrs": {"href": href}}],
+                        }
+                    ],
+                }
+            ],
+        }
+
+    @staticmethod
+    def _image_doc(src: str) -> dict:
+        return {
+            "type": "doc",
+            "content": [
+                {
+                    "type": "filer_image",
+                    "attrs": {
+                        "src": src,
+                        "alt": "",
+                        "title": None,
+                        "imageId": None,
+                        "caption": "",
+                    },
+                }
+            ],
+        }
+
+    @property
+    def _schema(self):
+        return ProsemirrorConfig(
+            allowed_node_types=[
+                NodeType.PARAGRAPH,
+                NodeType.BULLET_LIST,
+                NodeType.LIST_ITEM,
+                NodeType.FILER_IMAGE,
+            ],
+            allowed_mark_types=[MarkType.LINK, MarkType.STRONG],
+        ).schema
+
+    def test_strips_unsafe_link_mark(self):
+        doc = self._link_doc("javascript:alert(1)")
+
+        new_doc, changed = sanitize_document(doc)
+
+        assert changed is True
+        assert new_doc["content"][0]["content"][0].get("marks", []) == []
+        # Input untouched.
+        assert doc["content"][0]["content"][0]["marks"][0]["attrs"]["href"] == (
+            "javascript:alert(1)"
+        )
+
+    def test_leaves_safe_link_mark_untouched(self):
+        doc = self._link_doc("https://example.com")
+
+        new_doc, changed = sanitize_document(doc)
+
+        assert changed is False
+        assert new_doc is doc
+
+    def test_strips_unsafe_filer_image_node(self):
+        doc = self._image_doc("javascript:alert(1)")
+
+        new_doc, changed = sanitize_document(doc)
+
+        assert changed is True
+        assert new_doc["content"] == []
+
+    def test_leaves_safe_filer_image_node_untouched(self):
+        doc = self._image_doc("https://example.com/photo.png")
+
+        new_doc, changed = sanitize_document(doc)
+
+        assert changed is False
+        assert new_doc is doc
+
+    def test_drops_only_the_unsafe_mark_and_keeps_the_rest(self):
+        doc = {
+            "type": "doc",
+            "content": [
+                {
+                    "type": "paragraph",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "hi",
+                            "marks": [
+                                {"type": "strong"},
+                                {"type": "link", "attrs": {"href": "javascript:1"}},
+                            ],
+                        }
+                    ],
+                }
+            ],
+        }
+
+        new_doc, changed = sanitize_document(doc)
+
+        assert changed is True
+        assert new_doc["content"][0]["content"][0]["marks"] == [{"type": "strong"}]
+
+    def test_strips_unsafe_url_nested_in_a_list(self):
+        doc = {
+            "type": "doc",
+            "content": [
+                {
+                    "type": "bullet_list",
+                    "content": [
+                        {
+                            "type": "list_item",
+                            "content": [
+                                self._link_doc("javascript:alert(1)")["content"][0]
+                            ],
+                        }
+                    ],
+                }
+            ],
+        }
+
+        new_doc, changed = sanitize_document(doc)
+
+        assert changed is True
+        text_node = new_doc["content"][0]["content"][0]["content"][0]["content"][0]
+        assert text_node.get("marks", []) == []
+
+    @pytest.mark.parametrize("doc", [None, {}])
+    def test_returns_falsy_input_unchanged(self, doc):
+        result, changed = sanitize_document(doc)
+
+        assert result is doc
+        assert changed is False
+
+    def test_result_passes_validate_doc(self):
+        doc = self._link_doc("javascript:alert(1)")
+
+        new_doc, _ = sanitize_document(doc)
+
+        # Should not raise.
+        validate_doc(new_doc, schema=self._schema)
+
+
+UNSAFE_LINK_DOC = {
+    "type": "doc",
+    "content": [
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "click me",
+                    "marks": [
+                        {"type": "link", "attrs": {"href": "javascript:alert(1)"}}
+                    ],
+                }
+            ],
+        }
+    ],
+}
+
+
+class TestStripUnsafeProsemirrorUrls:
+    def test_repairs_rows_with_unsafe_urls(self):
+        instance = TestModel.objects.create(full_schema_with_default=VALID_DOC)
+        TestModel.objects.filter(pk=instance.pk).update(
+            full_schema_with_default=UNSAFE_LINK_DOC
+        )
+
+        records = strip_unsafe_prosemirror_urls(TestModel, "full_schema_with_default")
+
+        assert len(records) == 1
+        instance.refresh_from_db()
+        doc = instance.full_schema_with_default.doc
+        assert doc["content"][0]["content"][0].get("marks", []) == []
+
+    def test_returns_empty_list_when_nothing_to_repair(self):
+        TestModel.objects.create(full_schema_with_default=VALID_DOC)
+
+        records = strip_unsafe_prosemirror_urls(TestModel, "full_schema_with_default")
+
+        assert records == []
+
+    def test_record_contains_pk_original_and_repaired(self):
+        instance = TestModel.objects.create(full_schema_with_default=VALID_DOC)
+        TestModel.objects.filter(pk=instance.pk).update(
+            full_schema_with_default=UNSAFE_LINK_DOC
+        )
+
+        records = strip_unsafe_prosemirror_urls(TestModel, "full_schema_with_default")
+
+        assert len(records) == 1
+        record = records[0]
+        assert isinstance(record, RepairRecord)
+        assert record.pk == instance.pk
+        assert record.original == UNSAFE_LINK_DOC
+        assert record.repaired["content"][0]["content"][0].get("marks", []) == []
+
+    def test_does_not_touch_clean_rows(self):
+        clean = TestModel.objects.create(full_schema_with_default=VALID_DOC)
+        unsafe = TestModel.objects.create(full_schema_with_default=VALID_DOC)
+        TestModel.objects.filter(pk=unsafe.pk).update(
+            full_schema_with_default=UNSAFE_LINK_DOC
+        )
+
+        strip_unsafe_prosemirror_urls(TestModel, "full_schema_with_default")
+
+        clean.refresh_from_db()
+        assert clean.__dict__["full_schema_with_default"] == VALID_DOC
+
+    def test_skips_shape_corrupt_rows(self):
+        """Corrupt rows are out of scope - use the other repair helpers instead."""
+        instance = TestModel.objects.create(full_schema_with_default=VALID_DOC)
+        _corrupt(instance, "full_schema_with_default", "<p>Corrupt</p>")
+
+        records = strip_unsafe_prosemirror_urls(TestModel, "full_schema_with_default")
+
+        assert records == []
