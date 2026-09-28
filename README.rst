@@ -537,7 +537,7 @@ Setup for development:
     source .venv/bin/activate
 
     # Install Python package in development mode
-    pip install -e .[tests,coverage,docs,release]
+    pip install -e .[tests,docs,release]
 
     # Install Node.js dependencies
     npm install
