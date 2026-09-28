@@ -29,26 +29,24 @@ export default defineConfig({
             name: "copy-to-django",
             writeBundle() {
                 const targets = ["django_prosemirror", "testapp"];
-                try {
-                    for (const target of targets) {
-                        // Make sure the directories exist
-                        mkdirSync(`${target}/static/js`, { recursive: true });
-                        mkdirSync(`${target}/static/css`, { recursive: true });
+                // Errors propagate so a failed copy fails the build, instead of
+                // leaving stale assets in place.
+                for (const target of targets) {
+                    // Make sure the directories exist
+                    mkdirSync(`${target}/static/js`, { recursive: true });
+                    mkdirSync(`${target}/static/css`, { recursive: true });
 
-                        const copyDict = {
-                            "dist/django-prosemirror.js": `${target}/static/js/django-prosemirror.js`,
-                            "dist/django-prosemirror.js.map": `${target}/static/js/django-prosemirror.js.map`,
-                            "dist/django-prosemirror.css": `${target}/static/css/django-prosemirror.css`,
-                        };
+                    const copyDict = {
+                        "dist/django-prosemirror.js": `${target}/static/js/django-prosemirror.js`,
+                        "dist/django-prosemirror.js.map": `${target}/static/js/django-prosemirror.js.map`,
+                        "dist/django-prosemirror.css": `${target}/static/css/django-prosemirror.css`,
+                    };
 
-                        // Copy files.
-                        Object.entries(copyDict).forEach(([src, dest]) => {
-                            copyFileSync(src, dest);
-                            console.log(`✓ Gekopieerd: ${src} → ${dest}`);
-                        });
-                    }
-                } catch (error) {
-                    console.warn("⚠️  Kopieer fout:", error.message);
+                    // Copy files.
+                    Object.entries(copyDict).forEach(([src, dest]) => {
+                        copyFileSync(src, dest);
+                        console.log(`✓ Gekopieerd: ${src} → ${dest}`);
+                    });
                 }
             },
         },

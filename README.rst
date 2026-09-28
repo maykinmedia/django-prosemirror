@@ -537,13 +537,16 @@ Setup for development:
     source .venv/bin/activate
 
     # Install Python package in development mode
-    pip install -e .[tests,coverage,docs,release]
+    pip install -e .[tests,docs,release]
 
     # Install Node.js dependencies
     npm install
 
-    # Build frontend assets (when making changes to JavaScript)
-    ./build.sh
+    # Build frontend assets (after cloning and after every frontend change)
+    npm run build
+
+The built assets are not committed to git, so without ``npm run build`` the
+editor has no JavaScript or CSS. The PyPI package does include them.
 
 When running management commands via ``django-admin``, make sure to add the root
 directory to the python path (or use ``python -m django <command>``):

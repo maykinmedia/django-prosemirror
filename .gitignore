@@ -124,3 +124,8 @@ playwright-videos/
 # CI Coverage
 coverage/
 
+
+# Built by `npm run build` (in CI for releases)
+django_prosemirror/static/css/django-prosemirror.css
+django_prosemirror/static/js/django-prosemirror.js
+django_prosemirror/static/js/django-prosemirror.js.map
