@@ -494,6 +494,32 @@ If the values are genuinely unrecoverable, fall back to
         dependencies = [("myapp", "0001_initial")]
         operations = [migrations.RunPython(migrate, migrations.RunPython.noop)]
 
+Repairing unsafe URLs
+----------------------
+
+``django_prosemirror`` validates that link ``href`` and image ``src``
+values use a safe URL scheme (``http``, ``https``, ``mailto``, ``tel``, or a
+relative URL) — see ``django_prosemirror.sanitize``. Rows written before
+this validation existed may still hold a ``javascript:`` or ``data:`` URL;
+these aren't corrupt (the shape is fine), but they will fail validation the
+next time anything saves the row, even an edit to an unrelated field. Use
+``strip_unsafe_prosemirror_urls`` to strip the offending marks/nodes:
+
+.. code-block:: python
+
+    from django_prosemirror.migration_utils import strip_unsafe_prosemirror_urls
+
+    def migrate(apps, schema_editor):
+        MyModel = apps.get_model("myapp", "MyModel")
+        records = strip_unsafe_prosemirror_urls(MyModel, "body")
+        for r in records:
+            print(f"Repaired pk={r.pk}")
+        print(f"{len(records)} row(s) repaired")
+
+    class Migration(migrations.Migration):
+        dependencies = [("myapp", "0001_initial")]
+        operations = [migrations.RunPython(migrate, migrations.RunPython.noop)]
+
 
 Local development
 =================

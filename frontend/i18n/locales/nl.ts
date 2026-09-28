@@ -14,6 +14,8 @@ export const nl: IDPMTranslations = {
     "Add or remove link": "Link toevoegen of verwijderen",
     "Create a link": "Link aanmaken",
     "Link target": "Linkbestemming",
+    "Only http, https, mailto and tel links are allowed":
+        "Alleen http-, https-, mailto- en tel-links zijn toegestaan",
     "Toggle strong style": "Vet aan/uit",
     "Toggle emphasis": "Cursief aan/uit",
     "Toggle underline": "Onderstrepen aan/uit",

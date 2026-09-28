@@ -6,7 +6,13 @@ import {
     NodeType as PMNodeType,
     Schema,
 } from "prosemirror-model";
+import { EditorState } from "prosemirror-state";
+import { EditorView } from "prosemirror-view";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { en } from "../i18n/locales/en";
+import { openPrompt } from "../plugins/menubar/prompt";
+import { LanguageCodeEnum } from "../types/types";
+import { SAFE_URLS, UNSAFE_URLS } from "./test_sanitize.spec";
 
 // Mock ProseMirror menu components
 vi.mock("prosemirror-menu", () => ({
@@ -265,6 +271,44 @@ describe("plugins/menubar/index", () => {
             expect(() => {
                 buildMenuItems(mockSchema, true);
             }).not.toThrow();
+        });
+    });
+
+    describe("Link prompt href validation", () => {
+        beforeEach(() => {
+            document.documentElement.lang = LanguageCodeEnum.EN;
+        });
+
+        /** Open the link prompt and hand back its href field validator. */
+        const getHrefValidator = () => {
+            const state = {
+                selection: { empty: false, from: 0, to: 4 },
+                doc: { rangeHasMark: vi.fn().mockReturnValue(false) },
+            } as unknown as EditorState;
+            const view = {
+                state,
+                dispatch: vi.fn(),
+                focus: vi.fn(),
+                dom: document.createElement("div"),
+            } as unknown as EditorView;
+
+            const result = buildMenuItems(mockSchema);
+            result.toggleLink!.spec.run!(state, vi.fn(), view, new Event("x"));
+
+            const options = vi.mocked(openPrompt).mock.calls[0][0];
+            return options.fields.href.options.validate!;
+        };
+
+        it.each(SAFE_URLS)("should accept %j", (href) => {
+            expect(getHrefValidator()(href)).toBeNull();
+        });
+
+        // A javascript: href only got neutralised by toDOM, so it stayed in the
+        // document JSON and reached the form input verbatim.
+        it.each(UNSAFE_URLS)("should reject %j", (href) => {
+            expect(getHrefValidator()(href)).toBe(
+                en["Only http, https, mailto and tel links are allowed"],
+            );
         });
     });
 
