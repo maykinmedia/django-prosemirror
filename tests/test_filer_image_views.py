@@ -1,8 +1,9 @@
 import io
 import json
+from unittest.mock import patch
 from urllib.parse import urlencode
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Permission, User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
@@ -15,6 +16,8 @@ try:
     from filer import settings as filer_settings
     from filer.models import Image
     from PIL import Image as PILImage
+
+    from django_prosemirror.filer_models import image_permission
 except ModuleNotFoundError:
     pytest.skip("filer not available", allow_module_level=True)
 
@@ -27,6 +30,18 @@ def create_test_image(name="test_image.jpg", format="JPEG", size=(100, 100)):
     return SimpleUploadedFile(
         name, buffer.getvalue(), content_type=f"image/{format.lower()}"
     )
+
+
+def create_user(username="testuser", is_staff=True, permissions=()):
+    user = User.objects.create_user(
+        username=username, password="testpass", is_staff=is_staff
+    )
+    user.user_permissions.set(
+        Permission.objects.filter(
+            content_type__app_label="filer", codename__in=permissions
+        )
+    )
+    return user
 
 
 class TestFilerUrlsEnabled(TestCase):
@@ -56,7 +71,7 @@ class TestFilerUrlsEnabled(TestCase):
 
 class FilerUploadHandlerViewTestCase(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username="testuser", password="testpass")
+        self.user = create_user(permissions=["add_image"])
         self.client.login(username="testuser", password="testpass")
         self.mock_file = create_test_image("test_image.jpg")
 
@@ -106,7 +121,38 @@ class FilerUploadHandlerViewTestCase(TestCase):
             format="multipart",
         )
 
-        self.assertEqual(response.status_code, 302, msg="Should redirect to login")
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(
+            json.loads(response.content), {"error": "Authentication required"}
+        )
+        self.assertEqual(Image.objects.count(), 0, msg="No images were created")
+
+    def test_filer_upload_handler_requires_staff(self):
+        create_user(username="nonstaff", is_staff=False, permissions=["add_image"])
+        self.client.login(username="nonstaff", password="testpass")
+
+        response = self.client.post(
+            reverse("filer_upload_handler"),
+            data={"upload_file": self.mock_file},
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(json.loads(response.content), {"error": "Permission denied"})
+        self.assertEqual(Image.objects.count(), 0, msg="No images were created")
+
+    def test_filer_upload_handler_requires_add_permission(self):
+        create_user(username="noperm", permissions=["change_image"])
+        self.client.login(username="noperm", password="testpass")
+
+        response = self.client.post(
+            reverse("filer_upload_handler"),
+            data={"upload_file": self.mock_file},
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(json.loads(response.content), {"error": "Permission denied"})
         self.assertEqual(Image.objects.count(), 0, msg="No images were created")
 
     def test_filer_upload_handler_post_without_file(self):
@@ -140,9 +186,9 @@ class FilerUploadHandlerViewTestCase(TestCase):
 
         data = json.loads(response.content)
 
-        # Assert against the full expected error response for non-multipart
         expected_response = {
-            "error": "File upload requires multipart/form-data content type"
+            "error": "Invalid form data",
+            "errors": {"upload_file": ["This field is required."]},
         }
 
         self.assertEqual(data, expected_response)
@@ -160,9 +206,9 @@ class FilerUploadHandlerViewTestCase(TestCase):
 
         data = json.loads(response.content)
 
-        # Should get the same content type error
         expected_response = {
-            "error": "File upload requires multipart/form-data content type"
+            "error": "Invalid form data",
+            "errors": {"upload_file": ["This field is required."]},
         }
 
         self.assertEqual(data, expected_response)
@@ -177,7 +223,7 @@ class FilerUploadHandlerViewTestCase(TestCase):
 
 class FilerEditHandlerViewTestCase(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username="testuser", password="testpass")
+        self.user = create_user(permissions=["change_image"])
         self.client.login(username="testuser", password="testpass")
 
         # Create a test image
@@ -383,8 +429,40 @@ class FilerEditHandlerViewTestCase(TestCase):
             reverse("filer_edit_handler", args=[str(self.image.pk)])
         )
 
-        # Should redirect to login
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(
+            json.loads(response.content), {"error": "Authentication required"}
+        )
+
+    def test_filer_edit_handler_requires_staff(self):
+        create_user(username="nonstaff", is_staff=False, permissions=["change_image"])
+        self.client.login(username="nonstaff", password="testpass")
+
+        response = self.client.patch(
+            reverse("filer_edit_handler", args=[str(self.image.pk)]),
+            data=urlencode({"name": "Updated Name"}),
+            content_type="application/x-www-form-urlencoded",
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(json.loads(response.content), {"error": "Permission denied"})
+        self.image.refresh_from_db()
+        self.assertEqual(self.image.name, "Original name")
+
+    def test_filer_edit_handler_requires_change_permission(self):
+        create_user(username="noperm", permissions=["add_image"])
+        self.client.login(username="noperm", password="testpass")
+
+        response = self.client.patch(
+            reverse("filer_edit_handler", args=[str(self.image.pk)]),
+            data=urlencode({"name": "Updated Name"}),
+            content_type="application/x-www-form-urlencoded",
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(json.loads(response.content), {"error": "Permission denied"})
+        self.image.refresh_from_db()
+        self.assertEqual(self.image.name, "Original name")
 
     def test_filer_edit_handler_post_not_allowed(self):
         response = self.client.post(
@@ -393,3 +471,44 @@ class FilerEditHandlerViewTestCase(TestCase):
         )
 
         self.assertEqual(response.status_code, 405)
+
+
+class SwappedImageModelTests(TestCase):
+    """With FILER_IMAGE_MODEL swapped, the swapped model's permissions apply.
+
+    testapp.TestModel stands in for a custom image model: only the permission
+    check and the lookup by primary key are exercised.
+    """
+
+    def setUp(self):
+        patcher = patch.object(filer_settings, "FILER_IMAGE_MODEL", "testapp.TestModel")
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_image_permission(self):
+        self.assertEqual(image_permission("add"), "testapp.add_testmodel")
+        self.assertEqual(image_permission("change"), "testapp.change_testmodel")
+
+    def test_edit_handler_requires_the_swapped_models_permission(self):
+        user = create_user(username="swapped")
+        user.user_permissions.add(
+            Permission.objects.get(
+                content_type__app_label="testapp", codename="change_testmodel"
+            )
+        )
+        create_user(username="filer", permissions=["change_image"])
+        cases = {"swapped": 404, "filer": 403}
+        for username, expected_status in cases.items():
+            with self.subTest(username):
+                self.client.login(username=username, password="testpass")
+
+                response = self.client.get(reverse("filer_edit_handler", args=["999"]))
+
+                # 404: the permission check passed and the image was looked up
+                # in the swapped model.
+                self.assertEqual(response.status_code, expected_status)
+
+
+def test_image_permission_defaults_to_filers_image_model():
+    assert image_permission("add") == "filer.add_image"
+    assert image_permission("change") == "filer.change_image"

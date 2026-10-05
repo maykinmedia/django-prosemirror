@@ -1,6 +1,6 @@
 from django import forms
 
-from filer.models import Image
+from django_prosemirror.filer_models import get_image_model
 
 
 class FileUploadForm(forms.Form):
@@ -9,5 +9,5 @@ class FileUploadForm(forms.Form):
 
 class ImageEditForm(forms.ModelForm):
     class Meta:
-        model = Image
+        model = get_image_model()
         fields = ["name", "description", "default_caption"]

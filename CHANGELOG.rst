@@ -5,6 +5,27 @@ Changelog
 This changelog starts at 0.9.0. For earlier releases, see the git history and
 the GitHub releases page.
 
+0.11.0 (unreleased)
+===================
+
+**Security fixes**
+
+See `GHSA-5qm8-wqjq-3jw8
+<https://github.com/maykinmedia/django-prosemirror/security/advisories/GHSA-5qm8-wqjq-3jw8>`_.
+
+* Restricted the image upload and edit endpoints to staff users with
+  django-filer's permission to add images (upload) or change images (edit).
+  Previously any logged-in user could upload files and view and edit any filer
+  image's details. With a custom ``FILER_IMAGE_MODEL``, that model's
+  permissions apply. The endpoints don't apply django-filer's folder
+  permissions; see the warning under "Image uploads" in the README.
+
+**Breaking changes**
+
+* Editors now need staff status and django-filer's "Can add image" and "Can
+  change image" permissions to upload and edit images in the editor (see
+  Security fixes); without them the endpoints answer with 403.
+
 0.10.0 (2026-09-28)
 ===================
 

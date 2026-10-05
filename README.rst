@@ -367,6 +367,25 @@ Frontend Integration
 
 **Note**: These assets are only required for form rendering (editing). Displaying saved content using ``{{ post.content.html }}`` in templates does not require these assets.
 
+Image uploads
+-------------
+
+With django-filer installed, the editor uploads images through the endpoints
+in ``django_prosemirror.urls``. Only staff users can use them, and they need
+django-filer's image permissions: "Can add image" to upload an image, "Can
+change image" to view and edit its details. With a custom
+``FILER_IMAGE_MODEL``, the permissions are that model's.
+
+.. warning::
+
+   These endpoints don't apply django-filer's per-file and folder permissions
+   (``FILER_ENABLE_PERMISSIONS``). A staff user with "Can change image" can
+   view and edit the details (name, description and caption) of any filer
+   image on the site through them, including private images and images in
+   folders that the filer admin hides from them. If your site relies on folder
+   permissions to separate staff, only give "Can change image" to staff who
+   may see and edit all images.
+
 Data migrations
 ===============
 
