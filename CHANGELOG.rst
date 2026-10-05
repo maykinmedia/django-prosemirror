@@ -44,6 +44,13 @@ See `GHSA-5qm8-wqjq-3jw8
   uploaded in the editor.
 * The ``images`` extra requires django-filer 3.0 or later.
 
+**New features**
+
+* Added the ``check_filer_images`` management command. It checks the images
+  stored in django-filer for unsafe files that the upload endpoint of earlier
+  versions accepted, such as SVGs with scripts or HTML with an image extension,
+  and reports which ones to review. See "Checking stored images" in the README.
+
 0.10.0 (2026-09-28)
 ===================
 

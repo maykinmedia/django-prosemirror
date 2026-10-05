@@ -28,10 +28,13 @@ class WebImageField(forms.ImageField):
     default_validators = [
         FileExtensionValidator(allowed_extensions=list(ALLOWED_IMAGE_FORMATS))
     ]
+    # Whether to apply max_image_upload_size. Off when checking stored images,
+    # whose size isn't a safety concern.
+    check_size = True
 
     def to_python(self, data):
         # Check the size before ImageField parses the file.
-        max_size = get_setting("max_image_upload_size")
+        max_size = get_setting("max_image_upload_size") if self.check_size else None
         if data and max_size is not None and data.size > max_size:
             raise ValidationError(
                 "The file is too large. The maximum size is %(max_size)s.",
@@ -45,9 +48,10 @@ class FileUploadForm(forms.Form):
     # ImageField parses the upload with Pillow, which also rules out SVG.
     upload_file = WebImageField(required=True)
 
-    def __init__(self, *args, owner=None, **kwargs):
+    def __init__(self, *args, owner=None, check_size=True, **kwargs):
         super().__init__(*args, **kwargs)
         self.owner = owner
+        self.fields["upload_file"].check_size = check_size
 
     def clean_upload_file(self):
         upload_file = self.cleaned_data["upload_file"]

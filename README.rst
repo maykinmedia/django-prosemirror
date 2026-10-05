@@ -412,6 +412,49 @@ Images uploaded through the editor are checked before they are stored:
   admin: ``FILER_MIME_TYPE_WHITELIST`` and the file validators configured with
   ``FILER_ADD_FILE_VALIDATORS``.
 
+Checking stored images
+----------------------
+
+Before 0.11.0, the image upload endpoint accepted any file. If you ran an
+earlier version with django-filer, unsafe files may be stored as filer images,
+e.g. SVGs with scripts or HTML with an image extension. Check them with:
+
+.. code-block:: bash
+
+    python manage.py check_filer_images --hide-ok --base-url https://example.com
+
+Each image gets a verdict:
+
+* ``SUSPICIOUS``: review it in the admin, and delete it if it can't be
+  explained. Don't open the file itself, from the admin or the report: opened
+  directly in a browser, its scripts may run. The file isn't an image, an SVG
+  contains possible scripts, the file would be served with a non-image content
+  type, or it fails another check.
+* ``UNCHECKED``: the file exists but couldn't be read. Run the command again
+  once it can.
+* ``NOTE``: wouldn't be accepted as an upload today, but can't run code, e.g.
+  an SVG without scripts or an image with the wrong extension. An image that
+  is otherwise OK also gets a note if its uploader isn't a current staff
+  member (an active user with ``is_staff``), since only staff can upload today.
+* ``OK``: passes the upload validation and was uploaded by a current staff
+  member.
+
+The table lists every image, worst first, with whether the uploader is a
+current staff member and a link to each image's admin page. ``--hide-ok``
+leaves out the images that are OK, to list only those that need attention.
+``--format csv`` writes the report as CSV with all details, for use in a
+spreadsheet, and ``--output`` writes the report to a file. ``--base-url`` makes
+the links absolute; it defaults to the current site's domain if
+``django.contrib.sites`` is installed. The command exits with status 3 if any
+image is suspicious, else with status 4 if any image is unchecked. Status 1
+means the command failed (for example, the database couldn't be reached), and
+status 2 that its arguments are invalid.
+
+Add your own checks with ``--validator path.to.check``: a function that takes
+the filer image and its file content (bytes) and raises ``ValidationError`` if
+the image fails, which makes the image suspicious. Any other exception stops
+the command with status 1.
+
 Data migrations
 ===============
 
