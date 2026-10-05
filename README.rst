@@ -394,6 +394,24 @@ editor falls back to the CSRF cookie with its default name, ``csrftoken``.
    permissions to separate staff, only give "Can change image" to staff who
    may see and edit all images.
 
+Images uploaded through the editor are checked before they are stored:
+
+* Only JPEG, PNG, GIF and WebP files are accepted (``.jpg``, ``.jpeg``,
+  ``.png``, ``.gif``, ``.webp``), and the file content must be an image of the
+  format its extension says. SVG is not accepted.
+* The upload must not exceed ``max_image_upload_size`` bytes (default 10 MiB,
+  ``None`` for no limit):
+
+  .. code-block:: python
+
+      DJANGO_PROSEMIRROR = {
+          "max_image_upload_size": 5 * 1024 * 1024,
+      }
+
+* django-filer's upload policy applies, as for uploads through the filer
+  admin: ``FILER_MIME_TYPE_WHITELIST`` and the file validators configured with
+  ``FILER_ADD_FILE_VALIDATORS``.
+
 Data migrations
 ===============
 

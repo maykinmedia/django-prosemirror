@@ -196,7 +196,9 @@ describe("image-upload-plugin/upload", () => {
             // Verify file input properties
             const input = (document.body.appendChild as Mock).mock.calls[0][0];
             expect(input.type).toBe("file");
-            expect(input.accept).toBe("image/*");
+            expect(input.accept).toBe(
+                "image/jpeg,image/png,image/gif,image/webp,.jpg,.jpeg,.png,.gif,.webp",
+            );
             expect(input.hidden).toBe(true);
         });
 

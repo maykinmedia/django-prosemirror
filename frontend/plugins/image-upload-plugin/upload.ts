@@ -4,6 +4,21 @@ import { insertImage } from "@/utils";
 import crelt from "crelt";
 import { ImageDOMAttrs, ImageNodeAttrs } from "@/schema/nodes/image";
 
+/**
+ * Image types the upload endpoint accepts. Keep in sync with
+ * ALLOWED_IMAGE_FORMATS in django_prosemirror/constants.py.
+ */
+export const ALLOWED_IMAGE_MIME_TYPES = [
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+];
+const ALLOWED_IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
+
+export const isAllowedImageFile = (file: File): boolean =>
+    ALLOWED_IMAGE_MIME_TYPES.includes(file.type);
+
 export type UploadOptions = {
     attrs: Attrs;
     view: EditorView;
@@ -170,7 +185,10 @@ export class UploadImage {
     uploadImage(view: EditorView): boolean {
         const fileInput = crelt("input", {
             type: "file",
-            accept: "image/*",
+            accept: [
+                ...ALLOWED_IMAGE_MIME_TYPES,
+                ...ALLOWED_IMAGE_EXTENSIONS,
+            ].join(","),
             hidden: true,
         }) as HTMLInputElement;
 

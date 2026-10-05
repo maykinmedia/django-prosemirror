@@ -28,7 +28,10 @@ const mockUploadImageInstance = {
     uploadAndInsertFiles: vi.fn(),
 };
 
-vi.mock("@/plugins/image-upload-plugin/upload", () => ({
+vi.mock("@/plugins/image-upload-plugin/upload", async (importOriginal) => ({
+    ...(await importOriginal<
+        typeof import("@/plugins/image-upload-plugin/upload")
+    >()),
     UploadImage: vi.fn().mockImplementation((endpoint) => {
         mockUploadImage(endpoint);
         return mockUploadImageInstance;
@@ -396,7 +399,9 @@ describe("image-upload-plugin/plugin", () => {
                 { type: "image/png", shouldHandle: true },
                 { type: "image/gif", shouldHandle: true },
                 { type: "image/webp", shouldHandle: true },
-                { type: "image/svg+xml", shouldHandle: true },
+                { type: "image/svg+xml", shouldHandle: false },
+                { type: "image/bmp", shouldHandle: false },
+                { type: "image/tiff", shouldHandle: false },
                 { type: "text/plain", shouldHandle: false },
                 { type: "application/pdf", shouldHandle: false },
                 { type: "video/mp4", shouldHandle: false },

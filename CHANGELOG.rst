@@ -23,6 +23,12 @@ See `GHSA-5qm8-wqjq-3jw8
   a page on a sibling subdomain, or on any site with
   ``SESSION_COOKIE_SAMESITE = "None"``, could upload files with a logged-in
   user's session.
+* Validated image uploads through the editor. Previously the endpoint stored
+  any file as a filer image, e.g. an SVG with scripts or HTML with an image
+  extension. Only JPEG, PNG, GIF and WebP files are accepted now, and Pillow
+  must detect the format the extension says. django-filer's upload policy
+  (``FILER_MIME_TYPE_WHITELIST`` and file validators) applies as well, and
+  uploads are limited to ``max_image_upload_size`` (default 10 MiB).
 
 **Breaking changes**
 
@@ -34,6 +40,9 @@ See `GHSA-5qm8-wqjq-3jw8
   ``csrftoken`` cookie; the Django admin and forms that render
   ``{% csrf_token %}`` need no changes. Without a token, the endpoints answer
   with 403.
+* SVGs and image formats other than JPEG, PNG, GIF and WebP can no longer be
+  uploaded in the editor.
+* The ``images`` extra requires django-filer 3.0 or later.
 
 0.10.0 (2026-09-28)
 ===================

@@ -37,11 +37,13 @@ def create_user(username="testuser", is_staff=True, permissions=()):
     user = User.objects.create_user(
         username=username, password="testpass", is_staff=is_staff
     )
-    user.user_permissions.set(
-        Permission.objects.filter(
-            content_type__app_label="filer", codename__in=permissions
-        )
+    filer_permissions = Permission.objects.filter(
+        content_type__app_label="filer", codename__in=permissions
     )
+    missing = set(permissions) - {p.codename for p in filer_permissions}
+    assert not missing, f"Unknown filer permissions: {sorted(missing)}"
+    user.user_permissions.set(filer_permissions)
+    assert user.user_permissions.count() == len(set(permissions))
     return user
 
 

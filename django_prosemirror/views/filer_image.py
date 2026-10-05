@@ -74,7 +74,7 @@ def staff_image_permission_required(action: str):
 @require_http_methods(["POST"])
 @staff_image_permission_required("add")
 def filer_upload_handler(request) -> JsonResponse:
-    form = FileUploadForm(request.POST, request.FILES)
+    form = FileUploadForm(request.POST, request.FILES, owner=request.user)
     if not form.is_valid():
         return JsonResponse(
             {"error": "Invalid form data", "errors": form.errors}, status=400
