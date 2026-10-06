@@ -76,4 +76,7 @@ export const nl: IDPMTranslations = {
     "Enter image description": "Typ een beschrijving",
     "Caption": "Caption",
     "Enter image caption": "Typ een caption",
+    "Image upload failed": "Afbeelding uploaden mislukt",
+    "Upload failed, please try again": "Uploaden mislukt, probeer het opnieuw",
+    "Dismiss": "Sluiten",
 };

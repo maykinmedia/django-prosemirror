@@ -96,4 +96,7 @@ export interface IDPMTranslations {
     "Enter image title": string;
     "Enter image description": string;
     "Enter image caption": string;
+    "Image upload failed": string;
+    "Upload failed, please try again": string;
+    "Dismiss": string;
 }

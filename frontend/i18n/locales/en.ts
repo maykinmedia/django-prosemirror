@@ -76,4 +76,7 @@ export const en: IDPMTranslations = {
     "Enter image description": "Enter image description",
     "Caption": "Caption",
     "Enter image caption": "Enter image caption",
+    "Image upload failed": "Image upload failed",
+    "Upload failed, please try again": "Upload failed, please try again",
+    "Dismiss": "Dismiss",
 };

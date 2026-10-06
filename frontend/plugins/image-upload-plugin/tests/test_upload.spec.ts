@@ -1,4 +1,11 @@
-import { UploadImage } from "@/plugins/image-upload-plugin/upload";
+import {
+    getErrorMessage,
+    UploadImage,
+} from "@/plugins/image-upload-plugin/upload";
+import {
+    clearUploadAlert,
+    showUploadAlert,
+} from "@/plugins/image-upload-plugin/alert";
 import { ImageDOMAttrs } from "@/schema/nodes/image";
 import { insertImage } from "@/utils/nodes";
 import { EditorView } from "prosemirror-view";
@@ -7,6 +14,11 @@ import { beforeEach, describe, expect, it, Mock, vi } from "vitest";
 // Mock dependencies
 vi.mock("@/utils/nodes", () => ({
     insertImage: vi.fn(),
+}));
+
+vi.mock("@/plugins/image-upload-plugin/alert", () => ({
+    showUploadAlert: vi.fn(),
+    clearUploadAlert: vi.fn(),
 }));
 
 vi.mock("crelt", () => ({
@@ -314,7 +326,10 @@ describe("image-upload-plugin/upload", () => {
                 const loadHandler = mockXHR.addEventListener.mock.calls.find(
                     (call) => call[0] === "load",
                 )?.[1];
-                mockXHR.response = { error: { message: "Upload failed" } };
+                mockXHR.response = {
+                    error: "Invalid form data",
+                    errors: { upload_file: ["Upload a valid image."] },
+                };
                 loadHandler?.();
             }, 0);
 
@@ -325,6 +340,9 @@ describe("image-upload-plugin/upload", () => {
 
             expect(result).toEqual({ src: "", title: "", alt: "" });
             expect(consoleSpy).toHaveBeenCalled();
+            expect(showUploadAlert).toHaveBeenCalledWith(mockView, [
+                { fileName: "test.jpg", message: "Upload a valid image." },
+            ]);
 
             consoleSpy.mockRestore();
         });
@@ -381,7 +399,7 @@ describe("image-upload-plugin/upload", () => {
                             };
                         } else {
                             // Second upload fails
-                            mockXHR.response = { error: { message: "Failed" } };
+                            mockXHR.response = { error: "Failed" };
                         }
                         handler();
                     }, 0);
@@ -399,6 +417,9 @@ describe("image-upload-plugin/upload", () => {
                     "Only 1 of 2 files uploaded successfully",
                 ),
             );
+            expect(showUploadAlert).toHaveBeenCalledWith(mockView, [
+                { fileName: "test2.jpg", message: "Failed" },
+            ]);
 
             consoleSpy.mockRestore();
         });
@@ -433,6 +454,91 @@ describe("image-upload-plugin/upload", () => {
             );
 
             consoleSpy.mockRestore();
+        });
+    });
+
+    describe("upload alert", () => {
+        beforeEach(() => {
+            uploader = new UploadImage("http://example.com/upload");
+        });
+
+        it("should clear the alert when all uploads succeed", async () => {
+            mockXHR.addEventListener.mockImplementation((event, handler) => {
+                if (event === "load") {
+                    setTimeout(() => {
+                        mockXHR.response = {
+                            url: "http://example.com/uploaded.jpg",
+                        };
+                        handler();
+                    }, 0);
+                }
+            });
+
+            await uploader.uploadAndInsertFiles(
+                [new File([""], "test.jpg", { type: "image/jpeg" })],
+                mockView,
+            );
+
+            expect(clearUploadAlert).toHaveBeenCalledWith(mockView);
+            expect(showUploadAlert).not.toHaveBeenCalled();
+        });
+
+        it("should show a translated fallback on network errors", async () => {
+            vi.spyOn(console, "error").mockImplementation(() => {});
+            mockXHR.addEventListener.mockImplementation((event, handler) => {
+                if (event === "error") setTimeout(() => handler(), 0);
+            });
+
+            await uploader.uploadAndInsertFiles(
+                [new File([""], "test.jpg", { type: "image/jpeg" })],
+                mockView,
+            );
+
+            expect(showUploadAlert).toHaveBeenCalledWith(mockView, [
+                {
+                    fileName: "test.jpg",
+                    message: "Upload failed, please try again",
+                },
+            ]);
+        });
+
+        it("should not touch the alert without a view", async () => {
+            vi.spyOn(console, "error").mockImplementation(() => {});
+            mockXHR.addEventListener.mockImplementation((event, handler) => {
+                if (event === "error") setTimeout(() => handler(), 0);
+            });
+
+            await uploader.uploadAndInsertFiles([
+                new File([""], "test.jpg", { type: "image/jpeg" }),
+            ]);
+
+            expect(showUploadAlert).not.toHaveBeenCalled();
+            expect(clearUploadAlert).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("getErrorMessage", () => {
+        it("should prefer field errors", () => {
+            expect(
+                getErrorMessage(
+                    {
+                        error: "Invalid form data",
+                        errors: { upload_file: ["Not an image.", "Too big."] },
+                    },
+                    "fallback",
+                ),
+            ).toBe("Not an image. Too big.");
+        });
+
+        it("should use the error string without field errors", () => {
+            expect(getErrorMessage({ error: "Permission denied" }, "x")).toBe(
+                "Permission denied",
+            );
+        });
+
+        it("should use the fallback without a body", () => {
+            expect(getErrorMessage(null, "fallback")).toBe("fallback");
+            expect(getErrorMessage({}, "fallback")).toBe("fallback");
         });
     });
 

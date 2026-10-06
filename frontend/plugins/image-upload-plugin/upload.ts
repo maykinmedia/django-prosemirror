@@ -3,6 +3,8 @@ import { EditorView } from "prosemirror-view";
 import { insertImage } from "@/utils";
 import crelt from "crelt";
 import { ImageDOMAttrs, ImageNodeAttrs } from "@/schema/nodes/image";
+import { translate } from "@/i18n/translations";
+import { clearUploadAlert, showUploadAlert, UploadFailure } from "./alert";
 
 /**
  * Image types the upload endpoint accepts. Keep in sync with
@@ -54,6 +56,27 @@ export const getCSRFToken = (): string | undefined =>
     undefined;
 
 /**
+ * Error body returned by the upload/edit endpoints.
+ */
+export type FilerErrorBody = {
+    error?: string;
+    errors?: Record<string, string[]>;
+};
+
+/**
+ * Get a human readable message from an error response, preferring the form
+ * field errors (e.g. "Upload a valid image.") over the generic `error`.
+ */
+export const getErrorMessage = (
+    body: FilerErrorBody | null,
+    fallback: string,
+): string => {
+    const fieldErrors = Object.values(body?.errors ?? {}).flat();
+    if (fieldErrors.length > 0) return fieldErrors.join(" ");
+    return body?.error || fallback;
+};
+
+/**
  * CRUD handler to manupilate images inside the filer.
  */
 export class UploadImage {
@@ -88,6 +111,7 @@ export class UploadImage {
     async uploadAndInsertFiles(files: File[], view?: EditorView) {
         let firstResult = null;
         let successCount = 0;
+        const failures: UploadFailure[] = [];
 
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
@@ -114,11 +138,23 @@ export class UploadImage {
                 if (view && imageAttrs.src) insertImage(imageAttrs, view);
             } catch (err) {
                 console.error(this.errors.upload(file.name), err);
+                failures.push({
+                    fileName: file.name,
+                    message:
+                        err instanceof Error
+                            ? err.message
+                            : translate("Upload failed, please try again"),
+                });
                 // Return error object for failed uploads
                 if (i === 0) {
                     firstResult = { src: "", title: "", alt: "" };
                 }
             }
+        }
+
+        if (view) {
+            if (failures.length > 0) showUploadAlert(view, failures);
+            else clearUploadAlert(view);
         }
 
         // Log warning for partial success in multiple file uploads
@@ -221,7 +257,7 @@ export class UploadImage {
 
         return this.send<FilerResponseBody>(
             "POST",
-            this.errors.upload(file.name),
+            translate("Upload failed, please try again"),
             this.endpoint,
             formData,
         );
@@ -293,8 +329,8 @@ export class UploadImage {
 
             xhr.addEventListener("load", () => {
                 const response = xhr.response;
-                if (!response || response.error) {
-                    reject(new Error(response?.error?.message || genericError));
+                if (!response || response.error || xhr.status >= 400) {
+                    reject(new Error(getErrorMessage(response, genericError)));
                 } else {
                     resolve(response);
                 }

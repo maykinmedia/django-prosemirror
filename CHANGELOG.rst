@@ -50,6 +50,9 @@ See `GHSA-5qm8-wqjq-3jw8
   stored in django-filer for unsafe files that the upload endpoint of earlier
   versions accepted, such as SVGs with scripts or HTML with an image extension,
   and reports which ones to review. See "Checking stored images" in the README.
+* The editor shows failed image uploads in an alert above the editor, with the
+  reason, e.g. a file that isn't a supported image. Previously failures were
+  only logged to the browser console.
 
 0.10.0 (2026-09-28)
 ===================

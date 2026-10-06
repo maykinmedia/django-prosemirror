@@ -12,11 +12,10 @@ export function openPrompt(options: {
     dom: HTMLElement;
     hideButtons?: boolean;
 }) {
-    if (!options.dom.previousElementSibling) return;
+    const menubar = options.dom?.parentElement?.children[0];
+    if (!menubar) return;
 
-    const wrapper = options.dom.previousElementSibling?.appendChild(
-        document.createElement("div"),
-    );
+    const wrapper = menubar.appendChild(document.createElement("div"));
     wrapper.className = prefix;
 
     const mouseOutside = (e: MouseEvent) => {
