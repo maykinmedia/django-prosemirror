@@ -53,6 +53,9 @@ See `GHSA-5qm8-wqjq-3jw8
 * The editor shows failed image uploads in an alert above the editor, with the
   reason, e.g. a file that isn't a supported image. Previously failures were
   only logged to the browser console.
+* The editor checks a file's content before uploading it, and doesn't send
+  files that aren't JPEG, PNG, GIF or WebP images. The server still checks
+  every upload.
 
 0.10.0 (2026-09-28)
 ===================

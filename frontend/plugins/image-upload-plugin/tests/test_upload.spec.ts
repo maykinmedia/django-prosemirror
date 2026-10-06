@@ -21,6 +21,13 @@ vi.mock("@/plugins/image-upload-plugin/alert", () => ({
     clearUploadAlert: vi.fn(),
 }));
 
+// Detect the declared type, content detection is tested in test_file_type.
+vi.mock("file-type", () => ({
+    fileTypeFromBlob: vi.fn(async (file: File) =>
+        file.type ? { mime: file.type, ext: "" } : undefined,
+    ),
+}));
+
 vi.mock("crelt", () => ({
     default: vi.fn((tag, props) => {
         const element = document.createElement(tag);
@@ -271,6 +278,8 @@ describe("image-upload-plugin/upload", () => {
 
             // Start upload (don't await to check XHR setup)
             uploader.uploadAndInsertFiles([mockFile], mockView);
+            // The request is sent after the async content check.
+            await vi.waitFor(() => expect(mockXHR.send).toHaveBeenCalled());
 
             expect(mockXHR.open).toHaveBeenCalledWith(
                 "POST",
@@ -306,6 +315,8 @@ describe("image-upload-plugin/upload", () => {
             const mockFile = new File([""], "test.jpg", { type: "image/jpeg" });
 
             uploader.uploadAndInsertFiles([mockFile], mockView);
+            // The request is sent after the async content check.
+            await vi.waitFor(() => expect(mockXHR.send).toHaveBeenCalled());
 
             expect(mockXHR.setRequestHeader).toHaveBeenCalledWith(
                 "X-CSRFToken",
@@ -514,6 +525,30 @@ describe("image-upload-plugin/upload", () => {
 
             expect(showUploadAlert).not.toHaveBeenCalled();
             expect(clearUploadAlert).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("content check", () => {
+        beforeEach(() => {
+            uploader = new UploadImage("http://example.com/upload");
+        });
+
+        it("should not upload files with disallowed content", async () => {
+            vi.spyOn(console, "error").mockImplementation(() => {});
+
+            const result = await uploader.uploadAndInsertFiles(
+                [new File([""], "evil.png", { type: "image/svg+xml" })],
+                mockView,
+            );
+
+            expect(result).toEqual({ src: "", title: "", alt: "" });
+            expect(mockXHR.send).not.toHaveBeenCalled();
+            expect(showUploadAlert).toHaveBeenCalledWith(mockView, [
+                {
+                    fileName: "evil.png",
+                    message: "This file is not a supported image",
+                },
+            ]);
         });
     });
 

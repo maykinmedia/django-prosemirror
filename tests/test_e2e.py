@@ -50,16 +50,30 @@ def image_uploader(transactional_db, live_server, page: Page):
     return user
 
 
+UPLOAD_URL_PATTERN = "**/filer-image-upload/"
+
+
+def choose_file(page: Page, editor, name: str, mime_type: str, data: bytes):
+    """Choose a file with the editor's image button.
+
+    Choosing the file directly bypasses the file picker's type filter, like
+    picking "All files" would.
+    """
+    editor.locator(".ProseMirror p").first.click()
+    with page.expect_file_chooser() as chooser_info:
+        editor.locator('[title="Insert image"]').click()
+    chooser_info.value.set_files({"name": name, "mimeType": mime_type, "buffer": data})
+
+
 def upload_through_editor(page: Page, editor, name: str, mime_type: str, data: bytes):
     """Upload a file with the editor's image button and wait for the response."""
-    editor.locator(".ProseMirror p").first.click()
-    with page.expect_response("**/filer-image-upload/") as response_info:
-        with page.expect_file_chooser() as chooser_info:
-            editor.locator('[title="Insert image"]').click()
-        chooser_info.value.set_files(
-            {"name": name, "mimeType": mime_type, "buffer": data}
-        )
+    with page.expect_response(UPLOAD_URL_PATTERN) as response_info:
+        choose_file(page, editor, name, mime_type, data)
     return response_info.value
+
+
+def inserted_images(editor):
+    return editor.locator(".ProseMirror img:not(.ProseMirror-separator)")
 
 
 def test_entered_text_is_maintained(live_server, page: Page):
@@ -93,7 +107,7 @@ def test_uploaded_image_is_inserted_and_saved_with_reference(
 
     assert response.status == 201
     image = Image.objects.get()
-    inserted = editor.locator(".ProseMirror img:not(.ProseMirror-separator)")
+    inserted = inserted_images(editor)
     expect(inserted).to_have_attribute("src", image.url)
     expect(inserted).to_have_attribute("id", str(image.pk))
 
@@ -112,20 +126,50 @@ def test_uploaded_image_is_inserted_and_saved_with_reference(
     assert image_nodes[0]["attrs"]["src"] == image.url
 
 
-def test_rejected_upload_inserts_nothing(image_uploader, live_server, page: Page):
+def test_upload_of_non_image_is_rejected_in_the_browser(
+    image_uploader, live_server, page: Page
+):
+    from filer.models import Image
+
+    page.goto(f"{live_server.url}/model-form/")
+    editor = page.locator("[data-prosemirror-id=id_full_schema_with_default]")
+    upload_requests = []
+    page.on(
+        "request",
+        lambda request: (
+            upload_requests.append(request)
+            if "/filer-image-upload/" in request.url
+            else None
+        ),
+    )
+
+    choose_file(page, editor, "evil.svg", "image/svg+xml", MALICIOUS_SVG)
+
+    expect(page.get_by_role("alert")).to_contain_text(
+        "evil.svg: This file is not a supported image"
+    )
+    assert upload_requests == []
+    assert Image.objects.count() == 0
+    expect(inserted_images(editor)).to_have_count(0)
+
+
+def test_upload_rejected_by_the_server_inserts_nothing(
+    image_uploader, live_server, page: Page
+):
     from filer.models import Image
 
     page.goto(f"{live_server.url}/model-form/")
     editor = page.locator("[data-prosemirror-id=id_full_schema_with_default]")
 
-    # Choosing the file directly bypasses the file picker's type filter, like
-    # picking "All files" would.
+    # The browser only checks that the content is an allowed image; the server
+    # also requires it to match the extension.
     response = upload_through_editor(
-        page, editor, "evil.svg", "image/svg+xml", MALICIOUS_SVG
+        page, editor, "photo.gif", "image/gif", png_bytes()
     )
 
     assert response.status == 400
+    expect(page.get_by_role("alert")).to_contain_text(
+        "photo.gif: The file content does not match its extension."
+    )
     assert Image.objects.count() == 0
-    expect(
-        editor.locator(".ProseMirror img:not(.ProseMirror-separator)")
-    ).to_have_count(0)
+    expect(inserted_images(editor)).to_have_count(0)

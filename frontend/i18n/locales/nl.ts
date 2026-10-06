@@ -79,4 +79,6 @@ export const nl: IDPMTranslations = {
     "Image upload failed": "Afbeelding uploaden mislukt",
     "Upload failed, please try again": "Uploaden mislukt, probeer het opnieuw",
     "Dismiss": "Sluiten",
+    "This file is not a supported image":
+        "Dit bestand is geen ondersteunde afbeelding",
 };

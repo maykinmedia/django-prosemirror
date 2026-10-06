@@ -79,4 +79,5 @@ export const en: IDPMTranslations = {
     "Image upload failed": "Image upload failed",
     "Upload failed, please try again": "Upload failed, please try again",
     "Dismiss": "Dismiss",
+    "This file is not a supported image": "This file is not a supported image",
 };

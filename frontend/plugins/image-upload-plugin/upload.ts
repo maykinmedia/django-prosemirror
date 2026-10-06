@@ -2,6 +2,7 @@ import { Attrs, Schema } from "prosemirror-model";
 import { EditorView } from "prosemirror-view";
 import { insertImage } from "@/utils";
 import crelt from "crelt";
+import { fileTypeFromBlob } from "file-type";
 import { ImageDOMAttrs, ImageNodeAttrs } from "@/schema/nodes/image";
 import { translate } from "@/i18n/translations";
 import { clearUploadAlert, showUploadAlert, UploadFailure } from "./alert";
@@ -20,6 +21,16 @@ const ALLOWED_IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
 
 export const isAllowedImageFile = (file: File): boolean =>
     ALLOWED_IMAGE_MIME_TYPES.includes(file.type);
+
+/**
+ * Check the actual file content (magic bytes) instead of the type the browser
+ * derives from the extension. The server validates this as well, this only
+ * prevents uploading files that will be rejected anyway.
+ */
+export const hasAllowedImageContent = async (file: File): Promise<boolean> => {
+    const detected = await fileTypeFromBlob(file);
+    return !!detected && ALLOWED_IMAGE_MIME_TYPES.includes(detected.mime);
+};
 
 export type UploadOptions = {
     attrs: Attrs;
@@ -116,6 +127,11 @@ export class UploadImage {
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
             try {
+                if (!(await hasAllowedImageContent(file)))
+                    throw new Error(
+                        translate("This file is not a supported image"),
+                    );
+
                 // Perform the HTTP upload
                 const res = await this.post(file);
 

@@ -99,4 +99,5 @@ export interface IDPMTranslations {
     "Image upload failed": string;
     "Upload failed, please try again": string;
     "Dismiss": string;
+    "This file is not a supported image": string;
 }
