@@ -5,8 +5,14 @@ Changelog
 This changelog starts at 0.9.0. For earlier releases, see the git history and
 the GitHub releases page.
 
-0.11.0 (unreleased)
+0.11.0 (2026-10-08)
 ===================
+
+Security release for the editor's image upload and edit endpoints: they now
+require staff users with django-filer's image permissions and a CSRF token,
+and only accept valid JPEG, PNG, GIF and WebP images. A new management command
+finds unsafe files that earlier versions may have stored. Check the breaking
+changes before upgrading.
 
 **Security fixes**
 
