@@ -25,6 +25,20 @@ export type FilerResponseBody = {
 };
 
 /**
+ * The CSRF token to send with requests to the upload endpoints: from the
+ * page's `{% csrf_token %}` input, else from Django's CSRF cookie (with its
+ * default name, `csrftoken`).
+ */
+export const getCSRFToken = (): string | undefined =>
+    document.querySelector<HTMLInputElement>("[name=csrfmiddlewaretoken]")
+        ?.value ||
+    document.cookie
+        .split("; ")
+        .find((cookie) => cookie.startsWith("csrftoken="))
+        ?.slice("csrftoken=".length) ||
+    undefined;
+
+/**
  * CRUD handler to manupilate images inside the filer.
  */
 export class UploadImage {
@@ -275,10 +289,8 @@ export class UploadImage {
                 reject(new Error(this.errors.uploadAborted)),
             );
 
-            // Add CSRF token if available
-            const csrfToken = document.querySelector<HTMLInputElement>(
-                "[name=csrfmiddlewaretoken]",
-            )?.value;
+            // The endpoints require a CSRF token for POST and PATCH.
+            const csrfToken = getCSRFToken();
 
             if (csrfToken) xhr.setRequestHeader("X-CSRFToken", csrfToken);
 

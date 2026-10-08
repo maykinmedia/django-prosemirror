@@ -19,12 +19,21 @@ See `GHSA-5qm8-wqjq-3jw8
   image's details. With a custom ``FILER_IMAGE_MODEL``, that model's
   permissions apply. The endpoints don't apply django-filer's folder
   permissions; see the warning under "Image uploads" in the README.
+* Removed the CSRF exemption of the image upload and edit endpoints. Previously
+  a page on a sibling subdomain, or on any site with
+  ``SESSION_COOKIE_SAMESITE = "None"``, could upload files with a logged-in
+  user's session.
 
 **Breaking changes**
 
 * Editors now need staff status and django-filer's "Can add image" and "Can
   change image" permissions to upload and edit images in the editor (see
   Security fixes); without them the endpoints answer with 403.
+* Uploading and editing images in the editor needs a CSRF token. The editor
+  sends the one from the page's ``{% csrf_token %}``, else from the
+  ``csrftoken`` cookie; the Django admin and forms that render
+  ``{% csrf_token %}`` need no changes. Without a token, the endpoints answer
+  with 403.
 
 0.10.0 (2026-09-28)
 ===================

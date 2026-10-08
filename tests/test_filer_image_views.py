@@ -3,9 +3,10 @@ import json
 from unittest.mock import patch
 from urllib.parse import urlencode
 
+from django.conf import settings
 from django.contrib.auth.models import Permission, User
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase
+from django.test import Client, TestCase
 from django.urls import reverse
 
 import pytest
@@ -512,3 +513,72 @@ class SwappedImageModelTests(TestCase):
 def test_image_permission_defaults_to_filers_image_model():
     assert image_permission("add") == "filer.add_image"
     assert image_permission("change") == "filer.change_image"
+
+
+class CsrfTests(TestCase):
+    """The endpoints are protected against CSRF: POST and PATCH need a token."""
+
+    # Django's CSRF cookie holds a secret of 32 letters and digits; the header
+    # may send it as is.
+    CSRF_TOKEN = "a" * 32
+
+    def setUp(self):
+        self.user = create_user(permissions=["add_image", "change_image"])
+        self.client = Client(enforce_csrf_checks=True)
+        self.client.login(username="testuser", password="testpass")
+        self.image = Image.objects.create(
+            original_filename="test_image.jpg",
+            file=create_test_image("test_image.jpg"),
+            owner=self.user,
+        )
+        self.edit_url = reverse("filer_edit_handler", args=[str(self.image.pk)])
+
+    def with_csrf_token(self):
+        self.client.cookies[settings.CSRF_COOKIE_NAME] = self.CSRF_TOKEN
+        return {"HTTP_X_CSRFTOKEN": self.CSRF_TOKEN}
+
+    def upload(self, **extra):
+        return self.client.post(
+            reverse("filer_upload_handler"),
+            data={"upload_file": create_test_image("new.jpg")},
+            **extra,
+        )
+
+    def patch(self, **extra):
+        return self.client.patch(
+            self.edit_url,
+            data=urlencode({"name": "Changed"}),
+            content_type="application/x-www-form-urlencoded",
+            **extra,
+        )
+
+    def test_upload_without_token_is_forbidden(self):
+        response = self.upload()
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(Image.objects.count(), 1)
+
+    def test_upload_with_token(self):
+        response = self.upload(**self.with_csrf_token())
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Image.objects.count(), 2)
+
+    def test_edit_without_token_is_forbidden(self):
+        response = self.patch()
+
+        self.assertEqual(response.status_code, 403)
+        self.image.refresh_from_db()
+        self.assertNotEqual(self.image.name, "Changed")
+
+    def test_edit_with_token(self):
+        response = self.patch(**self.with_csrf_token())
+
+        self.assertEqual(response.status_code, 200)
+        self.image.refresh_from_db()
+        self.assertEqual(self.image.name, "Changed")
+
+    def test_get_needs_no_token(self):
+        response = self.client.get(self.edit_url)
+
+        self.assertEqual(response.status_code, 200)

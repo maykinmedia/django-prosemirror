@@ -6,7 +6,6 @@ from typing import assert_never
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.uploadedfile import UploadedFile
 from django.http import JsonResponse, QueryDict
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from filer import settings as filer_settings
@@ -72,7 +71,6 @@ def staff_image_permission_required(action: str):
     return decorator
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 @staff_image_permission_required("add")
 def filer_upload_handler(request) -> JsonResponse:
@@ -97,7 +95,6 @@ def filer_upload_handler(request) -> JsonResponse:
     )
 
 
-@csrf_exempt
 @require_http_methods(["GET", "PATCH"])
 @staff_image_permission_required("change")
 def filer_edit_handler(request, image_pk: str) -> JsonResponse:

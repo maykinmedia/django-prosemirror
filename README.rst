@@ -361,7 +361,10 @@ Frontend Integration
         {% include_django_prosemirror_js_defer %}
     </head>
     <body>
-        {{ form.as_p }}
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+        </form>
     </body>
     </html>
 
@@ -375,6 +378,11 @@ in ``django_prosemirror.urls``. Only staff users can use them, and they need
 django-filer's image permissions: "Can add image" to upload an image, "Can
 change image" to view and edit its details. With a custom
 ``FILER_IMAGE_MODEL``, the permissions are that model's.
+
+Uploading and editing images needs a CSRF token. The editor sends the one from
+the page's ``{% csrf_token %}``, so render it on pages with the editor, for
+example in the form around it; the Django admin already does. Without it, the
+editor falls back to the CSRF cookie with its default name, ``csrftoken``.
 
 .. warning::
 
