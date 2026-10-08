@@ -103,8 +103,6 @@ export class UploadImage {
     private readonly errors = {
         fetch: (imageId?: string) =>
             `Failed to fetch image data${imageId ? ` for image: ${imageId}` : ""}`,
-        patch: (imageId?: string) =>
-            `Failed to update image data${imageId ? ` for image: ${imageId}` : ""}`,
         upload: (fileName?: string) =>
             `Failed to upload file${fileName ? `: ${fileName}` : ""}`,
         noEndpoint: "Upload failed: No endpoint configured",
@@ -226,8 +224,25 @@ export class UploadImage {
 
             // If view and schema provided, insert into view
             if (view && imageAttrs.src) insertImage(imageAttrs, view);
+            if (view) clearUploadAlert(view);
         } catch (err) {
             console.error(this.errors.patchFailed, err);
+            if (view) {
+                showUploadAlert(
+                    view,
+                    [
+                        {
+                            message:
+                                err instanceof Error
+                                    ? err.message
+                                    : translate(
+                                          "Saving failed, please try again",
+                                      ),
+                        },
+                    ],
+                    translate("Saving image details failed"),
+                );
+            }
         }
     }
 
@@ -306,7 +321,7 @@ export class UploadImage {
 
         return this.send(
             "PATCH", // Change to POST so Django populates request.POST
-            this.errors.patch(data.id),
+            translate("Saving failed, please try again"),
             endpoint,
             params.toString(), // Send as URL-encoded string
         );

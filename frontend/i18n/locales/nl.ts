@@ -81,4 +81,6 @@ export const nl: IDPMTranslations = {
     "Dismiss": "Sluiten",
     "This file is not a supported image":
         "Dit bestand is geen ondersteunde afbeelding",
+    "Saving image details failed": "Afbeeldingsgegevens opslaan mislukt",
+    "Saving failed, please try again": "Opslaan mislukt, probeer het opnieuw",
 };

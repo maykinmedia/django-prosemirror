@@ -34,6 +34,22 @@ describe("image-upload-plugin/alert", () => {
         ).toEqual(["a.svg: Upload a valid image.", "b.pdf: Not allowed."]);
     });
 
+    it("should render a custom title", () => {
+        showUploadAlert(
+            view,
+            [{ message: "Permission denied" }],
+            "Saving image details failed",
+        );
+
+        const alert = getAlert()!;
+        expect(
+            alert.querySelector(".ProseMirror-upload-alert-title")!.textContent,
+        ).toBe("Saving image details failed");
+        expect(alert.querySelector("li")!.textContent).toBe(
+            "Permission denied",
+        );
+    });
+
     it("should not render text as HTML", () => {
         showUploadAlert(view, [
             {

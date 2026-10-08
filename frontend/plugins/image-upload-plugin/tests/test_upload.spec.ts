@@ -802,6 +802,67 @@ describe("image-upload-plugin/upload", () => {
             consoleSpy.mockRestore();
         });
 
+        it("should show the server's error in the alert", async () => {
+            vi.spyOn(console, "error").mockImplementation(() => {});
+            mockXHR.addEventListener.mockImplementation((event, handler) => {
+                if (event === "load") {
+                    setTimeout(() => {
+                        mockXHR.response = { error: "Permission denied" };
+                        handler();
+                    }, 0);
+                }
+            });
+
+            await uploader.updateImageAttributes(
+                { id: "image-123", title: "Title" } as ImageDOMAttrs,
+                mockView,
+            );
+
+            expect(showUploadAlert).toHaveBeenCalledWith(
+                mockView,
+                [{ message: "Permission denied" }],
+                "Saving image details failed",
+            );
+            expect(clearUploadAlert).not.toHaveBeenCalled();
+        });
+
+        it("should show a translated fallback on errors without a message", async () => {
+            vi.spyOn(console, "error").mockImplementation(() => {});
+            mockXHR.addEventListener.mockImplementation((event, handler) => {
+                if (event === "error") setTimeout(() => handler(), 0);
+            });
+
+            await uploader.updateImageAttributes(
+                { id: "image-123", title: "Title" } as ImageDOMAttrs,
+                mockView,
+            );
+
+            expect(showUploadAlert).toHaveBeenCalledWith(
+                mockView,
+                [{ message: "Saving failed, please try again" }],
+                "Saving image details failed",
+            );
+        });
+
+        it("should clear the alert when the update succeeds", async () => {
+            mockXHR.addEventListener.mockImplementation((event, handler) => {
+                if (event === "load") {
+                    setTimeout(() => {
+                        mockXHR.response = { id: "image-123" };
+                        handler();
+                    }, 0);
+                }
+            });
+
+            await uploader.updateImageAttributes(
+                { id: "image-123", title: "Title" } as ImageDOMAttrs,
+                mockView,
+            );
+
+            expect(clearUploadAlert).toHaveBeenCalledWith(mockView);
+            expect(showUploadAlert).not.toHaveBeenCalled();
+        });
+
         it("should not insert image if no src in response", async () => {
             const mockAttrs = {
                 id: "image-123",

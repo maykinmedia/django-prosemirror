@@ -80,4 +80,6 @@ export const en: IDPMTranslations = {
     "Upload failed, please try again": "Upload failed, please try again",
     "Dismiss": "Dismiss",
     "This file is not a supported image": "This file is not a supported image",
+    "Saving image details failed": "Saving image details failed",
+    "Saving failed, please try again": "Saving failed, please try again",
 };
