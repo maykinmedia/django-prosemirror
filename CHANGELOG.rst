@@ -8,6 +8,9 @@ the GitHub releases page.
 0.12.0 (2026-10-14)
 ===================
 
+Security release for the editor's bundled prosemirror-view, which could run
+attacker-provided JavaScript when HTML was pasted into the editor.
+
 **Security fixes**
 
 See `GHSA-c5fc-4gr4-83qw

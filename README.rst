@@ -3,7 +3,7 @@
 django-prosemirror
 ==================
 
-:Version: 0.11.1
+:Version: 0.12.0
 :Source: https://github.com/maykinmedia/django-prosemirror
 :Keywords: Django, Prosemirror, rich-text, editor, document, JSON, WYSIWYG, content editor, text editor, markdown, html
 :PythonVersion: 3.12+
