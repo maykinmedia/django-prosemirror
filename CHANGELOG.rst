@@ -5,6 +5,15 @@ Changelog
 This changelog starts at 0.9.0. For earlier releases, see the git history and
 the GitHub releases page.
 
+0.13.0 (2026-10-14)
+===================
+
+**Project maintenance**
+
+* Updated the development dependencies undici, brace-expansion and
+  @humanfs/node for their security advisories. They are only used to build and
+  test the package, so the installed package doesn't change.
+
 0.12.0 (2026-10-14)
 ===================
 
