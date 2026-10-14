@@ -5,6 +5,18 @@ Changelog
 This changelog starts at 0.9.0. For earlier releases, see the git history and
 the GitHub releases page.
 
+0.12.0 (2026-10-14)
+===================
+
+**Security fixes**
+
+See `GHSA-c5fc-4gr4-83qw
+<https://github.com/maykinmedia/django-prosemirror/security/advisories/GHSA-c5fc-4gr4-83qw>`_.
+
+* Updated the bundled prosemirror-view to 1.42.6. Before 1.42.3, pasting
+  attacker-provided HTML into the editor could run the attacker's JavaScript
+  in the page with the editor.
+
 0.11.1 (2026-10-14)
 ===================
 
