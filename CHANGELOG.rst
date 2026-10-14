@@ -8,6 +8,9 @@ the GitHub releases page.
 0.11.1 (2026-10-14)
 ===================
 
+Fixes the ``check_filer_images`` command from 0.11.0, which could crash with
+django-filer versions before 3.6.
+
 **Bugfixes**
 
 * Fixed ``check_filer_images`` with django-filer versions before 3.6. It
