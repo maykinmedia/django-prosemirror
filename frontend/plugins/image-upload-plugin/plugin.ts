@@ -1,5 +1,5 @@
 import { Plugin, PluginKey } from "prosemirror-state";
-import { UploadImage } from "./upload";
+import { isAllowedImageFile, UploadImage } from "./upload";
 import { IDPMSettings } from "@/types/types";
 
 export interface ImageUploadMethods {
@@ -38,9 +38,7 @@ export const uploadPlugin = (settings: IDPMSettings) => {
             handleDOMEvents: {
                 drop(view, event) {
                     const files = Array.from(event.dataTransfer?.files || []);
-                    const imageFiles = files.filter((file) =>
-                        file.type.startsWith("image/"),
-                    );
+                    const imageFiles = files.filter(isAllowedImageFile);
 
                     if (imageFiles.length > 0) {
                         event.preventDefault();
@@ -59,9 +57,7 @@ export const uploadPlugin = (settings: IDPMSettings) => {
                 },
                 paste(view, event) {
                     const files = Array.from(event.clipboardData?.files || []);
-                    const imageFiles = files.filter((file) =>
-                        file.type.startsWith("image/"),
-                    );
+                    const imageFiles = files.filter(isAllowedImageFile);
 
                     if (imageFiles.length > 0) {
                         event.preventDefault();

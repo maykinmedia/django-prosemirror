@@ -2,7 +2,35 @@ import { Attrs, Schema } from "prosemirror-model";
 import { EditorView } from "prosemirror-view";
 import { insertImage } from "@/utils";
 import crelt from "crelt";
+import { fileTypeFromBlob } from "file-type";
 import { ImageDOMAttrs, ImageNodeAttrs } from "@/schema/nodes/image";
+import { translate } from "@/i18n/translations";
+import { clearUploadAlert, showUploadAlert, UploadFailure } from "./alert";
+
+/**
+ * Image types the upload endpoint accepts. Keep in sync with
+ * ALLOWED_IMAGE_FORMATS in django_prosemirror/constants.py.
+ */
+export const ALLOWED_IMAGE_MIME_TYPES = [
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+];
+const ALLOWED_IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
+
+export const isAllowedImageFile = (file: File): boolean =>
+    ALLOWED_IMAGE_MIME_TYPES.includes(file.type);
+
+/**
+ * Check the actual file content (magic bytes) instead of the type the browser
+ * derives from the extension. The server validates this as well, this only
+ * prevents uploading files that will be rejected anyway.
+ */
+export const hasAllowedImageContent = async (file: File): Promise<boolean> => {
+    const detected = await fileTypeFromBlob(file);
+    return !!detected && ALLOWED_IMAGE_MIME_TYPES.includes(detected.mime);
+};
 
 export type UploadOptions = {
     attrs: Attrs;
@@ -25,6 +53,41 @@ export type FilerResponseBody = {
 };
 
 /**
+ * The CSRF token to send with requests to the upload endpoints: from the
+ * page's `{% csrf_token %}` input, else from Django's CSRF cookie (with its
+ * default name, `csrftoken`).
+ */
+export const getCSRFToken = (): string | undefined =>
+    document.querySelector<HTMLInputElement>("[name=csrfmiddlewaretoken]")
+        ?.value ||
+    document.cookie
+        .split("; ")
+        .find((cookie) => cookie.startsWith("csrftoken="))
+        ?.slice("csrftoken=".length) ||
+    undefined;
+
+/**
+ * Error body returned by the upload/edit endpoints.
+ */
+export type FilerErrorBody = {
+    error?: string;
+    errors?: Record<string, string[]>;
+};
+
+/**
+ * Get a human readable message from an error response, preferring the form
+ * field errors (e.g. "Upload a valid image.") over the generic `error`.
+ */
+export const getErrorMessage = (
+    body: FilerErrorBody | null,
+    fallback: string,
+): string => {
+    const fieldErrors = Object.values(body?.errors ?? {}).flat();
+    if (fieldErrors.length > 0) return fieldErrors.join(" ");
+    return body?.error || fallback;
+};
+
+/**
  * CRUD handler to manupilate images inside the filer.
  */
 export class UploadImage {
@@ -40,8 +103,6 @@ export class UploadImage {
     private readonly errors = {
         fetch: (imageId?: string) =>
             `Failed to fetch image data${imageId ? ` for image: ${imageId}` : ""}`,
-        patch: (imageId?: string) =>
-            `Failed to update image data${imageId ? ` for image: ${imageId}` : ""}`,
         upload: (fileName?: string) =>
             `Failed to upload file${fileName ? `: ${fileName}` : ""}`,
         noEndpoint: "Upload failed: No endpoint configured",
@@ -59,10 +120,16 @@ export class UploadImage {
     async uploadAndInsertFiles(files: File[], view?: EditorView) {
         let firstResult = null;
         let successCount = 0;
+        const failures: UploadFailure[] = [];
 
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
             try {
+                if (!(await hasAllowedImageContent(file)))
+                    throw new Error(
+                        translate("This file is not a supported image"),
+                    );
+
                 // Perform the HTTP upload
                 const res = await this.post(file);
 
@@ -85,11 +152,23 @@ export class UploadImage {
                 if (view && imageAttrs.src) insertImage(imageAttrs, view);
             } catch (err) {
                 console.error(this.errors.upload(file.name), err);
+                failures.push({
+                    fileName: file.name,
+                    message:
+                        err instanceof Error
+                            ? err.message
+                            : translate("Upload failed, please try again"),
+                });
                 // Return error object for failed uploads
                 if (i === 0) {
                     firstResult = { src: "", title: "", alt: "" };
                 }
             }
+        }
+
+        if (view) {
+            if (failures.length > 0) showUploadAlert(view, failures);
+            else clearUploadAlert(view);
         }
 
         // Log warning for partial success in multiple file uploads
@@ -145,8 +224,25 @@ export class UploadImage {
 
             // If view and schema provided, insert into view
             if (view && imageAttrs.src) insertImage(imageAttrs, view);
+            if (view) clearUploadAlert(view);
         } catch (err) {
             console.error(this.errors.patchFailed, err);
+            if (view) {
+                showUploadAlert(
+                    view,
+                    [
+                        {
+                            message:
+                                err instanceof Error
+                                    ? err.message
+                                    : translate(
+                                          "Saving failed, please try again",
+                                      ),
+                        },
+                    ],
+                    translate("Saving image details failed"),
+                );
+            }
         }
     }
 
@@ -156,7 +252,10 @@ export class UploadImage {
     uploadImage(view: EditorView): boolean {
         const fileInput = crelt("input", {
             type: "file",
-            accept: "image/*",
+            accept: [
+                ...ALLOWED_IMAGE_MIME_TYPES,
+                ...ALLOWED_IMAGE_EXTENSIONS,
+            ].join(","),
             hidden: true,
         }) as HTMLInputElement;
 
@@ -189,7 +288,7 @@ export class UploadImage {
 
         return this.send<FilerResponseBody>(
             "POST",
-            this.errors.upload(file.name),
+            translate("Upload failed, please try again"),
             this.endpoint,
             formData,
         );
@@ -222,7 +321,7 @@ export class UploadImage {
 
         return this.send(
             "PATCH", // Change to POST so Django populates request.POST
-            this.errors.patch(data.id),
+            translate("Saving failed, please try again"),
             endpoint,
             params.toString(), // Send as URL-encoded string
         );
@@ -261,8 +360,8 @@ export class UploadImage {
 
             xhr.addEventListener("load", () => {
                 const response = xhr.response;
-                if (!response || response.error) {
-                    reject(new Error(response?.error?.message || genericError));
+                if (!response || response.error || xhr.status >= 400) {
+                    reject(new Error(getErrorMessage(response, genericError)));
                 } else {
                     resolve(response);
                 }
@@ -275,10 +374,8 @@ export class UploadImage {
                 reject(new Error(this.errors.uploadAborted)),
             );
 
-            // Add CSRF token if available
-            const csrfToken = document.querySelector<HTMLInputElement>(
-                "[name=csrfmiddlewaretoken]",
-            )?.value;
+            // The endpoints require a CSRF token for POST and PATCH.
+            const csrfToken = getCSRFToken();
 
             if (csrfToken) xhr.setRequestHeader("X-CSRFToken", csrfToken);
 

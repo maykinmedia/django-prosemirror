@@ -3,7 +3,7 @@
 django-prosemirror
 ==================
 
-:Version: 0.10.0
+:Version: 0.13.0
 :Source: https://github.com/maykinmedia/django-prosemirror
 :Keywords: Django, Prosemirror, rich-text, editor, document, JSON, WYSIWYG, content editor, text editor, markdown, html
 :PythonVersion: 3.12+
@@ -361,11 +361,100 @@ Frontend Integration
         {% include_django_prosemirror_js_defer %}
     </head>
     <body>
-        {{ form.as_p }}
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+        </form>
     </body>
     </html>
 
 **Note**: These assets are only required for form rendering (editing). Displaying saved content using ``{{ post.content.html }}`` in templates does not require these assets.
+
+Image uploads
+-------------
+
+With django-filer installed, the editor uploads images through the endpoints
+in ``django_prosemirror.urls``. Only staff users can use them, and they need
+django-filer's image permissions: "Can add image" to upload an image, "Can
+change image" to view and edit its details. With a custom
+``FILER_IMAGE_MODEL``, the permissions are that model's.
+
+Uploading and editing images needs a CSRF token. The editor sends the one from
+the page's ``{% csrf_token %}``, so render it on pages with the editor, for
+example in the form around it; the Django admin already does. Without it, the
+editor falls back to the CSRF cookie with its default name, ``csrftoken``.
+
+.. warning::
+
+   These endpoints don't apply django-filer's per-file and folder permissions
+   (``FILER_ENABLE_PERMISSIONS``). A staff user with "Can change image" can
+   view and edit the details (name, description and caption) of any filer
+   image on the site through them, including private images and images in
+   folders that the filer admin hides from them. If your site relies on folder
+   permissions to separate staff, only give "Can change image" to staff who
+   may see and edit all images.
+
+Images uploaded through the editor are checked before they are stored:
+
+* Only JPEG, PNG, GIF and WebP files are accepted (``.jpg``, ``.jpeg``,
+  ``.png``, ``.gif``, ``.webp``), and the file content must be an image of the
+  format its extension says. SVG is not accepted.
+* The upload must not exceed ``max_image_upload_size`` bytes (default 10 MiB,
+  ``None`` for no limit):
+
+  .. code-block:: python
+
+      DJANGO_PROSEMIRROR = {
+          "max_image_upload_size": 5 * 1024 * 1024,
+      }
+
+* django-filer's upload policy applies, as for uploads through the filer
+  admin: ``FILER_MIME_TYPE_WHITELIST`` and the file validators configured with
+  ``FILER_ADD_FILE_VALIDATORS``.
+
+Checking stored images
+----------------------
+
+Before 0.11.0, the image upload endpoint accepted any file. If you ran an
+earlier version with django-filer, unsafe files may be stored as filer images,
+e.g. SVGs with scripts or HTML with an image extension. Check them with:
+
+.. code-block:: bash
+
+    python manage.py check_filer_images --hide-ok --base-url https://example.com
+
+Each image gets a verdict:
+
+* ``SUSPICIOUS``: review it in the admin, and delete it if it can't be
+  explained. Don't open the file itself, from the admin or the report: opened
+  directly in a browser, its scripts may run. The file isn't an image, an SVG
+  contains possible scripts, the file would be served with a non-image content
+  type, or it fails another check.
+* ``UNCHECKED``: the file exists but couldn't be read, or checking it failed,
+  e.g. due to a bug in a django-filer version. The reason says which. Run the
+  command again once it is resolved.
+* ``NOTE``: wouldn't be accepted as an upload today, but can't run code, e.g.
+  an SVG without scripts or an image with the wrong extension. An image that
+  is otherwise OK also gets a note if its uploader isn't a current staff
+  member (an active user with ``is_staff``), since only staff can upload today.
+* ``OK``: passes the upload validation and was uploaded by a current staff
+  member.
+
+The table lists every image, worst first, with whether the uploader is a
+current staff member and a link to each image's admin page. ``--hide-ok``
+leaves out the images that are OK, to list only those that need attention.
+``--format csv`` writes the report as CSV with all details, for use in a
+spreadsheet, and ``--output`` writes the report to a file. ``--base-url`` makes
+the links absolute; it defaults to the current site's domain if
+``django.contrib.sites`` is installed. The command exits with status 3 if any
+image is suspicious, else with status 4 if any image is unchecked. Status 1
+means the command failed (for example, the database couldn't be reached), and
+status 2 that its arguments are invalid.
+
+Add your own checks with ``--validator path.to.check``: a function that takes
+the filer image and its file content (bytes) and raises ``ValidationError`` if
+the image fails, which makes the image suspicious. Any other exception stops
+the command with status 1.
 
 Data migrations
 ===============

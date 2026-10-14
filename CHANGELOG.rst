@@ -5,6 +5,109 @@ Changelog
 This changelog starts at 0.9.0. For earlier releases, see the git history and
 the GitHub releases page.
 
+0.13.0 (2026-10-14)
+===================
+
+**Project maintenance**
+
+* Updated the development dependencies undici, brace-expansion and
+  @humanfs/node for their security advisories. They are only used to build and
+  test the package, so the installed package doesn't change.
+
+0.12.0 (2026-10-14)
+===================
+
+Security release for the editor's bundled prosemirror-view, which could run
+attacker-provided JavaScript when HTML was pasted into the editor.
+
+**Security fixes**
+
+See `GHSA-c5fc-4gr4-83qw
+<https://github.com/maykinmedia/django-prosemirror/security/advisories/GHSA-c5fc-4gr4-83qw>`_.
+
+* Updated the bundled prosemirror-view to 1.42.6. Before 1.42.3, pasting
+  attacker-provided HTML into the editor could run the attacker's JavaScript
+  in the page with the editor.
+
+0.11.1 (2026-10-14)
+===================
+
+Fixes the ``check_filer_images`` command from 0.11.0, which could crash with
+django-filer versions before 3.6.
+
+**Bugfixes**
+
+* Fixed ``check_filer_images`` with django-filer versions before 3.6. It
+  crashed on SVGs with possible scripts, and before filer 3.5 also on SVGs
+  that filer's ``sanitize_svg`` couldn't redraw, such as those with embedded
+  images. Before filer 3.5, damaged SVGs are reported as "SVG without
+  scripts".
+* ``check_filer_images`` no longer stops when checking an image fails, e.g.
+  due to a difference between django-filer versions: that image is reported as
+  ``UNCHECKED``, with the error as its reason.
+* The ``images`` extra requires django-filer 3.2.2 or later, the first release
+  that allows Django 5.2. Earlier releases couldn't be installed with this
+  package's supported Django versions anyway.
+
+0.11.0 (2026-10-08)
+===================
+
+Security release for the editor's image upload and edit endpoints: they now
+require staff users with django-filer's image permissions and a CSRF token,
+and only accept valid JPEG, PNG, GIF and WebP images. A new management command
+finds unsafe files that earlier versions may have stored. Check the breaking
+changes before upgrading.
+
+**Security fixes**
+
+See `GHSA-5qm8-wqjq-3jw8
+<https://github.com/maykinmedia/django-prosemirror/security/advisories/GHSA-5qm8-wqjq-3jw8>`_.
+
+* Restricted the image upload and edit endpoints to staff users with
+  django-filer's permission to add images (upload) or change images (edit).
+  Previously any logged-in user could upload files and view and edit any filer
+  image's details. With a custom ``FILER_IMAGE_MODEL``, that model's
+  permissions apply. The endpoints don't apply django-filer's folder
+  permissions; see the warning under "Image uploads" in the README.
+* Removed the CSRF exemption of the image upload and edit endpoints. Previously
+  a page on a sibling subdomain, or on any site with
+  ``SESSION_COOKIE_SAMESITE = "None"``, could upload files with a logged-in
+  user's session.
+* Validated image uploads through the editor. Previously the endpoint stored
+  any file as a filer image, e.g. an SVG with scripts or HTML with an image
+  extension. Only JPEG, PNG, GIF and WebP files are accepted now, and Pillow
+  must detect the format the extension says. django-filer's upload policy
+  (``FILER_MIME_TYPE_WHITELIST`` and file validators) applies as well, and
+  uploads are limited to ``max_image_upload_size`` (default 10 MiB).
+
+**Breaking changes**
+
+* Editors now need staff status and django-filer's "Can add image" and "Can
+  change image" permissions to upload and edit images in the editor (see
+  Security fixes); without them the endpoints answer with 403.
+* Uploading and editing images in the editor needs a CSRF token. The editor
+  sends the one from the page's ``{% csrf_token %}``, else from the
+  ``csrftoken`` cookie; the Django admin and forms that render
+  ``{% csrf_token %}`` need no changes. Without a token, the endpoints answer
+  with 403.
+* SVGs and image formats other than JPEG, PNG, GIF and WebP can no longer be
+  uploaded in the editor.
+* The ``images`` extra requires django-filer 3.0 or later.
+
+**New features**
+
+* Added the ``check_filer_images`` management command. It checks the images
+  stored in django-filer for unsafe files that the upload endpoint of earlier
+  versions accepted, such as SVGs with scripts or HTML with an image extension,
+  and reports which ones to review. See "Checking stored images" in the README.
+* The editor shows failed image uploads, and failed saves of an image's title,
+  description or caption, in an alert above the editor, with the reason, e.g.
+  a file that isn't a supported image or a missing permission. Previously
+  failures were only logged to the browser console.
+* The editor checks a file's content before uploading it, and doesn't send
+  files that aren't JPEG, PNG, GIF or WebP images. The server still checks
+  every upload.
+
 0.10.0 (2026-09-28)
 ===================
 

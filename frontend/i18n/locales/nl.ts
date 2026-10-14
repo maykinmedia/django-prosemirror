@@ -76,4 +76,11 @@ export const nl: IDPMTranslations = {
     "Enter image description": "Typ een beschrijving",
     "Caption": "Caption",
     "Enter image caption": "Typ een caption",
+    "Image upload failed": "Afbeelding uploaden mislukt",
+    "Upload failed, please try again": "Uploaden mislukt, probeer het opnieuw",
+    "Dismiss": "Sluiten",
+    "This file is not a supported image":
+        "Dit bestand is geen ondersteunde afbeelding",
+    "Saving image details failed": "Afbeeldingsgegevens opslaan mislukt",
+    "Saving failed, please try again": "Opslaan mislukt, probeer het opnieuw",
 };

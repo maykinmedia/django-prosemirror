@@ -4,6 +4,9 @@ These tests are designed to run in nofiler environments where filer is not insta
 They verify that basic functionality works without IMAGE node types.
 """
 
+from io import StringIO
+
+from django.core.management import call_command
 from django.test import TestCase
 from django.urls import NoReverseMatch, reverse
 
@@ -82,3 +85,12 @@ class TestNoFilerCompatibility(TestCase):
 
         with self.assertRaises(NoReverseMatch):
             reverse("filer_edit_handler", kwargs={"image_pk": "1"})
+
+    def test_check_filer_images_command_skips_without_filer(self):
+        stdout, stderr = StringIO(), StringIO()
+
+        # Exits normally: no CommandError, so exit status 0.
+        call_command("check_filer_images", stdout=stdout, stderr=stderr)
+
+        self.assertEqual(stdout.getvalue(), "")
+        self.assertIn("django-filer is not installed", stderr.getvalue())

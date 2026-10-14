@@ -10,6 +10,7 @@ class ProseMirrorConfig(TypedDict):
     allowed_node_types: list[str]
     allowed_mark_types: list[str]
     history: bool
+    max_image_upload_size: int | None
 
 
 def get_empty_doc() -> dict:
@@ -18,6 +19,18 @@ def get_empty_doc() -> dict:
 
 
 SETTINGS_KEY = "DJANGO_PROSEMIRROR"
+
+# Image file extensions accepted for filer images, mapped to the formats Pillow may
+# detect in the file content. MPO is a JPEG with additional images appended, as
+# taken by some cameras. Mirrored in
+# frontend/plugins/image-upload-plugin/upload.ts; keep both in sync.
+ALLOWED_IMAGE_FORMATS: dict[str, tuple[str, ...]] = {
+    "jpg": ("JPEG", "MPO"),
+    "jpeg": ("JPEG", "MPO"),
+    "png": ("PNG",),
+    "gif": ("GIF",),
+    "webp": ("WEBP",),
+}
 
 _default_node_types = [
     "paragraph",
@@ -55,4 +68,6 @@ DEFAULT_SETTINGS: ProseMirrorConfig = {
         "strikethrough",
     ],
     "history": True,
+    # Maximum size of an image upload in bytes, or None for no limit.
+    "max_image_upload_size": 10 * 1024 * 1024,
 }
