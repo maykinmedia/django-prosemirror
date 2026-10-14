@@ -316,17 +316,34 @@ def check_image_file(name: str, data: bytes) -> list[str]:
     return [str(error) for error in form.errors["upload_file"]]
 
 
+def _version_tuple(version: str) -> tuple[int, ...]:
+    """The leading numeric parts of a version, e.g. (3, 5) for "3.5.0rc1"."""
+    parts = []
+    for part in version.split("."):
+        if not part.isdigit():
+            break
+        parts.append(int(part))
+    return tuple(parts)
+
+
 def check_svg_file(name: str, data: bytes, owner) -> dict[str, str | None]:
     """Run filer's SVG validators on a copy of the file.
 
     Returns the error per validator, or None if it passes. Note that
     ``sanitize_svg`` only fails on SVGs it can't parse: it strips scripts rather
-    than rejecting them, which ``validate_svg`` does.
+    than rejecting them, which ``validate_svg`` does. Before filer 3.5,
+    ``sanitize_svg`` redraws the SVG with svglib instead, which fails for other
+    reasons than damage (e.g. on embedded images), so its result is left out.
     """
-    from filer.validation import sanitize_svg, validate_svg
+    import filer
+    from filer import validation
+
+    validators = [validation.validate_svg]
+    if _version_tuple(filer.__version__) >= (3, 5):
+        validators.append(validation.sanitize_svg)
 
     results: dict[str, str | None] = {}
-    for validator in (validate_svg, sanitize_svg):
+    for validator in validators:
         try:
             with warnings.catch_warnings():
                 # validate_svg warns that it is deprecated whenever it rejects.
@@ -346,18 +363,26 @@ def _svg_triggers(data: bytes) -> list[str]:
     """What makes filer's validate_svg reject the SVG, as it checks it."""
     from filer.validation import TRIGGER_XSS_THREAD
 
-    content = unescape(data.decode("utf-8", errors="replace").lower())
-    return list(dict.fromkeys(t for t in TRIGGER_XSS_THREAD if t in content))
+    # Older filer versions define the triggers as bytes and match them against
+    # the raw file rather than its unescaped content: check both.
+    raw = data.decode("utf-8", errors="replace").lower()
+    contents = (raw, unescape(raw))
+    triggers = (t.decode() if isinstance(t, bytes) else t for t in TRIGGER_XSS_THREAD)
+    return list(dict.fromkeys(t for t in triggers if any(t in c for c in contents)))
 
 
 def _svg_findings(name: str, data: bytes, owner) -> list[Finding]:
-    results = check_svg_file(name, data, owner)
-    if results["validate_svg"] == "Not valid UTF-8.":
+    # Checked here, as older filer versions match their triggers against the
+    # raw bytes, which misses scripts in e.g. UTF-16.
+    try:
+        data.decode("utf-8")
+    except UnicodeDecodeError:
         return [Finding(Verdict.SUSPICIOUS, "SVG that can't be checked: not UTF-8")]
+    results = check_svg_file(name, data, owner)
     if results["validate_svg"]:
         triggers = ", ".join(_svg_triggers(data))
         return [Finding(Verdict.SUSPICIOUS, f"SVG with possible scripts: {triggers}")]
-    if results["sanitize_svg"]:
+    if results.get("sanitize_svg"):
         return [Finding(Verdict.NOTE, "Damaged SVG, without scripts")]
     return [Finding(Verdict.NOTE, "SVG without scripts")]
 

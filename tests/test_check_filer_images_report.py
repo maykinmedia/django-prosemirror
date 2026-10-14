@@ -16,6 +16,7 @@ from django_prosemirror.management.utils.check_filer_images import (
     UnresolvableURLError,
     Verdict,
     _is_current_staff_member,
+    _svg_triggers,
     _uploader,
     absolute_url,
     resolve_base_url,
@@ -400,3 +401,18 @@ def test_is_current_staff_member_with_custom_user_models(owner, expected):
 def test_resolve_base_url_without_sites_framework():
     # The test app doesn't install django.contrib.sites.
     assert resolve_base_url() == ""
+
+
+@pytest.mark.parametrize(
+    "triggers",
+    [("onload=", "<script"), (b"onload=", b"<script")],
+    ids=["str", "bytes"],
+)
+def test_svg_triggers_with_str_or_bytes_triggers(triggers):
+    # Older filer versions define TRIGGER_XSS_THREAD as bytes.
+    pytest.importorskip("filer")
+    with patch("filer.validation.TRIGGER_XSS_THREAD", triggers):
+        assert _svg_triggers(b'<svg onload="x"><SCRIPT></SCRIPT></svg>') == [
+            "onload=",
+            "<script",
+        ]

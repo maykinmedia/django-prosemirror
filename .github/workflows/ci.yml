@@ -104,7 +104,7 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
-  nofiler-tests:
+  unit-tests:
     runs-on: ubuntu-latest
     needs: [build-frontend]
     permissions:
@@ -113,8 +113,14 @@ jobs:
       matrix:
         python: ["3.12", "3.13", "3.14"]
         django: ["5.2", "6.0", "6.1"]
+        variant: ["nofiler"]
+        include:
+          # The oldest django-filer that the images extra allows
+          - python: "3.12"
+            django: "5.2"
+            variant: "filermin"
 
-    name: Run nofiler tests (Python ${{ matrix.python }}, Django ${{ matrix.django }})
+    name: Run ${{ matrix.variant }} tests (Python ${{ matrix.python }}, Django ${{ matrix.django }})
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -137,12 +143,12 @@ jobs:
       - name: Install dependencies
         run: pip install tox tox-gh-actions
 
-      - name: Run nofiler tests
+      - name: Run ${{ matrix.variant }} tests
         run: tox
         env:
           PYTHON_VERSION: ${{ matrix.python }}
           DJANGO: ${{ matrix.django }}
-          VARIANT: nofiler
+          VARIANT: ${{ matrix.variant }}
 
       - name: Publish coverage report
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
@@ -152,7 +158,7 @@ jobs:
   publish:
     name: Publish package to PyPI
     runs-on: ubuntu-latest
-    needs: [tests, nofiler-tests]
+    needs: [tests, unit-tests]
     environment: release
     permissions:
       contents: read

@@ -19,17 +19,22 @@ from django.utils import timezone
 import pytest
 
 from django_prosemirror.management.utils.check_filer_images import (
+    _version_tuple,
     check_filer_images,
     check_image_file,
     check_svg_file,
 )
 
 try:
+    import filer
     from filer import settings as filer_settings
     from filer.models import File, Image
     from PIL import Image as PILImage
 except ModuleNotFoundError:
     pytest.skip("filer not available", allow_module_level=True)
+
+# Before 3.5, filer's sanitize_svg isn't used, and validate_svg checks bytes.
+FILER_35 = _version_tuple(filer.__version__) >= (3, 5)
 
 
 def image_bytes(format="PNG", **save_kwargs):
@@ -92,6 +97,7 @@ class CheckImageFileTests(TestCase):
 
 
 class CheckSvgFileTests(TestCase):
+    @pytest.mark.skipif(not FILER_35, reason="needs django-filer 3.5")
     def test_malicious_svg_fails_validate_svg(self):
         results = check_svg_file("evil.svg", MALICIOUS_SVG, None)
 
@@ -99,16 +105,26 @@ class CheckSvgFileTests(TestCase):
         # sanitize_svg strips the script instead of rejecting the file.
         self.assertIsNone(results["sanitize_svg"])
 
+    @pytest.mark.skipif(not FILER_35, reason="needs django-filer 3.5")
     def test_benign_svg_passes(self):
         results = check_svg_file("image.svg", BENIGN_SVG, None)
 
         self.assertEqual(results, {"validate_svg": None, "sanitize_svg": None})
 
+    @pytest.mark.skipif(not FILER_35, reason="needs django-filer 3.5")
     def test_unparseable_svg_fails_sanitize_svg(self):
         results = check_svg_file("broken.svg", b"<svg><unclosed></svg>", None)
 
         self.assertIn("incompatible format", results["sanitize_svg"])
 
+    def test_without_sanitize_svg_before_filer_35(self):
+        with patch.object(filer, "__version__", "3.4.4"):
+            results = check_svg_file("evil.svg", MALICIOUS_SVG, None)
+
+        self.assertEqual(list(results), ["validate_svg"])
+        self.assertIn("cross site scripting", results["validate_svg"])
+
+    @pytest.mark.skipif(not FILER_35, reason="needs django-filer 3.5")
     def test_non_utf8_svg_fails_validate_svg(self):
         results = check_svg_file("latin1.svg", b"<svg>\xe9</svg>", None)
 
@@ -206,7 +222,8 @@ class CheckFilerImagesCommandTests(TestCase):
             "broken.svg": (
                 b"<svg><unclosed></svg>",
                 "NOTE",
-                "Damaged SVG, without scripts",
+                # Before filer 3.5, damage isn't detected.
+                "Damaged SVG, without scripts" if FILER_35 else "SVG without scripts",
             ),
             "page.png": (PAYLOAD, "SUSPICIOUS", "Not an image, served as image/png"),
             "page.html": (PAYLOAD, "SUSPICIOUS", "Not an image, served as text/html"),

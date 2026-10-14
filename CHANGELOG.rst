@@ -5,6 +5,20 @@ Changelog
 This changelog starts at 0.9.0. For earlier releases, see the git history and
 the GitHub releases page.
 
+0.11.1 (2026-10-14)
+===================
+
+**Bugfixes**
+
+* Fixed ``check_filer_images`` with django-filer versions before 3.6. It
+  crashed on SVGs with possible scripts, and before filer 3.5 also on SVGs
+  that filer's ``sanitize_svg`` couldn't redraw, such as those with embedded
+  images. Before filer 3.5, damaged SVGs are reported as "SVG without
+  scripts".
+* The ``images`` extra requires django-filer 3.2.2 or later, the first release
+  that allows Django 5.2. Earlier releases couldn't be installed with this
+  package's supported Django versions anyway.
+
 0.11.0 (2026-10-08)
 ===================
 

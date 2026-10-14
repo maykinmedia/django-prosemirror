@@ -62,7 +62,7 @@ tests = [
     # "django-stubs",
 ]
 images = [
-    "django-filer>=3.0",
+    "django-filer>=3.2.2",
 ]
 docs = [
     "sphinx",
