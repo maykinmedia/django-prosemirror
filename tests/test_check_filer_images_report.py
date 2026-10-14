@@ -292,7 +292,7 @@ def test_table_columns_fit_the_longest_value():
             [make_check(UNCHECKED), make_check(UNCHECKED), make_check()],
             "Checked 3 images: 0 suspicious, 2 unchecked, 0 notes, 1 OK. "
             "Nothing suspicious found, but 2 images could not be checked; run "
-            "again once the files can be read.",
+            "again once the reasons are resolved.",
             id="unchecked",
         ),
         pytest.param(

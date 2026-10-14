@@ -15,6 +15,9 @@ the GitHub releases page.
   that filer's ``sanitize_svg`` couldn't redraw, such as those with embedded
   images. Before filer 3.5, damaged SVGs are reported as "SVG without
   scripts".
+* ``check_filer_images`` no longer stops when checking an image fails, e.g.
+  due to a difference between django-filer versions: that image is reported as
+  ``UNCHECKED``, with the error as its reason.
 * The ``images`` extra requires django-filer 3.2.2 or later, the first release
   that allows Django 5.2. Earlier releases couldn't be installed with this
   package's supported Django versions anyway.

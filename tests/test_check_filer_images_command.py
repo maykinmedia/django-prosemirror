@@ -534,9 +534,27 @@ class CheckFilerImagesCommandTests(TestCase):
                     error,
                     "Checked 1 image: 0 suspicious, 1 unchecked, 0 notes, 0 OK. "
                     "Nothing suspicious found, but 1 image could not be checked; "
-                    "run again once the files can be read.",
+                    "run again once the reasons are resolved.",
                 )
                 self.assertEqual(self.returncode, 4)
+
+    def test_failing_checks_are_unchecked(self):
+        # E.g. a filer version whose validator raises something unexpected.
+        svg = create_filer_image("logo.svg", BENIGN_SVG, self.staff)
+        png = create_filer_image("photo.png", image_bytes("PNG"), self.staff)
+
+        with patch(
+            "django_prosemirror.management.utils.check_filer_images.check_svg_file",
+            side_effect=OSError("Broken"),
+        ):
+            rows = self.csv_rows()
+
+        self.assertEqual(
+            (rows[str(svg.pk)]["Verdict"], rows[str(svg.pk)]["Reason"]),
+            ("UNCHECKED", "Could not check the file: OSError: Broken"),
+        )
+        self.assertEqual(rows[str(png.pk)]["Verdict"], "OK")
+        self.assertEqual(self.returncode, 4)
 
     def test_suspicious_takes_precedence_for_the_exit_status(self):
         create_filer_image("photo.png", image_bytes("PNG"), self.staff)

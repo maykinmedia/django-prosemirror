@@ -430,8 +430,9 @@ Each image gets a verdict:
   directly in a browser, its scripts may run. The file isn't an image, an SVG
   contains possible scripts, the file would be served with a non-image content
   type, or it fails another check.
-* ``UNCHECKED``: the file exists but couldn't be read. Run the command again
-  once it can.
+* ``UNCHECKED``: the file exists but couldn't be read, or checking it failed,
+  e.g. due to a bug in a django-filer version. The reason says which. Run the
+  command again once it is resolved.
 * ``NOTE``: wouldn't be accepted as an upload today, but can't run code, e.g.
   an SVG without scripts or an image with the wrong extension. An image that
   is otherwise OK also gets a note if its uploader isn't a current staff

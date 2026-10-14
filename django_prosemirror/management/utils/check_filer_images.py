@@ -11,8 +11,9 @@ Each image gets a :class:`Verdict` with the reasons for it:
   contains scripts, event handlers or embedded data, the file would be served
   with a non-image content type, it is rejected by the upload validation for
   another reason, or it fails a project's own check (a :data:`Validator`).
-* ``UNCHECKED``: the file exists but couldn't be read (e.g. a storage error), so
-  nothing is known about it. Worth checking again later.
+* ``UNCHECKED``: the file exists but couldn't be read (e.g. a storage error) or
+  checked (e.g. an error in a filer version), so nothing is known about it.
+  Worth checking again later.
 * ``NOTE``: wouldn't be accepted as an upload today, but can't run code: SVGs
   without scripts, images in an unsupported format or with the wrong
   extension, damaged images, records without a file, files missing from the
@@ -260,7 +261,7 @@ class FilerImageCheck:
             return (
                 f"{summary} Nothing suspicious found, but "
                 f"{_plural(unchecked, 'image')} could not be checked; run again "
-                "once the files can be read."
+                "once the reasons are resolved."
             )
         return f"{summary} Nothing suspicious found."
 
@@ -557,10 +558,24 @@ def check_filer_image(
     findings = []
     if data is None:
         findings.append(read_problem)
-    elif image.mime_type == "image/svg+xml" or stored_name.lower().endswith(".svg"):
-        findings += _svg_findings(stored_name, data, image.owner)
     else:
-        findings += _image_findings(stored_name, data)
+        is_svg = image.mime_type == "image/svg+xml" or stored_name.lower().endswith(
+            ".svg"
+        )
+        # The checks rely on filer and Pillow, whose behaviour differs between
+        # versions: a failing check shouldn't stop the other images' checks.
+        try:
+            if is_svg:
+                findings += _svg_findings(stored_name, data, image.owner)
+            else:
+                findings += _image_findings(stored_name, data)
+        except Exception as exc:
+            findings.append(
+                Finding(
+                    Verdict.UNCHECKED,
+                    f"Could not check the file: {type(exc).__name__}: {exc}",
+                )
+            )
 
     if validators and data is not None:
         findings += [

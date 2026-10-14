@@ -32,11 +32,11 @@ class Command(BaseCommand):
     help = (
         "Check all filer images. Each gets a verdict: SUSPICIOUS (review it, "
         "e.g. a file that isn't an image or an SVG with scripts), UNCHECKED (the "
-        "file couldn't be read), NOTE (wouldn't be accepted as an upload today, "
-        "but can't run code, or uploaded by someone who isn't a current staff "
-        "member) or OK. The summary is written to stderr. Exits with "
-        "status 3 if any image is suspicious, else with status 4 if any image "
-        "is unchecked. Status 1 means the command failed and 2 that its "
+        "file couldn't be read or checked), NOTE (wouldn't be accepted as an "
+        "upload today, but can't run code, or uploaded by someone who isn't a "
+        "current staff member) or OK. The summary is written to stderr. Exits "
+        "with status 3 if any image is suspicious, else with status 4 if any "
+        "image is unchecked. Status 1 means the command failed and 2 that its "
         "arguments are invalid."
     )
 
