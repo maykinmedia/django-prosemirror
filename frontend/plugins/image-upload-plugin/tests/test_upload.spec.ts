@@ -49,7 +49,9 @@ const mockXHR = {
 
 Object.defineProperty(window, "XMLHttpRequest", {
     writable: true,
-    value: vi.fn(() => mockXHR),
+    value: vi.fn(function () {
+        return mockXHR;
+    }),
 });
 
 describe("image-upload-plugin/upload", () => {

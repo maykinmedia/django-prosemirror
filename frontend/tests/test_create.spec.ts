@@ -9,11 +9,13 @@ Object.defineProperty(globalThis, "window", {
 
 // Mock ProseMirror modules
 vi.mock("prosemirror-view", () => ({
-    EditorView: vi.fn().mockImplementation(() => ({
-        state: { doc: { toJSON: () => ({ type: "doc", content: [] }) } },
-        updateState: vi.fn(),
-        dispatch: vi.fn(),
-    })),
+    EditorView: vi.fn().mockImplementation(function () {
+        return {
+            state: { doc: { toJSON: () => ({ type: "doc", content: [] }) } },
+            updateState: vi.fn(),
+            // ...
+        };
+    }),
 }));
 
 vi.mock("prosemirror-state", () => ({
@@ -46,15 +48,17 @@ vi.mock("prosemirror-model", () => ({
 
 // Mock the schema creation
 vi.mock("../schema/prosemirror-schema.ts", () => ({
-    default: vi.fn().mockImplementation(() => ({
-        schema: {
-            nodeFromJSON: vi.fn(() => ({
-                toJSON: () => ({ type: "doc", content: [] }),
-            })),
-            nodes: {},
-            marks: {},
-        },
-    })),
+    default: vi.fn().mockImplementation(function () {
+        return {
+            schema: {
+                nodeFromJSON: vi.fn(() => ({
+                    toJSON: () => ({ type: "doc", content: [] }),
+                })),
+                nodes: {},
+                marks: {},
+            },
+        };
+    }),
 }));
 
 vi.mock("../plugins/index.ts", () => ({
