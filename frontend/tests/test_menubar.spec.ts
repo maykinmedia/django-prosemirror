@@ -16,19 +16,29 @@ import { SAFE_URLS, UNSAFE_URLS } from "./test_sanitize.spec";
 
 // Mock ProseMirror menu components
 vi.mock("prosemirror-menu", () => ({
-    MenuItem: vi
-        .fn()
-        .mockImplementation((spec) => ({ spec, type: "MenuItem" })),
-    Dropdown: vi.fn().mockImplementation((content, options) => ({
-        content,
-        options,
-        type: "Dropdown",
-    })),
-    DropdownSubmenu: vi.fn().mockImplementation((content, options) => ({
-        content,
-        options,
-        type: "DropdownSubmenu",
-    })),
+    MenuItem: vi.fn().mockImplementation(function (spec: unknown) {
+        return { spec, type: "MenuItem" };
+    }),
+    Dropdown: vi.fn().mockImplementation(function (
+        content: unknown,
+        options: unknown,
+    ) {
+        return {
+            content,
+            options,
+            type: "Dropdown",
+        };
+    }),
+    DropdownSubmenu: vi.fn().mockImplementation(function (
+        content: unknown,
+        options: unknown,
+    ) {
+        return {
+            content,
+            options,
+            type: "DropdownSubmenu",
+        };
+    }),
     wrapItem: vi.fn().mockImplementation((nodeType, options) => ({
         nodeType,
         options,
@@ -57,10 +67,12 @@ vi.mock("prosemirror-schema-list", () => ({
 // Mock prompt functionality
 vi.mock("../plugins/menubar/prompt", () => ({
     openPrompt: vi.fn(),
-    TextField: vi.fn().mockImplementation((options) => ({
-        options,
-        type: "TextField",
-    })),
+    TextField: vi.fn().mockImplementation(function (options: unknown) {
+        return {
+            options,
+            type: "TextField",
+        };
+    }),
 }));
 
 // Mock icons

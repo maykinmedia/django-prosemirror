@@ -32,7 +32,7 @@ vi.mock("@/plugins/image-upload-plugin/upload", async (importOriginal) => ({
     ...(await importOriginal<
         typeof import("@/plugins/image-upload-plugin/upload")
     >()),
-    UploadImage: vi.fn().mockImplementation((endpoint) => {
+    UploadImage: vi.fn().mockImplementation(function (endpoint: string) {
         mockUploadImage(endpoint);
         return mockUploadImageInstance;
     }),
@@ -450,12 +450,11 @@ describe("image-upload-plugin/plugin", () => {
             } as MockDragEvent;
 
             const mockUploadImage = vi.fn();
-            vi.mocked(UploadImage).mockImplementation(
-                () =>
-                    ({
-                        uploadImage: mockUploadImage,
-                    }) as unknown as UploadImage,
-            );
+            vi.mocked(UploadImage).mockImplementation(function () {
+                return {
+                    uploadImage: mockUploadImage,
+                } as unknown as UploadImage;
+            });
 
             const result = dropHandler!.call(
                 plugin!,

@@ -12,10 +12,12 @@ vi.mock("@/utils", () => ({
 }));
 
 vi.mock("@/plugins/image-upload-plugin/upload", () => ({
-    UploadImage: vi.fn().mockImplementation(() => ({
-        handleImageUpload: vi.fn(),
-        uploadImage: vi.fn(),
-    })),
+    UploadImage: vi.fn().mockImplementation(function () {
+        return {
+            handleImageUpload: vi.fn(),
+            uploadImage: vi.fn(),
+        };
+    }),
 }));
 
 vi.mock("prosemirror-keymap", () => ({
@@ -97,13 +99,12 @@ describe("image-upload-plugin/keymap", () => {
             it("should handle image upload when image selected", () => {
                 vi.mocked(isImageSelected).mockReturnValue(true);
                 const mockUploadImage = vi.fn().mockReturnValue(true);
-                vi.mocked(UploadImage).mockImplementation(
-                    () =>
-                        ({
-                            handleImageUpload: vi.fn(),
-                            uploadImage: mockUploadImage,
-                        }) as unknown as UploadImage,
-                );
+                vi.mocked(UploadImage).mockImplementation(function () {
+                    return {
+                        handleImageUpload: vi.fn(),
+                        uploadImage: mockUploadImage,
+                    } as unknown as UploadImage;
+                });
 
                 const plugin = imageKeymapPlugin(mockSettings);
                 // @ts-expect-error keymap is available
@@ -119,13 +120,12 @@ describe("image-upload-plugin/keymap", () => {
             it("should return false when uploadImage fails", () => {
                 vi.mocked(isImageSelected).mockReturnValue(true);
                 const mockUploadImage = vi.fn().mockReturnValue(false);
-                vi.mocked(UploadImage).mockImplementation(
-                    () =>
-                        ({
-                            handleImageUpload: vi.fn(),
-                            uploadImage: mockUploadImage,
-                        }) as unknown as UploadImage,
-                );
+                vi.mocked(UploadImage).mockImplementation(function () {
+                    return {
+                        handleImageUpload: vi.fn(),
+                        uploadImage: mockUploadImage,
+                    } as unknown as UploadImage;
+                });
 
                 const plugin = imageKeymapPlugin(mockSettings);
                 // @ts-expect-error keymap is available
@@ -164,13 +164,12 @@ describe("image-upload-plugin/keymap", () => {
         it("should handle all commands consistently", () => {
             vi.mocked(isImageSelected).mockReturnValue(true);
             const mockUploadImage = vi.fn().mockReturnValue(true);
-            vi.mocked(UploadImage).mockImplementation(
-                () =>
-                    ({
-                        handleImageUpload: vi.fn(),
-                        uploadImage: mockUploadImage,
-                    }) as unknown as UploadImage,
-            );
+            vi.mocked(UploadImage).mockImplementation(function () {
+                return {
+                    handleImageUpload: vi.fn(),
+                    uploadImage: mockUploadImage,
+                } as unknown as UploadImage;
+            });
 
             const plugin = imageKeymapPlugin(mockSettings);
 
